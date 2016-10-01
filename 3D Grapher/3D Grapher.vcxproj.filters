@@ -18,10 +18,10 @@
     <None Include="..\Data\vertex.glsl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="..\Data\fragmentBlue.glsl">
+    <None Include="..\Data\fragmentOrange.glsl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="..\Data\fragmentOrange.glsl">
+    <None Include="..\Data\fragment.glsl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

@@ -5,14 +5,14 @@
 #include <assert.h>
 
 #include <SDL.h>
-#define GL3_PROTOTYPES 1
+//#define GL3_PROTOTYPES 1
 #include <GL\glew.h>
 
 const int width = 1280, height = 720;
 
 SDL_Window* window;
 SDL_GLContext context;
-GLuint programOrange, programBlue;
+GLuint program; // programOrange, programBlue;
 
 void init();
 void shaders();
@@ -30,15 +30,25 @@ GLuint indices[] = {  // Note that we start from 0!
 }; */
 
 GLfloat vertices1[] = {
-	-0.5f,  0.0f, 0.0f,
-	 0.0f, -0.5f, 0.0f,
-	 0.0f,  0.0f, 0.0f,
+	 // vert				 // color
+	-0.5f,  0.0f, 0.0f,  1.0f, 0.0f, 0.0f,
+	 0.0f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,
+	 0.0f,  0.0f, 0.0f,  0.0f, 0.0f, 1.0f,
 	 //
-	 0.25f, 0.25f, 0.0f,
-	 0.5f , 0.25f, 0.0f,
-	 0.25f, 0.5f , 0.0f
+	 0.25f, 0.25f, 0.0f, 1.0f, 0.0f, 0.0f,
+	 0.5f , 0.25f, 0.0f, 0.0f, 1.0f, 0.0f,
+	 0.25f, 0.5f , 0.0f, 0.0f, 0.0f, 1.0f,
+	 //
+	 0.5f, 0.0f, 0.0f,  1.0f, 0.0f, 0.0f,
+	 0.0f, 0.5f, 0.0f,  0.0f, 1.0f, 0.0f,
+	 0.0f, 0.0f, 0.0f,  0.0f, 0.0f, 1.0f,
+	 //
+	 -0.25f, -0.25f, 0.0f, 1.0f, 0.0f, 0.0f,
+	 -0.5f , -0.25f, 0.0f, 0.0f, 1.0f, 0.0f,
+	 -0.25f, -0.5f , 0.0f, 0.0f, 0.0f, 1.0f
 };
 
+/*
 GLfloat vertices2[] = {
 	0.0f, 0.0f, 0.0f,
 	0.0f, 0.5f, 0.0f,
@@ -47,23 +57,23 @@ GLfloat vertices2[] = {
 	-0.25f, -0.25f, 0.0f,
 	-0.5f , -0.25f, 0.0f,
 	-0.25f, -0.5f , 0.0f
-};
+}; */
 
 int main(int argc, char** args) {
 
 	init();
 	shaders();
 
-	GLuint VBOid1, VBOid2;
+	GLuint VBOid1;// VBOid2;
 	glGenBuffers(1, &VBOid1);
-	glGenBuffers(1, &VBOid2);
+	//glGenBuffers(1, &VBOid2);
 
 	//GLuint EBOid;
 	//glGenBuffers(1, &EBOid);
 
-	GLuint VAOid1, VAOid2;
+	GLuint VAOid1;// VAOid2;
 	glGenVertexArrays(1, &VAOid1);
-	glGenVertexArrays(1, &VAOid2);
+	//glGenVertexArrays(1, &VAOid2);
 
 	glBindVertexArray(VAOid1);
 
@@ -73,12 +83,15 @@ int main(int argc, char** args) {
 		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOid);
 		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
 		glEnableVertexAttribArray(0);
+
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+		glEnableVertexAttribArray(1);
 
 	glBindVertexArray(0);
 
-	glBindVertexArray(VAOid2);
+	/*glBindVertexArray(VAOid2);
 
 		glBindBuffer(GL_ARRAY_BUFFER, VBOid2);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
@@ -86,7 +99,7 @@ int main(int argc, char** args) {
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 		glEnableVertexAttribArray(0);
 
-	glBindVertexArray(0);
+	glBindVertexArray(0);*/
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -96,16 +109,24 @@ int main(int argc, char** args) {
 		glClearColor(1.0, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glUseProgram(programOrange);
+		GLfloat time = SDL_GetTicks() / 500.0f;
+		GLfloat offset = sin(time) / 2;
+		GLint offsetLocation = glGetUniformLocation(program, "offset");
+		glUseProgram(program);
+		glUniform2f(offsetLocation, offset, offset);
 		glBindVertexArray(VAOid1);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
+			glDrawArrays(GL_TRIANGLES, 0, 12);
 			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 
-		glUseProgram(programBlue);
-		glBindVertexArray(VAOid2);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-		glBindVertexArray(0);
+		//GLfloat time = SDL_GetTicks() / 500.0f;
+		//GLfloat green = sin(time) / 2 + 0.5;
+		//GLint pcolorLocation = glGetUniformLocation(programBlue, "pcolor");
+		//glUseProgram(programBlue);
+		//glUniform4f(pcolorLocation, 0.0f, green, 0.0f, 1.0f);
+		//glBindVertexArray(VAOid2);
+			//glDrawArrays(GL_TRIANGLES, 0, 6);
+		//glBindVertexArray(0);
 
 		SDL_GL_SwapWindow(window);
 
@@ -123,7 +144,7 @@ int main(int argc, char** args) {
 }
 
 void shaders() {
-	GLuint vert, fragOrange, fragBlue;
+	GLuint vert, frag;
 
 	std::string file, line;
 	std::ifstream fin("vertex.glsl");
@@ -139,7 +160,7 @@ void shaders() {
 	glCompileShader(vert);
 
 	file = "";
-	fin.open("fragmentOrange.glsl");
+	fin.open("fragment.glsl");
 	while (!fin.eof()) {
 		std::getline(fin, line);
 		file.append(line + "\n");
@@ -147,11 +168,11 @@ void shaders() {
 	fin.close();
 
 	source = file.c_str();
-	fragOrange = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragOrange, 1, &source, NULL);
-	glCompileShader(fragOrange);
+	frag = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(frag, 1, &source, NULL);
+	glCompileShader(frag);
 
-	file = "";
+	/*file = "";
 	fin.open("fragmentBlue.glsl");
 	while (!fin.eof()) {
 		std::getline(fin, line);
@@ -172,11 +193,15 @@ void shaders() {
 	programBlue = glCreateProgram();
 	glAttachShader(programBlue, vert);
 	glAttachShader(programBlue, fragBlue);
-	glLinkProgram(programBlue);
+	glLinkProgram(programBlue);*/
+
+	program = glCreateProgram();
+	glAttachShader(program, vert);
+	glAttachShader(program, frag);
+	glLinkProgram(program);
 
 	glDeleteShader(vert);
-	glDeleteShader(fragOrange);
-	glDeleteShader(fragBlue);
+	glDeleteShader(frag);
 }
 
 void init() {

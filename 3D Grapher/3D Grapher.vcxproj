@@ -120,7 +120,7 @@
     <ClCompile Include="..\src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Data\fragmentBlue.glsl" />
+    <None Include="..\Data\fragment.glsl" />
     <None Include="..\Data\fragmentOrange.glsl" />
     <None Include="..\Data\vertex.glsl" />
   </ItemGroup>
