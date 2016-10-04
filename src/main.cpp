@@ -5,6 +5,7 @@
 #include <assert.h>
 
 #include <SDL.h>
+#include <SDL_image.h>
 //#define GL3_PROTOTYPES 1
 #include <GL\glew.h>
 
@@ -12,7 +13,8 @@ const int width = 1280, height = 720;
 
 SDL_Window* window;
 SDL_GLContext context;
-GLuint program; // programOrange, programBlue;
+SDL_Surface *bricks, *face;
+GLuint program, btex, ftex; // programOrange, programBlue;
 
 void init();
 void shaders();
@@ -30,22 +32,22 @@ GLuint indices[] = {  // Note that we start from 0!
 }; */
 
 GLfloat vertices1[] = {
-	 // vert				 // color
-	-0.5f,  0.0f, 0.0f,  1.0f, 0.0f, 0.0f,
-	 0.0f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,
-	 0.0f,  0.0f, 0.0f,  0.0f, 0.0f, 1.0f,
+	 // vert				// color			// tex coord
+	-0.5f,  0.0f, 0.0f,		1.0f, 0.0f, 0.0f,	0.0f, 1.0f,
+	 0.0f, -0.5f, 0.0f,		0.0f, 1.0f, 0.0f,	1.0f, 0.0f,
+	 0.0f,  0.0f, 0.0f,		0.0f, 0.0f, 1.0f,	1.0f, 1.0f,
 	 //
-	 0.25f, 0.25f, 0.0f, 1.0f, 0.0f, 0.0f,
-	 0.5f , 0.25f, 0.0f, 0.0f, 1.0f, 0.0f,
-	 0.25f, 0.5f , 0.0f, 0.0f, 0.0f, 1.0f,
+	 0.25f, 0.25f, 0.0f,	1.0f, 0.0f, 0.0f,	0.0f, 0.0f,
+	 0.5f , 0.25f, 0.0f,	0.0f, 1.0f, 0.0f,	1.0f, 0.0f,
+	 0.25f, 0.5f , 0.0f,	0.0f, 0.0f, 1.0f,	0.0f, 1.0f,
 	 //
-	 0.5f, 0.0f, 0.0f,  1.0f, 0.0f, 0.0f,
-	 0.0f, 0.5f, 0.0f,  0.0f, 1.0f, 0.0f,
-	 0.0f, 0.0f, 0.0f,  0.0f, 0.0f, 1.0f,
+	 0.5f, 0.0f, 0.0f,		1.0f, 0.0f, 0.0f,	1.0f, 0.0f,
+	 0.0f, 0.5f, 0.0f,		0.0f, 1.0f, 0.0f,	0.0f, 1.0f,
+	 0.0f, 0.0f, 0.0f,		0.0f, 0.0f, 1.0f,	0.0f, 0.0f,
 	 //
-	 -0.25f, -0.25f, 0.0f, 1.0f, 0.0f, 0.0f,
-	 -0.5f , -0.25f, 0.0f, 0.0f, 1.0f, 0.0f,
-	 -0.25f, -0.5f , 0.0f, 0.0f, 0.0f, 1.0f
+	 -0.25f, -0.25f, 0.0f,	1.0f, 0.0f, 0.0f,	1.0f, 1.0f,
+	 -0.5f , -0.25f, 0.0f,	0.0f, 1.0f, 0.0f,	0.0f, 1.0f,
+	 -0.25f, -0.5f , 0.0f,	0.0f, 0.0f, 1.0f,	1.0f, 0.0f
 };
 
 /*
@@ -83,11 +85,14 @@ int main(int argc, char** args) {
 		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOid);
 		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
 		glEnableVertexAttribArray(0);
 
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
 		glEnableVertexAttribArray(1);
+
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
+		glEnableVertexAttribArray(2);
 
 	glBindVertexArray(0);
 
@@ -114,6 +119,14 @@ int main(int argc, char** args) {
 		GLint offsetLocation = glGetUniformLocation(program, "offset");
 		glUseProgram(program);
 		glUniform2f(offsetLocation, offset, offset);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, btex);
+		glUniform1i(glGetUniformLocation(program, "tex1"), 0);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, ftex);
+		glUniform1i(glGetUniformLocation(program, "tex2"), 1);
+
 		glBindVertexArray(VAOid1);
 			glDrawArrays(GL_TRIANGLES, 0, 12);
 			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -139,6 +152,8 @@ int main(int argc, char** args) {
 
 	SDL_GL_DeleteContext(context);
 	SDL_DestroyWindow(window);
+	SDL_FreeSurface(bricks);
+	IMG_Quit();
 	SDL_Quit();
 	return 0;
 }
@@ -220,6 +235,27 @@ void init() {
 
 	glewExperimental = GL_TRUE;
 	glewInit();
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
+	bricks = IMG_Load("wall.jpg");
+	SDL_ConvertSurfaceFormat(bricks, SDL_PIXELFORMAT_RGB888, 0);
+	face = IMG_Load("face.png");
+	SDL_ConvertSurfaceFormat(face, SDL_PIXELFORMAT_RGBA8888, 0);
+
+	glGenTextures(1, &btex);
+	glGenTextures(1, &ftex);
+	glBindTexture(GL_TEXTURE_2D, btex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, bricks->w, bricks->h, 0, GL_RGB, GL_UNSIGNED_BYTE, bricks->pixels);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, ftex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, face->w, face->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, face->pixels);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glViewport(0, 0, width, height);
 }
