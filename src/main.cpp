@@ -8,6 +8,11 @@
 #include <SDL_image.h>
 //#define GL3_PROTOTYPES 1
 #include <GL\glew.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+using namespace glm;
 
 const int width = 1280, height = 720;
 
@@ -113,11 +118,13 @@ int main(int argc, char** args) {
 	while (running) {
 		glClearColor(1.0, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+		
+		glUseProgram(program);
 
 		GLfloat time = SDL_GetTicks() / 500.0f;
 		GLfloat offset = sin(time) / 2;
 		GLint offsetLocation = glGetUniformLocation(program, "offset");
-		glUseProgram(program);
+
 		glUniform2f(offsetLocation, offset, offset);
 
 		glActiveTexture(GL_TEXTURE0);
@@ -126,6 +133,8 @@ int main(int argc, char** args) {
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, ftex);
 		glUniform1i(glGetUniformLocation(program, "tex2"), 1);
+
+
 
 		glBindVertexArray(VAOid1);
 			glDrawArrays(GL_TRIANGLES, 0, 12);
