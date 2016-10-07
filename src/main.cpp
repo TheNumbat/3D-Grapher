@@ -55,6 +55,16 @@ GLuint indices[] = {  // Note that we start from 0!
 	 -0.25f, -0.5f , 0.0f,	0.0f, 0.0f, 1.0f,	1.0f, 0.0f
 };*/
 
+GLfloat bar[] {
+	-0.25f, -1.0f, 0.0f, 0.0f, 0.0f,
+	-0.25f, 1.0f, 0.0f, 0.0f, 0.0f,
+	0.25f, 1.0f, 0.0f, 0.0f, 0.0f,
+
+	0.25f, 1.0f, 0.0f, 0.0f, 0.0f,
+	-0.25f, -1.0f, 0.0f, 0.0f, 0.0f,
+	0.25f, -1.0f, 0.0f, 0.0f, 0.0f
+};
+
 GLfloat vertices[] = {
 	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 	0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
@@ -100,7 +110,7 @@ GLfloat vertices[] = {
 };
 
 vec3 cubePositions[] = {
-	vec3(0.0f,  0.0f,  0.0f),
+	vec3(1.0f,  1.0f,  1.0f),
 	vec3(2.0f,  5.0f, -15.0f),
 	vec3(-1.5f, -2.2f, -2.5f),
 	vec3(-3.8f, -2.0f, -12.3f),
@@ -128,16 +138,16 @@ int main(int argc, char** args) {
 	init();
 	shaders();
 
-	GLuint VBOid1;// VBOid2;
+	GLuint VBOid1, VBOid2;
 	glGenBuffers(1, &VBOid1);
-	//glGenBuffers(1, &VBOid2);
+	glGenBuffers(1, &VBOid2);
 
 	//GLuint EBOid;
 	//glGenBuffers(1, &EBOid);
 
-	GLuint VAOid1;// VAOid2;
+	GLuint VAOid1, VAOid2;
 	glGenVertexArrays(1, &VAOid1);
-	//glGenVertexArrays(1, &VAOid2);
+	glGenVertexArrays(1, &VAOid2);
 
 	glBindVertexArray(VAOid1);
 
@@ -158,15 +168,17 @@ int main(int argc, char** args) {
 
 	glBindVertexArray(0);
 
-	/*glBindVertexArray(VAOid2);
+	glBindVertexArray(VAOid2);
 
 		glBindBuffer(GL_ARRAY_BUFFER, VBOid2);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(bar), bar, GL_STATIC_DRAW);
 
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
 		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+		glEnableVertexAttribArray(1);
 
-	glBindVertexArray(0);*/
+	glBindVertexArray(0);
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	
@@ -176,6 +188,48 @@ int main(int argc, char** args) {
 	bool running = true;
 	SDL_Event ev;
 	while (running) {
+		while (SDL_PollEvent(&ev) != 0)
+		{
+			if (ev.type == SDL_QUIT)
+				running = false;
+			if (ev.type == SDL_MOUSEMOTION) {
+				int x = ev.motion.x, y = ev.motion.y;
+				int dx = mx - x, dy = my - y;
+				mx = x; my = y;
+				yaw -= dx;
+				pitch += dy;
+				if (pitch < -89.9f)
+					pitch = -89.9f;
+				if (pitch > 89.9f)
+					pitch = 89.9f;
+			}
+		}
+		mat4 proj, view;
+		proj = perspective(45.0f, (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
+		
+		vec3 dir(cos(radians(pitch)) * cos(radians(yaw)), sin(radians(pitch)), cos(radians(pitch)) * sin(radians(yaw)));
+		cameraFront = normalize(dir);
+		cameraTarget = cameraPos + cameraFront;
+		cameraRight = normalize(cross(vec3(0.0f, 1.0f, 0.0f), cameraTarget));
+		//cameraUp = normalize(cross(cameraTarget, cameraRight));
+		cameraUp = vec3(0.0f, 1.0f, 0.0f);
+
+		view = lookAt(cameraPos, cameraTarget, cameraUp);
+
+		const unsigned char* keys = SDL_GetKeyboardState(NULL);
+		if (keys[SDL_SCANCODE_W]) {
+			cameraPos += cameraSpeed * cameraFront;
+		}
+		if (keys[SDL_SCANCODE_S]) {
+			cameraPos -= cameraSpeed * cameraFront;
+		}
+		if (keys[SDL_SCANCODE_A]) {
+			cameraPos -= normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
+		}
+		if (keys[SDL_SCANCODE_D]) {
+			cameraPos += normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
+		}
+
 		glClearColor(1.0, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
@@ -184,12 +238,7 @@ int main(int argc, char** args) {
 		//cameraPos = vec3(sin(SDL_GetTicks() / 500.0f) * 5.0f, 0.0f, cos(SDL_GetTicks() / 500.0f) * 5.0f);
 		//pitch = sin(SDL_GetTicks() / 500.0f) * 89.0f;
 		//yaw = sin(SDL_GetTicks() / 500.0f) * 89.0f;
-		vec3 dir(cos(radians(pitch)) * cos(radians(yaw)), sin(radians(pitch)), cos(radians(pitch)) * sin(radians(yaw)));
-		cameraFront = normalize(dir);
 		//cameraFront = vec3(0.0f, 0.0f, 1.0f);
-		cameraTarget = cameraPos + cameraFront;
-		cameraRight = normalize(cross(vec3(0.0f, 1.0f, 0.0f), cameraTarget));
-		cameraUp = normalize(cross(cameraTarget, cameraRight));
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, btex);
@@ -197,10 +246,6 @@ int main(int argc, char** args) {
 		//glActiveTexture(GL_TEXTURE1);
 		//glBindTexture(GL_TEXTURE_2D, ftex);
 		//glUniform1i(glGetUniformLocation(program, "tex2"), 1);
-
-		mat4 proj, view;
-		proj = perspective(45.0f, (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
-		view = lookAt(cameraPos, cameraTarget, cameraUp);
 
 		glUniformMatrix4fv(glGetUniformLocation(program, "proj"), 1, GL_FALSE, value_ptr(proj));
 		glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, value_ptr(view));
@@ -219,7 +264,19 @@ int main(int argc, char** args) {
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
-			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+
+		glBindVertexArray(VAOid2);
+			//view = mat4(1);
+			proj = ortho(0.0f, 0.0f, (GLfloat)width, (GLfloat)height, -1.0f, 1.0f);
+			//mat4 proj2 = ortho(-100.0 f, 100.0f, -100.0f, 100.0f, -0.1f, 0.1f);
+			mat4 model;
+			//model = scale(model, vec3(10.0f, 10.0f, 1.0f));
+			glUniformMatrix4fv(glGetUniformLocation(program, "proj"), 1, GL_FALSE, value_ptr(proj));
+			glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, value_ptr(view));
+			glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, 0, 6);
 		glBindVertexArray(0);
 
 		//GLfloat time = SDL_GetTicks() / 500.0f;
@@ -232,32 +289,6 @@ int main(int argc, char** args) {
 		//glBindVertexArray(0);
 
 		SDL_GL_SwapWindow(window);
-
-		while (SDL_PollEvent(&ev) != 0)
-		{
-			if (ev.type == SDL_QUIT)
-				running = false;
-			if (ev.type == SDL_MOUSEMOTION) {
-				int x = ev.motion.x, y = ev.motion.y;
-				int dx = mx - x, dy = my - y;
-				mx = x; my = y;
-				yaw -= dx;
-				pitch += dy;
-			}
-		}
-		const unsigned char* keys = SDL_GetKeyboardState(NULL);
-		if (keys[SDL_SCANCODE_W]) {
-			cameraPos += cameraSpeed * cameraFront;
-		}
-		if (keys[SDL_SCANCODE_S]) {
-			cameraPos -= cameraSpeed * cameraFront;
-		}
-		if (keys[SDL_SCANCODE_A]) {
-			cameraPos -= normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
-		}
-		if (keys[SDL_SCANCODE_D]) {
-			cameraPos += normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
-		}
 	}
 
 	SDL_GL_DeleteContext(context);
