@@ -36,7 +36,7 @@ GLuint indices[] = {  // Note that we start from 0!
 	1, 2, 3    // Second Triangle
 }; */
 
-GLfloat vertices1[] = {
+/*GLfloat vertices1[] = {
 	 // vert				// color			// tex coord
 	-0.5f,  0.0f, 0.0f,		1.0f, 0.0f, 0.0f,	0.0f, 1.0f,
 	 0.0f, -0.5f, 0.0f,		0.0f, 1.0f, 0.0f,	1.0f, 0.0f,
@@ -53,6 +53,63 @@ GLfloat vertices1[] = {
 	 -0.25f, -0.25f, 0.0f,	1.0f, 0.0f, 0.0f,	1.0f, 1.0f,
 	 -0.5f , -0.25f, 0.0f,	0.0f, 1.0f, 0.0f,	0.0f, 1.0f,
 	 -0.25f, -0.5f , 0.0f,	0.0f, 0.0f, 1.0f,	1.0f, 0.0f
+};*/
+
+GLfloat vertices[] = {
+	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+	0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+	0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+	0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+	0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+	-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+	0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+	0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+	0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+	0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+};
+
+vec3 cubePositions[] = {
+	vec3(0.0f,  0.0f,  0.0f),
+	vec3(2.0f,  5.0f, -15.0f),
+	vec3(-1.5f, -2.2f, -2.5f),
+	vec3(-3.8f, -2.0f, -12.3f),
+	vec3(2.4f, -0.4f, -3.5f),
+	vec3(-1.7f,  3.0f, -7.5f),
+	vec3(1.3f, -2.0f, -2.5f),
+	vec3(1.5f,  2.0f, -2.5f),
+	vec3(1.5f,  0.2f, -1.5f),
+	vec3(-1.3f,  1.0f, -1.5f)
 };
 
 /*
@@ -85,19 +142,19 @@ int main(int argc, char** args) {
 	glBindVertexArray(VAOid1);
 
 		glBindBuffer(GL_ARRAY_BUFFER, VBOid1);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices1), vertices1, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOid);
 		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
 		glEnableVertexAttribArray(0);
 
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-		glEnableVertexAttribArray(1);
+		//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+		//glEnableVertexAttribArray(1);
 
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));
-		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+		glEnableVertexAttribArray(1);
 
 	glBindVertexArray(0);
 
@@ -112,28 +169,56 @@ int main(int argc, char** args) {
 	glBindVertexArray(0);*/
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
+	
+	int mx = 0, my = 0;
+	GLfloat cameraSpeed = 0.01f, pitch = 0, yaw = 0;// roll = 0;
+	vec3 cameraPos, cameraFront, cameraTarget, cameraRight, cameraUp;
 	bool running = true;
 	SDL_Event ev;
 	while (running) {
 		glClearColor(1.0, 1.0f, 1.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		glUseProgram(program);
+
+		//cameraPos = vec3(sin(SDL_GetTicks() / 500.0f) * 5.0f, 0.0f, cos(SDL_GetTicks() / 500.0f) * 5.0f);
+		//pitch = sin(SDL_GetTicks() / 500.0f) * 89.0f;
+		//yaw = sin(SDL_GetTicks() / 500.0f) * 89.0f;
+		vec3 dir(cos(radians(pitch)) * cos(radians(yaw)), sin(radians(pitch)), cos(radians(pitch)) * sin(radians(yaw)));
+		cameraFront = normalize(dir);
+		//cameraFront = vec3(0.0f, 0.0f, 1.0f);
+		cameraTarget = cameraPos + cameraFront;
+		cameraRight = normalize(cross(vec3(0.0f, 1.0f, 0.0f), cameraTarget));
+		cameraUp = normalize(cross(cameraTarget, cameraRight));
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, btex);
 		glUniform1i(glGetUniformLocation(program, "tex1"), 0);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, ftex);
-		glUniform1i(glGetUniformLocation(program, "tex2"), 1);
+		//glActiveTexture(GL_TEXTURE1);
+		//glBindTexture(GL_TEXTURE_2D, ftex);
+		//glUniform1i(glGetUniformLocation(program, "tex2"), 1);
 
-		mat4 model, view, persp;
-		model = rotate(model, radians(-45.0f), vec3(1.0f, 0.0f, 0.0f));
-		glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, value_ptr(model));
+		mat4 proj, view;
+		proj = perspective(45.0f, (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
+		view = lookAt(cameraPos, cameraTarget, cameraUp);
+
+		glUniformMatrix4fv(glGetUniformLocation(program, "proj"), 1, GL_FALSE, value_ptr(proj));
+		glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, value_ptr(view));
 
 		glBindVertexArray(VAOid1);
-			glDrawArrays(GL_TRIANGLES, 0, 12);
+		for (GLuint i = 0; i < 10; i++)
+		{
+			mat4 model;
+			model = translate(model, cubePositions[i]);
+			model = rotate(model, SDL_GetTicks() / 1500.0f * (i + 1), vec3(1.0f, 0.3f, 0.5f));
+		
+			//view = rotate(view, SDL_GetTicks() / 500.0f, vec3(0.0f, 1.0f, 0.0f));
+			//float fov = sin(SDL_GetTicks() / 500.0f) * 90;
+		
+			glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, value_ptr(model));
+
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
 			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 
@@ -152,6 +237,26 @@ int main(int argc, char** args) {
 		{
 			if (ev.type == SDL_QUIT)
 				running = false;
+			if (ev.type == SDL_MOUSEMOTION) {
+				int x = ev.motion.x, y = ev.motion.y;
+				int dx = mx - x, dy = my - y;
+				mx = x; my = y;
+				yaw -= dx;
+				pitch += dy;
+			}
+		}
+		const unsigned char* keys = SDL_GetKeyboardState(NULL);
+		if (keys[SDL_SCANCODE_W]) {
+			cameraPos += cameraSpeed * cameraFront;
+		}
+		if (keys[SDL_SCANCODE_S]) {
+			cameraPos -= cameraSpeed * cameraFront;
+		}
+		if (keys[SDL_SCANCODE_A]) {
+			cameraPos -= normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
+		}
+		if (keys[SDL_SCANCODE_D]) {
+			cameraPos += normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
 		}
 	}
 
@@ -235,6 +340,8 @@ void init() {
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetSwapInterval(1);
 
+	SDL_ShowCursor(0);
+
 	context = SDL_GL_CreateContext(window);
 	assert(context);
 
@@ -245,6 +352,8 @@ void init() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glEnable(GL_DEPTH_TEST);
 
 	IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
 	bricks = IMG_Load("wall.jpg");
