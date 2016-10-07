@@ -8,11 +8,11 @@ layout (location = 2) in vec2 texCoord;
 out vec3 vcolor;
 out vec2 TexCoord;
 
-uniform vec2 offset;
+uniform mat4 model;
 
 void main()
 {
-	gl_Position = vec4(position.x + offset.x, position.y + offset.y, position.z, 1.0f);
+	gl_Position = model * vec4(position.x, position.y, position.z, 1.0f);
 	vcolor = color;
 	TexCoord = texCoord;
 }

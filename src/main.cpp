@@ -121,12 +121,6 @@ int main(int argc, char** args) {
 		
 		glUseProgram(program);
 
-		GLfloat time = SDL_GetTicks() / 500.0f;
-		GLfloat offset = sin(time) / 2;
-		GLint offsetLocation = glGetUniformLocation(program, "offset");
-
-		glUniform2f(offsetLocation, offset, offset);
-
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, btex);
 		glUniform1i(glGetUniformLocation(program, "tex1"), 0);
@@ -134,7 +128,9 @@ int main(int argc, char** args) {
 		glBindTexture(GL_TEXTURE_2D, ftex);
 		glUniform1i(glGetUniformLocation(program, "tex2"), 1);
 
-
+		mat4 model, view, persp;
+		model = rotate(model, radians(-45.0f), vec3(1.0f, 0.0f, 0.0f));
+		glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, value_ptr(model));
 
 		glBindVertexArray(VAOid1);
 			glDrawArrays(GL_TRIANGLES, 0, 12);
