@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <assert.h>
-
+#include "cam.cpp"
 #include <SDL.h>
 #include <SDL_image.h>
 //#define GL3_PROTOTYPES 1
@@ -182,53 +182,73 @@ int main(int argc, char** args) {
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	
-	int mx = 0, my = 0;
-	GLfloat cameraSpeed = 0.01f, pitch = 0, yaw = 0;// roll = 0;
-	vec3 cameraPos, cameraFront, cameraTarget, cameraRight, cameraUp;
+	float mx = 0, my = 0, mdxa = 0, mdya = 0;
+	//GLfloat cameraSpeed = 0.1f, pitch = 0, yaw = 0, roll = 0;
+	//vec3 cameraPos, cameraFront, cameraTarget, cameraRight, cameraUp;
+	Camera cam;
 	bool running = true;
 	SDL_Event ev;
+	GLuint time = SDL_GetTicks();
 	while (running) {
 		while (SDL_PollEvent(&ev) != 0)
 		{
 			if (ev.type == SDL_QUIT)
 				running = false;
 			if (ev.type == SDL_MOUSEMOTION) {
-				int x = ev.motion.x, y = ev.motion.y;
-				int dx = mx - x, dy = my - y;
+				float x = ev.motion.x, y = ev.motion.y;
+				float dx = mx - x - mdxa, dy = my - y - mdya;
+				cam.ProcessMouseMovement(dx, -dy, false);
+				//pitch += dy / 50.0f;
+				//yaw -= dx / 50.0f;
+				SDL_WarpMouseInWindow(window, width/2, height/2);
+				mdxa = width/2 - x;
+				mdya = height/2 - y;
 				mx = x; my = y;
-				yaw -= dx;
-				pitch += dy;
-				if (pitch < -89.9f)
-					pitch = -89.9f;
-				if (pitch > 89.9f)
-					pitch = 89.9f;
 			}
 		}
-		mat4 proj, view;
+		
+		mat4 proj, view = cam.GetViewMatrix();
 		proj = perspective(45.0f, (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
 		
-		vec3 dir(cos(radians(pitch)) * cos(radians(yaw)), sin(radians(pitch)), cos(radians(pitch)) * sin(radians(yaw)));
-		cameraFront = normalize(dir);
-		cameraTarget = cameraPos + cameraFront;
-		cameraRight = normalize(cross(vec3(0.0f, 1.0f, 0.0f), cameraTarget));
-		//cameraUp = normalize(cross(cameraTarget, cameraRight));
-		cameraUp = vec3(0.0f, 1.0f, 0.0f);
+		
+	/*	GLfloat mat[] = { cos(yaw)*cos(pitch), -cos(yaw)*sin(pitch)*sin(roll) - sin(yaw)*cos(roll), -cos(yaw)*sin(pitch)*cos(roll) + sin(yaw)*sin(roll),
+						  sin(yaw)*cos(pitch), -sin(yaw)*sin(pitch)*sin(roll) + cos(yaw)*cos(roll), -sin(yaw)*sin(pitch)*cos(roll) - cos(yaw)*sin(roll),
+						  sin(pitch),			cos(pitch)*sin(roll),								cos(pitch)*sin(roll) }; */
+		//mat3 rot = make_mat3(mat);
+		//cameraFront = normalize(rot * vec3(0,0,1));
+		//vec3 dir(sin(yaw), -(sin(pitch)*cos(yaw)), -(cos(pitch)*cos(yaw)));
+		
+		//glm::vec3 front;
+		//front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+		//front.y = sin(glm::radians(pitch));
+		//front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+		//cameraFront = glm::normalize(front);
 
-		view = lookAt(cameraPos, cameraTarget, cameraUp);
+		//cameraTarget = cameraPos + cameraFront;
+		//cameraRight = normalize(cross(vec3(0.0f, 1.0f, 0.0f), cameraTarget));
+		//cameraUp = normalize(cross(cameraTarget, cameraRight));
+		//cameraUp = vec3(0.0f, 1.0f, 0.0f);
+
+		//view = lookAt(cameraPos, cameraTarget, vec3(0.0f, 1.0f, 0.0f));
 
 		const unsigned char* keys = SDL_GetKeyboardState(NULL);
 		if (keys[SDL_SCANCODE_W]) {
-			cameraPos += cameraSpeed * cameraFront;
+			//cameraPos += cameraSpeed * cameraFront;
+			cam.ProcessKeyboard(FORWARD, (SDL_GetTicks() - time) / 1000.0f);
 		}
 		if (keys[SDL_SCANCODE_S]) {
-			cameraPos -= cameraSpeed * cameraFront;
+			//cameraPos -= cameraSpeed * cameraFront;
+			cam.ProcessKeyboard(BACKWARD, (SDL_GetTicks() - time) / 1000.0f);
 		}
 		if (keys[SDL_SCANCODE_A]) {
-			cameraPos -= normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
+			//cameraPos -= normalize(cross(cameraFront, vec3(0.0f, 1.0f, 0.0f))) * cameraSpeed;
+			cam.ProcessKeyboard(LEFT, (SDL_GetTicks() - time) / 1000.0f);
 		}
 		if (keys[SDL_SCANCODE_D]) {
-			cameraPos += normalize(cross(cameraFront, cameraUp)) * cameraSpeed;
+			//cameraPos += normalize(cross(cameraFront, vec3(0.0f, 1.0f, 0.0f))) * cameraSpeed;
+			cam.ProcessKeyboard(RIGHT, (SDL_GetTicks() - time) / 1000.0f);
 		}
+		time = SDL_GetTicks();
 
 		glClearColor(1.0, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -303,7 +323,7 @@ void shaders() {
 	GLuint vert, frag;
 
 	std::string file, line;
-	std::ifstream fin("vertex.glsl");
+	std::ifstream fin("vertex_old.glsl");
 	while (!fin.eof()) {
 		std::getline(fin, line);
 		file.append(line + "\n");
@@ -316,7 +336,7 @@ void shaders() {
 	glCompileShader(vert);
 
 	file = "";
-	fin.open("fragment.glsl");
+	fin.open("fragment_old.glsl");
 	while (!fin.eof()) {
 		std::getline(fin, line);
 		file.append(line + "\n");
@@ -372,6 +392,9 @@ void init() {
 	SDL_GL_SetSwapInterval(1);
 
 	SDL_ShowCursor(0);
+	SDL_SetWindowGrab(window, SDL_TRUE);
+	//assert(!SDL_SetRelativeMouseMode(SDL_TRUE));
+	//SDL_ShowCursor(1);
 
 	context = SDL_GL_CreateContext(window);
 	assert(context);
