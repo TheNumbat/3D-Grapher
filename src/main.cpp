@@ -19,7 +19,11 @@ enum operators : op {
 	var_y = 'y',
 	open_p = '(',
 	close_p = ')',
-	num_break = 1000
+	num_break = 1000,
+	op_sqrt = 1001,
+	op_sin = 1002,
+	op_cos = 1003,
+	op_tan = 1004
 };
 
 #define get() two = s.top(); \
@@ -57,6 +61,30 @@ float eval(vector<op> EQ, float x, float y) {
 			result = pow(one, two);
 			s.push(result);
 			break;
+		case op_sqrt:
+			one = s.top();
+			s.pop();
+			result = sqrt(one);
+			s.push(result);
+			break;
+		case op_sin:
+			one = s.top();
+			s.pop();
+			result = sin(one);
+			s.push(result);
+			break;
+		case op_cos:
+			one = s.top();
+			s.pop();
+			result = cos(one);
+			s.push(result);
+			break;
+		case op_tan:
+			one = s.top();
+			s.pop();
+			result = tan(one);
+			s.push(result);
+			break;
 		case var_x:
 			s.push(x);
 			break;
@@ -78,6 +106,10 @@ float eval(vector<op> EQ, float x, float y) {
 	return s.top();
 }
 
+bool num(char c) {
+	return c >= '0' && c <= '9' || c == '.';
+}
+
 int precedence(char c) {
 	switch (c) {
 	case open_p: return -1;
@@ -94,8 +126,8 @@ int precedence(char c) {
 void in(istream& in, vector<op>& EQ) {
 	char buf = 0;
 	int  pos;
-	stack<char> s;
-	queue<char> q;
+	stack<op> s;
+	queue<op> q;
 	bool queued = false, added = false, ins = true;
 	while (!in.eof()) {
 		if(ins)
@@ -161,12 +193,28 @@ void in(istream& in, vector<op>& EQ) {
 			EQ.push_back('y');
 			break;
 		default:
-			while (buf >= '0' && buf <= '9' || buf == '.') {
-				EQ.push_back(buf);
-				in >> buf;
-				ins = false;
-			} 
-			EQ.push_back(num_break);
+			if (!num(buf)) {
+				string str;
+				getline(in, str, '(');
+				str.insert(0, 1, buf);
+				if (str == "sqrt")
+					s.push(op_sqrt);
+				else if (str == "sin")
+					s.push(op_sin);
+				else if (str == "cos")
+					s.push(op_cos);
+				else if (str == "tan")
+					s.push(op_tan);
+				s.push('(');
+			}
+			else {
+				while (num(buf)) {
+					EQ.push_back(buf);
+					in >> buf;
+					ins = false;
+				}
+				EQ.push_back(num_break);
+			}
 			break;
 		}
 	}
@@ -189,8 +237,18 @@ int main(int argc, char** args) {
 		in(ss, eq);
 		ss.clear();
 
-		for (char c : eq)
-			cout << c;
+		for (op c : eq) {
+			if (c == op_sqrt)
+				cout << "Sq";
+			else if (c == op_sin)
+				cout << "Sn";
+			else if (c == op_cos)
+				cout << "Cs";
+			else if (c == op_tan)
+				cout << "Tn";
+			else
+				cout << (char)c;
+		}
 		cout << endl;
 
 		float result = eval(eq, x, y);
