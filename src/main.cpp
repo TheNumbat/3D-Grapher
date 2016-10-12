@@ -18,12 +18,13 @@ enum operators : op {
 	var_x = 'x',
 	var_y = 'y',
 	open_p = '(',
-	close_p = ')'
+	close_p = ')',
+	num_break = 1000
 };
 
-#define get() one = s.top(); \
+#define get() two = s.top(); \
 			  s.pop(); \
-			  two = s.top(); \
+			  one = s.top(); \
 			  s.pop();
 
 float eval(vector<op> EQ, float x, float y) {
@@ -38,7 +39,7 @@ float eval(vector<op> EQ, float x, float y) {
 			break;
 		case subtract:
 			get();
-			result = two - one;
+			result = one - two;
 			s.push(result);
 			break;
 		case multiply:
@@ -48,12 +49,12 @@ float eval(vector<op> EQ, float x, float y) {
 			break;
 		case divide:
 			get();
-			result = two / one;
+			result = one / two;
 			s.push(result);
 			break;
 		case power:
 			get();
-			result = pow(two, one);
+			result = pow(one, two);
 			s.push(result);
 			break;
 		case var_x:
@@ -65,12 +66,11 @@ float eval(vector<op> EQ, float x, float y) {
 		default:
 			int i2 = index;
 			string num;
-			while (EQ[i2] >= '0' && EQ[i2] <= '9' || EQ[i2] == '.') {
+			while (EQ[i2] != num_break) {
 				num.push_back(EQ[i2]);
 				i2++;
 				index++;
 			}
-			index--;
 			s.push(atof(num.c_str()));
 			break;
 		}
@@ -86,6 +86,8 @@ int precedence(char c) {
 	case multiply:
 	case divide: return 1;
 	case power: return 2;
+	case var_x:
+	case var_y: return 100;
 	}
 }
 
@@ -94,14 +96,18 @@ void in(istream& in, vector<op>& EQ) {
 	int  pos;
 	stack<char> s;
 	queue<char> q;
+	bool queued = false, added = false, ins = true;
 	while (!in.eof()) {
-		in >> buf;
+		if(ins)
+			in >> buf;
 		if (in.eof()) break;
 		switch (buf) {
 		case open_p:
+			ins = true;
 			s.push(buf);
 			break;
 		case close_p:
+			ins = true;
 			if (s.size()) {
 				do {
 					buf = s.top();
@@ -125,10 +131,15 @@ void in(istream& in, vector<op>& EQ) {
 		case add:
 		case subtract:
 		case power:
+			ins = true;
+			queued = false; added = false;
 			while (s.size() && precedence(s.top()) == precedence(buf)) {
 				q.push(s.top());
 				s.pop();
+				queued = true;
 			}
+			if (queued)
+				EQ.push_back(buf);
 			while (q.size()) {
 				s.push(q.front());
 				q.pop();
@@ -136,13 +147,26 @@ void in(istream& in, vector<op>& EQ) {
 			while (s.size() && precedence(s.top()) > precedence(buf)) {
 				EQ.push_back(s.top());
 				s.pop();
+				added = true;
 			}
-			s.push(buf);
+			if (!queued)
+				s.push(buf);
+			break;
+		case var_x:
+			ins = true;
+			EQ.push_back('x');
+			break;
+		case var_y:
+			ins = true;
+			EQ.push_back('y');
 			break;
 		default:
-			if (buf >= '0' && buf <= '9' || buf == '.') {
+			while (buf >= '0' && buf <= '9' || buf == '.') {
 				EQ.push_back(buf);
+				in >> buf;
+				ins = false;
 			} 
+			EQ.push_back(num_break);
 			break;
 		}
 	}
