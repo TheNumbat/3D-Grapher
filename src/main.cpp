@@ -170,8 +170,10 @@ void in(istream& in, vector<op>& EQ) {
 				s.pop();
 				queued = true;
 			}
-			if (queued)
-				EQ.push_back(buf);
+			if (queued) {
+				EQ.push_back(q.front());
+				q.pop();
+			}
 			while (q.size()) {
 				s.push(q.front());
 				q.pop();
