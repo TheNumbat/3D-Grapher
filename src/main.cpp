@@ -3,65 +3,75 @@
 #include <sstream>
 #include <stack>
 #include <vector>
+#include <queue>
 
 using namespace std;
 
-ifstream fin("in.txt");
+typedef int op;
 
-float xmin, xmax, ymin, ymax, zmin, zmax, x, y;
-string eq;
-vector<char> post;
+enum operators : op {
+	add = '+',
+	subtract = '-',
+	multiply = '*',
+	divide = '/',
+	power = '^',
+	var_x = 'x',
+	var_y = 'y',
+	open_p = '(',
+	close_p = ')'
+};
 
-float eval() {
+#define get() one = s.top(); \
+			  s.pop(); \
+			  two = s.top(); \
+			  s.pop();
+
+float eval(vector<op> EQ, float x, float y) {
 	stack<float> s;
-	float one, two, result;
-	for (char c : post) {
-		switch (c) {
-		case '+':
-			one = s.top();
-			s.pop();
-			two = s.top();
-			s.pop();
+	float one = 0, two = 0, result = 0;
+	for (int index = 0; index < EQ.size(); index++) {
+		switch (EQ[index]) {
+		case add:
+			get();
 			result = one + two;
 			s.push(result);
 			break;
-		case '-': 
-			one = s.top();
-			s.pop();
-			two = s.top();
-			s.pop();
-			result = one - two;
+		case subtract:
+			get();
+			result = two - one;
 			s.push(result);
 			break;
-		case '*':
-			one = s.top();
-			s.pop();
-			two = s.top();
-			s.pop();
+		case multiply:
+			get();
 			result = one * two;
 			s.push(result);
 			break;
-		case '/': 
-			one = s.top();
-			s.pop();
-			two = s.top();
-			s.pop();
-			result = one / two;
+		case divide:
+			get();
+			result = two / one;
 			s.push(result);
 			break;
-		case '^': 
-			one = s.top();
-			s.pop();
-			two = s.top();
-			s.pop();
-			result = pow(one,two);
+		case power:
+			get();
+			result = pow(two, one);
 			s.push(result);
 			break;
-		case 'x':
+		case var_x:
 			s.push(x);
 			break;
-		case 'y':
+		case var_y:
 			s.push(y);
+			break;
+		default:
+			int i2 = index;
+			string num;
+			while (EQ[i2] >= '0' && EQ[i2] <= '9' || EQ[i2] == '.') {
+				num.push_back(EQ[i2]);
+				i2++;
+				index++;
+			}
+			index--;
+			s.push(atof(num.c_str()));
 			break;
 		}
 	}
@@ -70,66 +80,100 @@ float eval() {
 
 int precedence(char c) {
 	switch (c) {
-	case '(': return -1;
-	case '+':
-	case '-': return 0;
-	case '*':
-	case '/': return 1;
-	case '^': return 2;
+	case open_p: return -1;
+	case add:
+	case subtract: return 0;
+	case multiply:
+	case divide: return 1;
+	case power: return 2;
 	}
 }
 
-void in() {
-	fin >> xmin >> xmax >> ymin >> ymax >> zmin >> zmax >> x >> y;
-
-	char buf;
+void in(istream& in, vector<op>& EQ) {
+	char buf = 0;
 	int  pos;
 	stack<char> s;
-	while (fin.good()) {
-		fin >> buf;
-		if (!fin.good()) break;
+	queue<char> q;
+	while (!in.eof()) {
+		in >> buf;
+		if (in.eof()) break;
 		switch (buf) {
-		case '(':
+		case open_p:
 			s.push(buf);
 			break;
-		case ')':
-			do {
-				buf = s.top();
-				if(buf != '(')
-					post.push_back(buf);
+		case close_p:
+			if (s.size()) {
+				do {
+					buf = s.top();
+					if (buf != open_p)
+						EQ.push_back(buf);
+					s.pop();
+				} while (s.size() && buf != open_p);
+			}
+			while (s.size()) {
+				if (s.top() == open_p) {
+					s.pop();
+					continue;
+				}
+				EQ.push_back(s.top());
 				s.pop();
-			} while (buf != '(');
+				break;
+			}
 			break;
-		case '*':
-		case '/':
-		case '+':
-		case '-':
-		case '^':
+		case multiply:
+		case divide:
+		case add:
+		case subtract:
+		case power:
+			while (s.size() && precedence(s.top()) == precedence(buf)) {
+				q.push(s.top());
+				s.pop();
+			}
+			while (q.size()) {
+				s.push(q.front());
+				q.pop();
+			}
 			while (s.size() && precedence(s.top()) > precedence(buf)) {
-				post.push_back(s.top());
+				EQ.push_back(s.top());
 				s.pop();
 			}
 			s.push(buf);
 			break;
 		default:
-			post.push_back(buf);
+			if (buf >= '0' && buf <= '9' || buf == '.') {
+				EQ.push_back(buf);
+			} 
 			break;
 		}
 	}
 	while (s.size()) {
-		post.push_back(s.top());
+		EQ.push_back(s.top());
 		s.pop();
 	}
 }
 
 int main(int argc, char** args) {
-	in();
-	for (char c : post)
-		cout << c;
-	cout << endl;
+	vector<op> eq;
+	stringstream ss;
+	string s;
+	float x, y;
 
-	float result = eval();
-	cout << x << " " << y << " " << result << endl;
+	while (true) {
+		getline(cin, s);
+		ss << s;
+		ss >> x >> y;
+		in(ss, eq);
+		ss.clear();
+
+		for (char c : eq)
+			cout << c;
+		cout << endl;
+
+		float result = eval(eq, x, y);
+		cout << x << " " << y << " " << result << endl;
+
+		eq.clear();
+	}
 
 	system("pause");
 	return 0;
