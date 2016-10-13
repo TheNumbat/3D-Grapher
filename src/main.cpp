@@ -250,10 +250,9 @@ bool in(istream& in, vector<op>& EQ) {
 					s.pop();
 				} while (s.size() && buf != open_p);
 			}
-			while (s.size()) {
+			if (s.size()) {
 				if (s.top() == open_p) {
 					s.pop();
-					break;
 				}
 				EQ.push_back(s.top());
 				s.pop();
