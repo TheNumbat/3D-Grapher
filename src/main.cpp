@@ -34,7 +34,7 @@ enum operators : op {
 	op_atan = 1007,
 	op_abs = 1008,
 	op_exp = 1009,
-	op_exp2 = 1010,
+	op_exptwo = 1010,
 	op_ceil = 1011,
 	op_floor = 1012,
 	op_ln = 1013,
@@ -46,8 +46,8 @@ enum operators : op {
 	var_y = 'y',
 
 	// constants
-	const_pi = 'p',
-	const_e = 'e'
+	const_pi = 'P',
+	const_e = 'E'
 };
 
 #define get() two = s.top(); \
@@ -139,7 +139,7 @@ float eval(vector<op> EQ, float x, float y) {
 			result = exp(one);
 			s.push(result);
 			break;
-		case op_exp2:
+		case op_exptwo:
 			one = s.top();
 			s.pop();
 			result = exp2(one);
@@ -325,8 +325,8 @@ bool in(istream& in, vector<op>& EQ) {
 					s.push(op_abs);
 				else if (str == "exp")
 					s.push(op_exp);
-				else if (str == "exp2")
-					s.push(op_exp2);
+				else if (str == "exptwo")
+					s.push(op_exptwo);
 				else if (str == "ceil")
 					s.push(op_ceil);
 				else if (str == "floor")
@@ -375,8 +375,8 @@ void welcome() {
 		 << endl
 		 << "   Variables: x, y" << endl
 		 << "   Operators: +, -, %, *, /, ^, (, )" << endl
-		 << "   Constants: e = 2.71... p = 3.14..." << endl
-		 << "   Functions: sqrt, sin, cos, tan, asin, acos, atan, abs, exp, exp2, ceil, floor, ln, log, log2" << endl
+		 << "   Constants: E = 2.71... P = 3.14..." << endl
+		 << "   Functions: sqrt, sin, cos, tan, asin, acos, atan, abs, exp, exptwo, ceil, floor, ln, log, log2" << endl
 		 << endl
 		 << "   Format: x y <exp>" << endl
 		 << "   Example: 3 4 x / y * (e ^ x - y)" << endl
@@ -405,8 +405,8 @@ void printeq(vector<op> eq) {
 			cout << "abs";
 		else if (c == op_exp)
 			cout << "exp";
-		else if (c == op_exp2)
-			cout << "exp2";
+		else if (c == op_exptwo)
+			cout << "exptwo";
 		else if (c == op_ceil)
 			cout << "ceil";
 		else if (c == op_floor)
