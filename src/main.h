@@ -66,6 +66,7 @@ const GLchar* fragment = {
 	"}\n"
 };
 
+// index into axes
 const int x_min = 0;
 const int x_max = 6;
 const int y_min = 13;

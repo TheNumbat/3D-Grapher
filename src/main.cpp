@@ -107,8 +107,8 @@ void loop(state* s) {
 
 		mat4 model, view, proj;
 		model = rotate(model, radians(90.0f), vec3(1, 0, 0));
-		view = lookAt(vec3(5.0f * sin(SDL_GetTicks() / 500.0f), 3, 5.0f * cos(SDL_GetTicks() / 500.0f)), vec3(0, 0, 0), vec3(0, 1, 0));
-		proj = perspective(45.0f, (GLfloat)s->w / (GLfloat)s->h, 0.1f, 100.0f);
+		view = lookAt(vec3(5.0f * sin(SDL_GetTicks() / 1000.0f), 3, 5.0f * cos(SDL_GetTicks() / 1000.0f)), vec3(0, 0, 0), vec3(0, 1, 0));
+		proj = perspective(radians(60.0f), (GLfloat)s->w / (GLfloat)s->h, 0.1f, 100.0f);
 
 		glUniformMatrix4fv(glGetUniformLocation(s->shader, "model"), 1, GL_FALSE, value_ptr(model));
 		glUniformMatrix4fv(glGetUniformLocation(s->shader, "view"), 1, GL_FALSE, value_ptr(view));
