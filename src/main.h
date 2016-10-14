@@ -10,6 +10,13 @@
 #include <SDL.h>
 #include <GL\glew.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+using namespace glm;
+using namespace std;
+
 struct state {
 	SDL_GLContext context;
 	GLuint shader, VAO, VBO;
@@ -17,8 +24,6 @@ struct state {
 	int w, h;
 	bool running;
 };
-
-void setup(state* s, int w, int h);
 
 const GLchar* vertex = {
 	"#version 330 core\n"

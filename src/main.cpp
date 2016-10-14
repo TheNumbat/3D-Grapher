@@ -17,7 +17,26 @@ int main(int argc, char** args) {
 }
 
 void loop(state* s) {
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	while (s->running) {
+
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		mat4 model, view, proj;
+		view = lookAt(vec3(3, 3, -3), vec3(0, 0, 0), vec3(0, 1, 0));
+		proj = perspective(45.0f, (GLfloat)s->w / (GLfloat)s->h, 0.1f, 100.0f);
+
+		glUniformMatrix4fv(glGetUniformLocation(s->shader, "model"), 1, GL_FALSE, value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(s->shader, "view"), 1, GL_FALSE, value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(s->shader, "proj"), 1, GL_FALSE, value_ptr(proj));
+
+		glBindVertexArray(s->VAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glBindVertexArray(0);
+
+		SDL_GL_SwapWindow(s->window);
+
 		SDL_Event ev;
 		while (SDL_PollEvent(&ev) != 0) {
 			switch (ev.type) {
@@ -65,6 +84,7 @@ void setup(state* s, int w, int h) {
 	glAttachShader(s->shader, vert);
 	glAttachShader(s->shader, frag);
 	glLinkProgram(s->shader);
+	glUseProgram(s->shader);
 
 	glDeleteShader(vert);
 	glDeleteShader(frag);
