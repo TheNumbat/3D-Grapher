@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include <assert.h>
 #include <SDL.h>
@@ -17,12 +18,19 @@
 using namespace glm;
 using namespace std;
 
+struct graph {
+	vector<op> eq;
+	vector<vector<float>> data;
+	float xmin, xmax, ymin, ymax, xrez, yrez;
+};
+
 struct state {
 	SDL_GLContext context;
 	GLuint shader, VAO, VBO;
 	SDL_Window* window;
 	int w, h;
 	bool running;
+	graph g;
 };
 
 const GLchar* vertex = {

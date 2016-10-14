@@ -6,8 +6,8 @@
 
 using namespace std;
 
-const double e = 2.7182818284590452353602874713527;
-const double pi = 3.141592653589793238462643383279;
+const double val_e = 2.7182818284590452353602874713527;
+const double val_pi = 3.141592653589793238462643383279;
 
 typedef int op;
 
@@ -77,11 +77,13 @@ void welcome(ostream& out) {
 		<< endl;
 }
 
+#define get2() two = s.top(); \
+			   s.pop(); \
+			   one = s.top(); \
+			   s.pop();
 
-#define get() two = s.top(); \
-			  s.pop(); \
-			  one = s.top(); \
-			  s.pop();
+#define get1() one = s.top(); \
+			   s.pop();
 
 float eval(vector<op> EQ, float x, float y) {
 	stack<float> s;
@@ -89,123 +91,108 @@ float eval(vector<op> EQ, float x, float y) {
 	for (int index = 0; index < EQ.size(); index++) {
 		switch (EQ[index]) {
 		case add:
-			get();
+			get2();
 			result = one + two;
 			s.push(result);
 			break;
 		case subtract:
-			get();
+			get2();
 			result = one - two;
 			s.push(result);
 			break;
 		case multiply:
-			get();
+			get2();
 			result = one * two;
 			s.push(result);
 			break;
 		case divide:
-			get();
+			get2();
 			result = one / two;
 			s.push(result);
 			break;
+		case modulo:
+			get2();
+			result = fmod(one, two);
+			s.push(result);
+			break;
 		case power:
-			get();
+			get2();
 			result = pow(one, two);
 			s.push(result);
 			break;
 		case op_sqrt:
-			one = s.top();
-			s.pop();
+			get1();
 			result = sqrt(one);
 			s.push(result);
 			break;
 		case op_sin:
-			one = s.top();
-			s.pop();
+			get1();
 			result = sin(one);
 			s.push(result);
 			break;
 		case op_cos:
-			one = s.top();
-			s.pop();
+			get1();
 			result = cos(one);
 			s.push(result);
 			break;
 		case op_tan:
-			one = s.top();
-			s.pop();
+			get1();
 			result = tan(one);
 			s.push(result);
 			break;
 		case op_asin:
-			one = s.top();
-			s.pop();
+			get1();
 			result = asin(one);
 			s.push(result);
 			break;
 		case op_acos:
-			one = s.top();
-			s.pop();
+			get1();
 			result = acos(one);
 			s.push(result);
 			break;
 		case op_atan:
-			one = s.top();
-			s.pop();
+			get1();
 			result = atan(one);
 			s.push(result);
 			break;
 		case op_abs:
-			one = s.top();
-			s.pop();
+			get1();
 			result = abs(one);
 			s.push(result);
 			break;
 		case op_exp:
-			one = s.top();
-			s.pop();
+			get1();
 			result = exp(one);
 			s.push(result);
 			break;
 		case op_exptwo:
-			one = s.top();
-			s.pop();
+			get1();
 			result = exp2(one);
 			s.push(result);
 			break;
 		case op_ceil:
-			one = s.top();
-			s.pop();
+			get1();
 			result = ceil(one);
 			s.push(result);
 			break;
 		case op_floor:
-			one = s.top();
-			s.pop();
+			get1();
 			result = floor(one);
 			s.push(result);
 			break;
 		case op_ln:
-			one = s.top();
-			s.pop();
+			get1();
 			result = log(one);
 			s.push(result);
 			break;
 		case op_log:
-			one = s.top();
-			s.pop();
+			get1();
 			result = log10(one);
 			s.push(result);
 			break;
 		case op_log2:
-			one = s.top();
-			s.pop();
+			get1();
 			result = log2(one);
-			s.push(result);
-			break;
-		case modulo:
-			get();
-			result = fmod(one, two);
 			s.push(result);
 			break;
 		case var_x:
@@ -215,10 +202,10 @@ float eval(vector<op> EQ, float x, float y) {
 			s.push(y);
 			break;
 		case const_e:
-			s.push(e);
+			s.push(val_e);
 			break;
 		case const_pi:
-			s.push(pi);
+			s.push(val_pi);
 			break;
 		default:
 			int i2 = index;

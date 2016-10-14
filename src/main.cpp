@@ -5,15 +5,71 @@
 using namespace std;
 
 void loop(state* s);
+void setup(state* s, int w, int h);
+void kill(state* s);
+void gengraph(state* s);
 
 int main(int argc, char** args) {
 	//welcome(cout);
 	state st;
 	setup(&st, 640, 480);
 
+	string exp;
+	stringstream ss;
+	cout << "xmin: ";
+	cin >> st.g.xmin;
+	cout << "xmax: ";
+	cin >> st.g.xmax;
+	cout << "ymin: ";
+	cin >> st.g.ymin;
+	cout << "ymax: ";
+	cin >> st.g.ymax;
+	cout << "xrez: ";
+	cin >> st.g.xrez;
+	cout << "yrez: ";
+	cin >> st.g.yrez;
+	cout << "exp: ";
+
+	cin.ignore();
+	getline(cin, exp);
+
+	ss << exp;
+	in(ss, st.g.eq);
+	printeq(cout, st.g.eq);
+
+	gengraph(&st);
+
 	loop(&st);
 
+	kill(&st);
+
 	return 0;
+}
+
+void gengraph(state* s) {
+	float dx = (s->g.xmax - s->g.xmin) / s->g.xrez;
+	float dy = (s->g.ymax - s->g.ymin) / s->g.yrez;
+
+	int xc = 0;
+	for (float x = s->g.xmin; x <= s->g.xmax; x += dx, xc++) {
+		s->g.data.push_back(vector<float>());
+		for (float y = s->g.ymin; y <= s->g.ymax; y += dy) {
+			s->g.data[xc].push_back(eval(s->g.eq, x, y));
+		}
+	}
+
+	for (auto v : s->g.data) {
+		for (float f : v) {
+			cout << f << " ";
+		}
+		cout << endl;
+	}
+}
+
+void kill(state* s) {
+	SDL_GL_DeleteContext(s->context);
+	SDL_DestroyWindow(s->window);
+	SDL_Quit();
 }
 
 void loop(state* s) {
