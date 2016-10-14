@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <limits>
 
 #include <assert.h>
 #include <SDL.h>
@@ -20,17 +21,22 @@ using namespace std;
 
 struct graph {
 	vector<op> eq;
-	vector<vector<float>> data;
 	float xmin, xmax, ymin, ymax, xrez, yrez;
+	float zoom;
 };
 
 struct state {
-	SDL_GLContext context;
-	GLuint shader, VAO, VBO;
 	SDL_Window* window;
 	int w, h;
-	bool running;
+	SDL_GLContext context;
+	GLuint shader, VAO, VBO;
+	
+	vector<float> verticies;
+	int stride;
+
 	graph g;
+
+	bool running;
 };
 
 const GLchar* vertex = {
@@ -60,46 +66,20 @@ const GLchar* fragment = {
 	"}\n"
 };
 
-const GLfloat cube[] = {
-	-0.5f, -0.5f, -0.5f,  	0.5f, 0.5f, 0.5f,
-	 0.5f, -0.5f, -0.5f,  	0.5f, 0.5f, 0.5f,
-	 0.5f,  0.5f, -0.5f,  	0.5f, 0.5f, 0.5f,
-	 0.5f,  0.5f, -0.5f,  	0.5f, 0.5f, 0.5f,
-	-0.5f,  0.5f, -0.5f,  	0.5f, 0.5f, 0.5f,
-	-0.5f, -0.5f, -0.5f,  	0.5f, 0.5f, 0.5f,
+const int x_min = 0;
+const int x_max = 6;
+const int y_min = 13;
+const int y_max = 19;
+const int z_min = 26;
+const int z_max = 32;
 
-	-0.5f, -0.5f,  0.5f,  	0.5f, 0.5f, 0.5f,
-	 0.5f, -0.5f,  0.5f,  	0.5f, 0.5f, 0.5f,
-	 0.5f,  0.5f,  0.5f,  	0.5f, 0.5f, 0.5f,
-	 0.5f,  0.5f,  0.5f,  	0.5f, 0.5f, 0.5f,
-	-0.5f,  0.5f,  0.5f,  	0.5f, 0.5f, 0.5f,
-	-0.5f, -0.5f,  0.5f,  	0.5f, 0.5f, 0.5f,
+GLfloat axes[] = {
+	 0.0f, 0.0f, 0.0f,		1.0f, 0.0f, 0.0f,
+	 0.0f, 0.0f, 0.0f,  	1.0f, 0.0f, 0.0f,
 
-	-0.5f,  0.5f,  0.5f,  	0.5f, 0.5f, 0.5f,
-	-0.5f,  0.5f, -0.5f,  	0.5f, 0.5f, 0.5f,
-	-0.5f, -0.5f, -0.5f,  	0.5f, 0.5f, 0.5f,
-	-0.5f, -0.5f, -0.5f,  	0.5f, 0.5f, 0.5f,
-	-0.5f, -0.5f,  0.5f,  	0.5f, 0.5f, 0.5f,
-	-0.5f,  0.5f,  0.5f,  	0.5f, 0.5f, 0.5f,
+	 0.0f, 0.0f, 0.0f,  	0.0f, 1.0f, 0.0f,
+	 0.0f, 0.0f, 0.0f,  	0.0f, 1.0f, 0.0f,
 
-	 0.5f,  0.5f,  0.5f,  	0.5f, 0.5f, 0.5f,
-	 0.5f,  0.5f, -0.5f,  	0.5f, 0.5f, 0.5f,
-	 0.5f, -0.5f, -0.5f,  	0.5f, 0.5f, 0.5f,
-	 0.5f, -0.5f, -0.5f,  	0.5f, 0.5f, 0.5f,
-	 0.5f, -0.5f,  0.5f,  	0.5f, 0.5f, 0.5f,
-	 0.5f,  0.5f,  0.5f,  	0.5f, 0.5f, 0.5f,
-
-	-0.5f, -0.5f, -0.5f,  	0.5f, 0.5f, 0.5f,
-	 0.5f, -0.5f, -0.5f,  	0.5f, 0.5f, 0.5f,
-	 0.5f, -0.5f,  0.5f,  	0.5f, 0.5f, 0.5f,
-	 0.5f, -0.5f,  0.5f,  	0.5f, 0.5f, 0.5f,
-	-0.5f, -0.5f,  0.5f,  	0.5f, 0.5f, 0.5f,
-	-0.5f, -0.5f, -0.5f,  	0.5f, 0.5f, 0.5f,
-
-	-0.5f,  0.5f, -0.5f,  	0.5f, 0.5f, 0.5f,
-	 0.5f,  0.5f, -0.5f,  	0.5f, 0.5f, 0.5f,
-	 0.5f,  0.5f,  0.5f,  	0.5f, 0.5f, 0.5f,
-	 0.5f,  0.5f,  0.5f,  	0.5f, 0.5f, 0.5f,
-	-0.5f,  0.5f,  0.5f,  	0.5f, 0.5f, 0.5f,
-	-0.5f,  0.5f, -0.5f,  	0.5f, 0.5f, 0.5f
+	 0.0f, 0.0f, 0.0f,  	0.0f, 0.0f, 1.0f,
+	 0.0f, 0.0f, 0.0f,  	0.0f, 0.0f, 1.0f
 };
