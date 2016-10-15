@@ -39,7 +39,10 @@ int main(int argc, char** args) {
 	in(ss, st.g.eq);
 	printeq(cout, st.g.eq);
 
+	Uint64 start = SDL_GetPerformanceCounter();
 	gengraph(&st);
+	Uint64 end = SDL_GetPerformanceCounter();
+	cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << endl;
 
 	loop(&st);
 
