@@ -12,7 +12,7 @@ const double val_pi = 3.141592653589793238462643383279;
 typedef int op;
 
 void welcome(ostream& out);
-float eval(vector<op> EQ, float x, float y);
+float eval(const vector<op>& EQ, float x, float y);
 bool in(istream& in, vector<op>& EQ);
 void printeq(ostream& out, vector<op> eq);
 
@@ -85,7 +85,7 @@ void welcome(ostream& out) {
 #define get1() one = s.top(); \
 			   s.pop();
 
-float eval(vector<op> EQ, float x, float y) {
+float eval(const vector<op>& EQ, float x, float y) {
 	stack<float> s;
 	float one = 0, two = 0, result = 0;
 	int size = EQ.size();

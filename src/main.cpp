@@ -79,6 +79,10 @@ void genthread(gendata* g) {
 
 void gengraph(state* s) {
 	unsigned int numthreads = thread::hardware_concurrency();
+	int cpuinfo[4];
+	__cpuid(cpuinfo, 1);
+	bool HT = (cpuinfo[3] & (1 << 28)) > 0;
+	if (HT) numthreads /= 2;
 
 	s->verticies.clear();
 	s->g.zoom = 0.2f;
@@ -107,6 +111,7 @@ void gengraph(state* s) {
 	for (int i = 0; i < numthreads; i++) {
 		threads[i].join();
 		s->verticies.insert(s->verticies.end(), data[i].ret.begin(), data[i].ret.end());
+		data[i].ret.clear();
 	}
 
 	axes[x_min] = s->g.xmin * s->g.zoom;
