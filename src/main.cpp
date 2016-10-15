@@ -3,12 +3,11 @@
 #include "main.h"
 
 using namespace std;
-
+ 
 void loop(state* s);
 void setup(state* s, int w, int h);
 void kill(state* s);
 void gengraph(state* s);
-void printverts(state* s);
 
 int main(int argc, char** args) {
 	//welcome(cout);
@@ -51,47 +50,84 @@ int main(int argc, char** args) {
 	return 0;
 }
 
+struct gendata {
+	gendata() {
+		zmin = FLT_MAX;
+		zmax = -FLT_MAX;
+	};
+	state* s;
+	vector<float> ret;
+	float zoom, dx, dy, xmin, xmax, ymin, ymax, zmin, zmax;
+};
+void genthread(gendata* g) {
+	for (float x = g->xmin; x < g->xmax; x += g->dx) {
+		for (float y = g->ymin; y < g->ymax; y += g->dy) {
+			float z = eval(g->s->g.eq, x, y);
+
+			if (z < g->zmin) g->zmin = z;
+			else if (z > g->zmax) g->zmax = z;
+
+			g->ret.push_back(x*g->zoom);
+			g->ret.push_back(y*g->zoom);
+			g->ret.push_back(z*g->zoom);
+			g->ret.push_back(0);
+			g->ret.push_back(0);
+			g->ret.push_back(0);
+		}
+	}
+}
+
 void gengraph(state* s) {
+	unsigned int numthreads = thread::hardware_concurrency();
+	int cpuinfo[4];
+	__cpuid(cpuinfo, 1);
+	bool HT = (cpuinfo[3] & (1 << 28)) > 0;
+	if (HT) numthreads /= 2;
+
 	s->verticies.clear();
 	s->g.zoom = 0.2f;
+
 	float dx = (s->g.xmax - s->g.xmin) / s->g.xrez;
 	float dy = (s->g.ymax - s->g.ymin) / s->g.yrez;
 
-	float zmin = numeric_limits<float>::max(), zmax = numeric_limits<float>::min();
-	for (float x = s->g.xmin; x <= s->g.xmax; x += dx) {
-		int yc = 0;
-		for (float y = s->g.ymin; y <= s->g.ymax; y += dy, yc++) {
-			float z = eval(s->g.eq, x, y);
-			
-			if (z < zmin) zmin = z;
-			else if (z > zmax) zmax = z;
-
-			s->verticies.push_back(x*s->g.zoom);
-			s->verticies.push_back(y*s->g.zoom);
-			s->verticies.push_back(z*s->g.zoom);
-			s->verticies.push_back(0);
-			s->verticies.push_back(0);
-			s->verticies.push_back(0);
-		}
-		s->stride = yc;
+	float txDelta = (s->g.xmax - s->g.xmin) / numthreads;
+	float txmin = s->g.xmin, txmax = s->g.xmin;
+	
+	vector<thread> threads;
+	gendata* data = new gendata[numthreads];
+	for (int i = 0; i < numthreads; i++) {
+		txmax += txDelta;
+		data[i].s = s;
+		data[i].dx = dx;
+		data[i].dy = dy;
+		data[i].xmin = txmin;
+		data[i].xmax = txmax;
+		data[i].ymin = s->g.ymin;
+		data[i].ymax = s->g.ymax;
+		data[i].zoom = s->g.zoom;
+		threads.push_back(thread(genthread, &data[i]));
+		txmin += txDelta;
+	}
+	for (int i = 0; i < numthreads; i++) {
+		threads[i].join();
+		s->verticies.insert(s->verticies.end(), data[i].ret.begin(), data[i].ret.end());
+		data[i].ret.clear();
 	}
 
 	axes[x_min] = s->g.xmin * s->g.zoom;
 	axes[x_max] = s->g.xmax * s->g.zoom;
 	axes[y_min] = s->g.ymin * s->g.zoom;
 	axes[y_max] = s->g.ymax * s->g.zoom;
+
+	float zmin = FLT_MAX, zmax = -FLT_MAX;
+	for (int i = 0; i < numthreads; i++) {
+		if (data[i].zmin < zmin) zmin = data[i].zmin;
+		if (data[i].zmax > zmax) zmax = data[i].zmax;
+	}
 	axes[z_min] = zmin * s->g.zoom;
 	axes[z_max] = zmax * s->g.zoom;
-}
 
-void printverts(state* s) {
-	for (int i = 2, j = 0; i < s->verticies.size(); i += 6, j++) {
-		if (j == s->stride) {
-			cout << endl;
-			j = 0;
-		}
-		cout << s->verticies[i] / s->g.zoom << " ";
-	}
+	delete[] data;
 }
 
 void kill(state* s) {
@@ -102,7 +138,7 @@ void kill(state* s) {
 
 void loop(state* s) {
 	while (s->running) {
-
+		
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -117,15 +153,13 @@ void loop(state* s) {
 		glUniformMatrix4fv(glGetUniformLocation(s->shader, "view"), 1, GL_FALSE, value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(s->shader, "proj"), 1, GL_FALSE, value_ptr(proj));
 
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->verticies.size(), &s->verticies[0], GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->verticies.size(), s->verticies.size() ? &s->verticies[0] : NULL, GL_STATIC_DRAW);
 		glDrawArrays(GL_POINTS, 0, s->verticies.size() / 6);
 
 		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
 		glDrawArrays(GL_LINES, 0, 6);
 
 		glBindVertexArray(0);
-
-		SDL_GL_SwapWindow(s->window);
 
 		SDL_Event ev;
 		while (SDL_PollEvent(&ev) != 0) {
@@ -140,8 +174,16 @@ void loop(state* s) {
 					glViewport(0, 0, s->w, s->h);
 				}
 				break;
+			case SDL_KEYDOWN:
+				if (ev.key.keysym.sym == SDLK_ESCAPE) {
+					s->running = false;
+				}
+				break;
 			}
 		}
+
+		SDL_GL_SwapWindow(s->window);
+		SDL_Delay(10);
 	}
 }
 
@@ -158,7 +200,7 @@ void setup(state* s, int w, int h) {
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetSwapInterval(1);
+	SDL_GL_SetSwapInterval(-1);
 
 	s->context = SDL_GL_CreateContext(s->window);
 	assert(s->context);
