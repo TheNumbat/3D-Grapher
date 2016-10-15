@@ -88,7 +88,8 @@ void welcome(ostream& out) {
 float eval(vector<op> EQ, float x, float y) {
 	stack<float> s;
 	float one = 0, two = 0, result = 0;
-	for (int index = 0; index < EQ.size(); index++) {
+	int size = EQ.size();
+	for (int index = 0; index < size; index++) {
 		switch (EQ[index]) {
 		case add:
 			get2();

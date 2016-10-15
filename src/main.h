@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 #include <limits>
+#include <thread>
+#include <atomic>
 
 #include <assert.h>
 #include <SDL.h>
@@ -32,7 +34,6 @@ struct state {
 	GLuint shader, VAO, VBO;
 	
 	vector<float> verticies;
-	int stride;
 
 	graph g;
 
