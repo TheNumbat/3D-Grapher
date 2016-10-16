@@ -57,19 +57,31 @@ struct gendata {
 	};
 	state* s;
 	vector<float> ret;
-	float zoom, dx, dy, xmin, xmax, ymin, ymax, zmin, zmax;
+	float dx, dy, xmin, xmax, ymin, ymax, zmin, zmax;
 };
+
+float clamp(float one, float two) {
+	if (one > 0)
+		return one - fmod(one, two);
+	else if (one < 0)
+		return one + fmod(-one, two);
+	else
+		return one;
+}
+
 void genthread(gendata* g) {
-	for (float x = g->xmin; x < g->xmax; x += g->dx) {
+	float xmin = clamp(g->xmin, g->dx);
+	float xmax = clamp(g->xmax, g->dx);
+	for (float x = xmin; x < xmax; x += g->dx) {
 		for (float y = g->ymin; y < g->ymax; y += g->dy) {
 			float z = eval(g->s->g.eq, x, y);
 
 			if (z < g->zmin) g->zmin = z;
 			else if (z > g->zmax) g->zmax = z;
 
-			g->ret.push_back(x*g->zoom);
-			g->ret.push_back(y*g->zoom);
-			g->ret.push_back(z*g->zoom);
+			g->ret.push_back(x);
+			g->ret.push_back(y);
+			g->ret.push_back(z);
 			g->ret.push_back(0);
 			g->ret.push_back(0);
 			g->ret.push_back(0);
@@ -85,10 +97,11 @@ void gengraph(state* s) {
 	if (HT) numthreads /= 2;
 
 	s->verticies.clear();
-	s->g.zoom = 0.2f;
 
 	float dx = (s->g.xmax - s->g.xmin) / s->g.xrez;
 	float dy = (s->g.ymax - s->g.ymin) / s->g.yrez;
+	s->g.xmax += dx;
+	s->g.ymax += dy;
 
 	float txDelta = (s->g.xmax - s->g.xmin) / numthreads;
 	float txmin = s->g.xmin, txmax = s->g.xmin;
@@ -104,9 +117,8 @@ void gengraph(state* s) {
 		data[i].xmax = txmax;
 		data[i].ymin = s->g.ymin;
 		data[i].ymax = s->g.ymax;
-		data[i].zoom = s->g.zoom;
 		threads.push_back(thread(genthread, &data[i]));
-		txmin += txDelta;
+		txmin = txmax;
 	}
 	for (int i = 0; i < numthreads; i++) {
 		threads[i].join();
@@ -114,18 +126,18 @@ void gengraph(state* s) {
 		data[i].ret.clear();
 	}
 
-	axes[x_min] = s->g.xmin * s->g.zoom;
-	axes[x_max] = s->g.xmax * s->g.zoom;
-	axes[y_min] = s->g.ymin * s->g.zoom;
-	axes[y_max] = s->g.ymax * s->g.zoom;
+	axes[x_min] = s->g.xmin;
+	axes[x_max] = s->g.xmax - dx;
+	axes[y_min] = s->g.ymin;
+	axes[y_max] = s->g.ymax - dy;
 
 	float zmin = FLT_MAX, zmax = -FLT_MAX;
 	for (int i = 0; i < numthreads; i++) {
 		if (data[i].zmin < zmin) zmin = data[i].zmin;
 		if (data[i].zmax > zmax) zmax = data[i].zmax;
 	}
-	axes[z_min] = zmin * s->g.zoom;
-	axes[z_max] = zmax * s->g.zoom;
+	axes[z_min] = zmin;
+	axes[z_max] = zmax;
 
 	delete[] data;
 }
@@ -145,8 +157,9 @@ void loop(state* s) {
 		glBindVertexArray(s->VAO);
 
 		mat4 model, view, proj;
-		model = rotate(model, radians(90.0f), vec3(1, 0, 0));
 		view = lookAt(vec3(5.0f * sin(SDL_GetTicks() / 1000.0f), 3, 5.0f * cos(SDL_GetTicks() / 1000.0f)), vec3(0, 0, 0), vec3(0, 1, 0));
+		view = rotate(view, radians(90.0f), vec3(1, 0, 0));
+		view = rotate(view, radians(180.0f), vec3(0, 1, 0));
 		proj = perspective(radians(60.0f), (GLfloat)s->w / (GLfloat)s->h, 0.1f, 100.0f);
 
 		glUniformMatrix4fv(glGetUniformLocation(s->shader, "model"), 1, GL_FALSE, value_ptr(model));

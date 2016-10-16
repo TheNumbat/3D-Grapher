@@ -24,7 +24,6 @@ using namespace std;
 struct graph {
 	vector<op> eq;
 	float xmin, xmax, ymin, ymax, xrez, yrez;
-	float zoom;
 };
 
 struct state {
