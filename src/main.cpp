@@ -126,6 +126,19 @@ void gengraph(state* s) {
 		data[i].ret.clear();
 	}
 
+	for (int x = 0; x < s->g.xrez; x++) {
+		for (int y = 0; y < s->g.yrez; y++) {
+			GLuint index = x*s->g.xrez + y;
+			s->indicies.push_back(index);
+			s->indicies.push_back(index + 1);
+			s->indicies.push_back(index + s->g.xrez);
+
+			s->indicies.push_back(index + 1);
+			s->indicies.push_back(index + s->g.xrez);
+			s->indicies.push_back(index + s->g.xrez + 1);
+		}
+	}
+
 	axes[x_min] = s->g.xmin;
 	axes[x_max] = s->g.xmax - dx;
 	axes[y_min] = s->g.ymin;
@@ -166,10 +179,16 @@ void loop(state* s) {
 		glUniformMatrix4fv(glGetUniformLocation(s->shader, "view"), 1, GL_FALSE, value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(s->shader, "proj"), 1, GL_FALSE, value_ptr(proj));
 
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * s->indicies.size(), s->indicies.size() ? &s->indicies[0] : NULL, GL_STATIC_DRAW);
+
 		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->verticies.size(), s->verticies.size() ? &s->verticies[0] : NULL, GL_STATIC_DRAW);
-		glDrawArrays(GL_POINTS, 0, s->verticies.size() / 6);
+		
+		glEnable(GL_BLEND);
+		glDrawElements(GL_TRIANGLES, s->indicies.size(), GL_UNSIGNED_INT, 0);
 
 		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
+
+		glDisable(GL_BLEND);
 		glDrawArrays(GL_LINES, 0, 6);
 
 		glBindVertexArray(0);
@@ -196,7 +215,6 @@ void loop(state* s) {
 		}
 
 		SDL_GL_SwapWindow(s->window);
-		SDL_Delay(10);
 	}
 }
 
@@ -222,6 +240,7 @@ void setup(state* s, int w, int h) {
 	glewInit();
 
 	glEnable(GL_DEPTH_TEST);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glViewport(0, 0, w, h);
 
 	GLuint vert, frag;
@@ -243,9 +262,11 @@ void setup(state* s, int w, int h) {
 	
 	glGenVertexArrays(1, &s->VAO);
 	glGenBuffers(1, &s->VBO);
+	glGenBuffers(1, &s->EBO);
 	glBindVertexArray(s->VAO);
 	
 	glBindBuffer(GL_ARRAY_BUFFER, s->VBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->EBO);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);

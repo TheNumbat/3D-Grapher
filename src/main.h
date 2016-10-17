@@ -30,9 +30,10 @@ struct state {
 	SDL_Window* window;
 	int w, h;
 	SDL_GLContext context;
-	GLuint shader, VAO, VBO;
+	GLuint shader, VAO, VBO, EBO;
 	
-	vector<float> verticies;
+	vector<GLfloat> verticies;
+	vector<GLuint> indicies;
 
 	graph g;
 
@@ -62,7 +63,7 @@ const GLchar* fragment = {
 	"out vec4 color;\n"
 
 	"void main() {\n"
-	"	color = vec4(vcolor, 1.0f);\n"
+	"	color = vec4(vcolor, 0.1f);\n"
 	"}\n"
 };
 
