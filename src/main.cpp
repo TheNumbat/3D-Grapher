@@ -149,6 +149,8 @@ void gengraph(state* s) {
 		if (data[i].zmin < zmin) zmin = data[i].zmin;
 		if (data[i].zmax > zmax) zmax = data[i].zmax;
 	}
+	if (zmin > 0) zmin = 0;
+	if (zmax < 0) zmax = 0;
 	axes[z_min] = zmin;
 	axes[z_max] = zmax;
 
@@ -170,10 +172,10 @@ void loop(state* s) {
 		glBindVertexArray(s->VAO);
 
 		mat4 model, view, proj;
-		view = lookAt(vec3(5.0f * sin(SDL_GetTicks() / 1000.0f), 3, 5.0f * cos(SDL_GetTicks() / 1000.0f)), vec3(0, 0, 0), vec3(0, 1, 0));
+		view = lookAt(vec3(5.0f * sin(SDL_GetTicks() / 1000.0f), 5, 5.0f * cos(SDL_GetTicks() / 1000.0f)), vec3(0, 0, 0), vec3(0, 1, 0));
 		view = rotate(view, radians(90.0f), vec3(1, 0, 0));
 		view = rotate(view, radians(180.0f), vec3(0, 1, 0));
-		proj = perspective(radians(60.0f), (GLfloat)s->w / (GLfloat)s->h, 0.1f, 100.0f);
+		proj = perspective(radians(75.0f), (GLfloat)s->w / (GLfloat)s->h, 0.1f, 100.0f);
 
 		glUniformMatrix4fv(glGetUniformLocation(s->shader, "model"), 1, GL_FALSE, value_ptr(model));
 		glUniformMatrix4fv(glGetUniformLocation(s->shader, "view"), 1, GL_FALSE, value_ptr(view));
@@ -185,6 +187,7 @@ void loop(state* s) {
 		
 		glEnable(GL_BLEND);
 		glDrawElements(GL_TRIANGLES, s->indicies.size(), GL_UNSIGNED_INT, 0);
+		//glDrawArrays(GL_POINTS, 0, s->verticies.size() / 6);
 
 		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
 
