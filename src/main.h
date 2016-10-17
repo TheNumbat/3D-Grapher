@@ -63,7 +63,6 @@ const GLchar* fragment = {
 	"out vec4 color;\n"
 
 	"void main() {\n"
-	"	color = vec4(vcolor, 0.1f);\n"
 	"}\n"
 };
 
