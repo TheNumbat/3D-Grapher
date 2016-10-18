@@ -10,7 +10,7 @@ using namespace std;
 		// Text input
 		// Selection boxes (UI system?)
 	// Transparency, blending, maybe sorting
-	// Stuff like partials - alegriac? probably just numeric
+	// Stuff like partials - algebriac? probably just numeric
 
 void loop(state* s);
 void setup(state* s, int w, int h);
@@ -58,16 +58,6 @@ int main(int argc, char** args) {
 	return 0;
 }
 
-struct gendata {
-	gendata() {
-		zmin = FLT_MAX;
-		zmax = -FLT_MAX;
-	};
-	state* s;
-	vector<float> ret;
-	float dx, dy, xmin, xmax, ymin, ymax, zmin, zmax;
-};
-
 float clamp(float one, float two) {
 	if (one > 0)
 		return one - fmod(one, two);
@@ -88,9 +78,6 @@ void genthread(gendata* g) {
 			g->ret.push_back(x);
 			g->ret.push_back(y);
 			g->ret.push_back(z);
-			g->ret.push_back(0.2f);
-			g->ret.push_back(0.2f);
-			g->ret.push_back(0.2f);
 		}
 	}
 }
@@ -172,12 +159,12 @@ void kill(state* s) {
 }
 
 void loop(state* s) {
+	glBindVertexArray(s->VAO);
 	while (s->running) {
 		
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glBindVertexArray(s->VAO);
 
 		mat4 model, view, proj;
 		view = lookAt(vec3(5.0f * sin(SDL_GetTicks() / 2000.0f), 5, 5.0f * cos(SDL_GetTicks() / 2000.0f)), vec3(0, 0, 0), vec3(0, 1, 0));
@@ -185,18 +172,39 @@ void loop(state* s) {
 		view = rotate(view, radians(180.0f), vec3(0, 1, 0));
 		proj = perspective(radians(75.0f), (GLfloat)s->w / (GLfloat)s->h, 0.1f, 100.0f);
 
-		glUniformMatrix4fv(glGetUniformLocation(s->shader, "model"), 1, GL_FALSE, value_ptr(model));
-		glUniformMatrix4fv(glGetUniformLocation(s->shader, "view"), 1, GL_FALSE, value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(s->shader, "proj"), 1, GL_FALSE, value_ptr(proj));
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+
+		glUseProgram(s->graphShader);
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+		glEnableVertexAttribArray(0);
+
+		glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "model"), 1, GL_FALSE, value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "view"), 1, GL_FALSE, value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "proj"), 1, GL_FALSE, value_ptr(proj));
+		glUniform4f(glGetUniformLocation(s->graphShader, "vcolor"), 0.2f, 0.2f, 0.2f, 1.0f);
 
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * s->indicies.size(), s->indicies.size() ? &s->indicies[0] : NULL, GL_STATIC_DRAW);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->verticies.size(), s->verticies.size() ? &s->verticies[0] : NULL, GL_STATIC_DRAW);
 		
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glEnable(GL_BLEND);
 		glEnable(GL_DEPTH_TEST);
 		glDrawElements(GL_TRIANGLES, s->indicies.size(), GL_UNSIGNED_INT, (void*)0);
-		//glDrawArrays(GL_POINTS, 0, s->verticies.size() / 6);
+
+
+		glUseProgram(s->axisShader);
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+		glEnableVertexAttribArray(0);
+
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+		glEnableVertexAttribArray(1);
+
+		glUniformMatrix4fv(glGetUniformLocation(s->axisShader, "model"), 1, GL_FALSE, value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(s->axisShader, "view"), 1, GL_FALSE, value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(s->axisShader, "proj"), 1, GL_FALSE, value_ptr(proj));
 
 		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
 
@@ -205,7 +213,7 @@ void loop(state* s) {
 		glDisable(GL_DEPTH_TEST);
 		glDrawArrays(GL_LINES, 0, 6);
 		
-		glBindVertexArray(0);
+		glUseProgram(0);
 
 		SDL_Event ev;
 		while (SDL_PollEvent(&ev) != 0) {
@@ -257,22 +265,34 @@ void setup(state* s, int w, int h) {
 	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glViewport(0, 0, w, h);
 
-	GLuint vert, frag;
+	GLuint vert, frag, cvert, cfrag;
 	vert = glCreateShader(GL_VERTEX_SHADER);
+	cvert = glCreateShader(GL_VERTEX_SHADER);
 	frag = glCreateShader(GL_FRAGMENT_SHADER);
+	cfrag = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(vert, 1, &vertex, NULL);
+	glShaderSource(cvert, 1, &colorvertex, NULL);
 	glShaderSource(frag, 1, &fragment, NULL);
+	glShaderSource(cfrag, 1, &colorfragment, NULL);
 	glCompileShader(vert);
+	glCompileShader(cvert);
 	glCompileShader(frag);
+	glCompileShader(cfrag);
 
-	s->shader = glCreateProgram();
-	glAttachShader(s->shader, vert);
-	glAttachShader(s->shader, frag);
-	glLinkProgram(s->shader);
-	glUseProgram(s->shader);
+	s->graphShader = glCreateProgram();
+	glAttachShader(s->graphShader, vert);
+	glAttachShader(s->graphShader, frag);
+	glLinkProgram(s->graphShader);
+
+	s->axisShader = glCreateProgram();
+	glAttachShader(s->axisShader, cvert);
+	glAttachShader(s->axisShader, cfrag);
+	glLinkProgram(s->axisShader);
 
 	glDeleteShader(vert);
+	glDeleteShader(cvert);
 	glDeleteShader(frag);
+	glDeleteShader(cfrag);
 	
 	glGenVertexArrays(1, &s->VAO);
 	glGenBuffers(1, &s->VBO);
@@ -281,12 +301,6 @@ void setup(state* s, int w, int h) {
 	
 	glBindBuffer(GL_ARRAY_BUFFER, s->VBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->EBO);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
-	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(1);
 
 	glBindVertexArray(0);
 
