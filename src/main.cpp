@@ -3,12 +3,14 @@
 #include "main.h"
 
 using namespace std;
- 
 
 // TODO:
-	// Fix thread ranges clamped to values of dx/dy
 	// UI
 		// Text rendering
+		// Text input
+		// Selection boxes (UI system?)
+	// Transparency, blending, maybe sorting
+	// Stuff like partials - alegriac? probably just numeric
 
 void loop(state* s);
 void setup(state* s, int w, int h);
@@ -16,7 +18,7 @@ void kill(state* s);
 void gengraph(state* s);
 
 int main(int argc, char** args) {
-	//welcome(cout);
+	
 	state st;
 	setup(&st, 640, 480);
 
@@ -76,10 +78,8 @@ float clamp(float one, float two) {
 }
 
 void genthread(gendata* g) {
-	float xmin = g->xmin; //clamp(g->xmin, g->dx);
-	float xmax = g->xmax; //clamp(g->xmax, g->dx);
-	for (float x = xmin; x < xmax; x += g->dx) {
-		for (float y = g->ymin; y < g->ymax; y += g->dy) {
+	for (float x = g->xmin; x <= g->xmax; x += g->dx) {
+		for (float y = g->ymin; y <= g->ymax; y += g->dy) {
 			float z = eval(g->s->g.eq, x, y);
 
 			if (z < g->zmin) g->zmin = z;
