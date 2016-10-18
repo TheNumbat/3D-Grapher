@@ -108,12 +108,13 @@ void gengraph(state* s) {
 	float dy = (s->g.ymax - s->g.ymin) / s->g.yrez;
 
 	float txDelta = (s->g.xmax - s->g.xmin) / numthreads;
+	clamp(txDelta, dx);
 	float txmin = s->g.xmin, txmax = s->g.xmin;
 	
-	/*vector<thread> threads;
+	vector<thread> threads;
 	gendata* data = new gendata[numthreads];
 	for (int i = 0; i < numthreads; i++) {
-		txmax += txDelta;
+		txmax = txmin + txDelta;
 		data[i].s = s;
 		data[i].dx = dx;
 		data[i].dy = dy;
@@ -128,18 +129,7 @@ void gengraph(state* s) {
 		threads[i].join();
 		s->verticies.insert(s->verticies.end(), data[i].ret.begin(), data[i].ret.end());
 		data[i].ret.clear();
-	}*/
-
-	gendata data;
-	data.s = s;
-	data.dx = dx;
-	data.dy = dy;
-	data.xmin = s->g.xmin;
-	data.xmax = s->g.xmax;
-	data.ymin = s->g.ymin;
-	data.ymax = s->g.ymax;
-	genthread(&data);
-	s->verticies.insert(s->verticies.end(), data.ret.begin(), data.ret.end());
+	}
 
 	for (int x = 0; x < s->g.xrez; x++) {
 		for (int y = 0; y < s->g.yrez; y++) {
@@ -155,22 +145,21 @@ void gengraph(state* s) {
 	}
 
 	axes[x_min] = s->g.xmin;
-	axes[x_max] = s->g.xmax - dx;
+	axes[x_max] = s->g.xmax;
 	axes[y_min] = s->g.ymin;
-	axes[y_max] = s->g.ymax - dy;
+	axes[y_max] = s->g.ymax;
 
-	float zmin = data.zmin, zmax = data.zmax;
-	//float zmin = FLT_MAX, zmax = -FLT_MAX;
-	/*for (int i = 0; i < numthreads; i++) {
+	float zmin = FLT_MAX, zmax = -FLT_MAX;
+	for (int i = 0; i < numthreads; i++) {
 		if (data[i].zmin < zmin) zmin = data[i].zmin;
 		if (data[i].zmax > zmax) zmax = data[i].zmax;
-	}*/
+	}
 	if (zmin > 0) zmin = 0;
 	if (zmax < 0) zmax = 0;
 	axes[z_min] = zmin;
 	axes[z_max] = zmax;
 
-	//delete[] data;
+	delete[] data;
 }
 
 void kill(state* s) {
