@@ -108,13 +108,16 @@ void gengraph(state* s) {
 	float dy = (s->g.ymax - s->g.ymin) / s->g.yrez;
 
 	float txDelta = (s->g.xmax - s->g.xmin) / numthreads;
-	clamp(txDelta, dx);
+	txDelta = clamp(txDelta, dx);
 	float txmin = s->g.xmin, txmax = s->g.xmin;
 	
 	vector<thread> threads;
 	gendata* data = new gendata[numthreads];
 	for (int i = 0; i < numthreads; i++) {
-		txmax = txmin + txDelta;
+		if (i == numthreads - 1)
+			txmax = s->g.xmax;
+		else
+			txmax = txmin + txDelta;
 		data[i].s = s;
 		data[i].dx = dx;
 		data[i].dy = dy;
