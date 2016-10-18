@@ -4,6 +4,12 @@
 
 using namespace std;
  
+
+// TODO:
+	// Fix thread ranges clamped to values of dx/dy
+	// UI
+		// Text rendering
+
 void loop(state* s);
 void setup(state* s, int w, int h);
 void kill(state* s);
@@ -70,8 +76,8 @@ float clamp(float one, float two) {
 }
 
 void genthread(gendata* g) {
-	float xmin = clamp(g->xmin, g->dx);
-	float xmax = clamp(g->xmax, g->dx);
+	float xmin = g->xmin; //clamp(g->xmin, g->dx);
+	float xmax = g->xmax; //clamp(g->xmax, g->dx);
 	for (float x = xmin; x < xmax; x += g->dx) {
 		for (float y = g->ymin; y < g->ymax; y += g->dy) {
 			float z = eval(g->s->g.eq, x, y);
@@ -82,9 +88,9 @@ void genthread(gendata* g) {
 			g->ret.push_back(x);
 			g->ret.push_back(y);
 			g->ret.push_back(z);
-			g->ret.push_back(0);
-			g->ret.push_back(0);
-			g->ret.push_back(0);
+			g->ret.push_back(0.2f);
+			g->ret.push_back(0.2f);
+			g->ret.push_back(0.2f);
 		}
 	}
 }
@@ -100,13 +106,11 @@ void gengraph(state* s) {
 
 	float dx = (s->g.xmax - s->g.xmin) / s->g.xrez;
 	float dy = (s->g.ymax - s->g.ymin) / s->g.yrez;
-	s->g.xmax += dx;
-	s->g.ymax += dy;
 
 	float txDelta = (s->g.xmax - s->g.xmin) / numthreads;
 	float txmin = s->g.xmin, txmax = s->g.xmin;
 	
-	vector<thread> threads;
+	/*vector<thread> threads;
 	gendata* data = new gendata[numthreads];
 	for (int i = 0; i < numthreads; i++) {
 		txmax += txDelta;
@@ -118,24 +122,35 @@ void gengraph(state* s) {
 		data[i].ymin = s->g.ymin;
 		data[i].ymax = s->g.ymax;
 		threads.push_back(thread(genthread, &data[i]));
-		txmin = txmax;
+		txmin = txmax + dx;
 	}
 	for (int i = 0; i < numthreads; i++) {
 		threads[i].join();
 		s->verticies.insert(s->verticies.end(), data[i].ret.begin(), data[i].ret.end());
 		data[i].ret.clear();
-	}
+	}*/
+
+	gendata data;
+	data.s = s;
+	data.dx = dx;
+	data.dy = dy;
+	data.xmin = s->g.xmin;
+	data.xmax = s->g.xmax;
+	data.ymin = s->g.ymin;
+	data.ymax = s->g.ymax;
+	genthread(&data);
+	s->verticies.insert(s->verticies.end(), data.ret.begin(), data.ret.end());
 
 	for (int x = 0; x < s->g.xrez; x++) {
 		for (int y = 0; y < s->g.yrez; y++) {
-			GLuint index = x*s->g.xrez + y;
+			GLuint index = x*s->g.xrez + y + x;
 			s->indicies.push_back(index);
 			s->indicies.push_back(index + 1);
-			s->indicies.push_back(index + s->g.xrez);
+			s->indicies.push_back(index + s->g.xrez + 1);
 
 			s->indicies.push_back(index + 1);
-			s->indicies.push_back(index + s->g.xrez);
 			s->indicies.push_back(index + s->g.xrez + 1);
+			s->indicies.push_back(index + s->g.xrez + 2);
 		}
 	}
 
@@ -144,17 +159,18 @@ void gengraph(state* s) {
 	axes[y_min] = s->g.ymin;
 	axes[y_max] = s->g.ymax - dy;
 
-	float zmin = FLT_MAX, zmax = -FLT_MAX;
-	for (int i = 0; i < numthreads; i++) {
+	float zmin = data.zmin, zmax = data.zmax;
+	//float zmin = FLT_MAX, zmax = -FLT_MAX;
+	/*for (int i = 0; i < numthreads; i++) {
 		if (data[i].zmin < zmin) zmin = data[i].zmin;
 		if (data[i].zmax > zmax) zmax = data[i].zmax;
-	}
+	}*/
 	if (zmin > 0) zmin = 0;
 	if (zmax < 0) zmax = 0;
 	axes[z_min] = zmin;
 	axes[z_max] = zmax;
 
-	delete[] data;
+	//delete[] data;
 }
 
 void kill(state* s) {
@@ -172,7 +188,7 @@ void loop(state* s) {
 		glBindVertexArray(s->VAO);
 
 		mat4 model, view, proj;
-		view = lookAt(vec3(5.0f * sin(SDL_GetTicks() / 1000.0f), 5, 5.0f * cos(SDL_GetTicks() / 1000.0f)), vec3(0, 0, 0), vec3(0, 1, 0));
+		view = lookAt(vec3(5.0f * sin(SDL_GetTicks() / 2000.0f), 5, 5.0f * cos(SDL_GetTicks() / 2000.0f)), vec3(0, 0, 0), vec3(0, 1, 0));
 		view = rotate(view, radians(90.0f), vec3(1, 0, 0));
 		view = rotate(view, radians(180.0f), vec3(0, 1, 0));
 		proj = perspective(radians(75.0f), (GLfloat)s->w / (GLfloat)s->h, 0.1f, 100.0f);
@@ -182,18 +198,21 @@ void loop(state* s) {
 		glUniformMatrix4fv(glGetUniformLocation(s->shader, "proj"), 1, GL_FALSE, value_ptr(proj));
 
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * s->indicies.size(), s->indicies.size() ? &s->indicies[0] : NULL, GL_STATIC_DRAW);
-
 		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->verticies.size(), s->verticies.size() ? &s->verticies[0] : NULL, GL_STATIC_DRAW);
 		
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glEnable(GL_BLEND);
-		glDrawElements(GL_TRIANGLES, s->indicies.size(), GL_UNSIGNED_INT, 0);
+		glEnable(GL_DEPTH_TEST);
+		glDrawElements(GL_TRIANGLES, s->indicies.size(), GL_UNSIGNED_INT, (void*)0);
 		//glDrawArrays(GL_POINTS, 0, s->verticies.size() / 6);
 
 		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
 
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glDisable(GL_BLEND);
+		glDisable(GL_DEPTH_TEST);
 		glDrawArrays(GL_LINES, 0, 6);
-
+		
 		glBindVertexArray(0);
 
 		SDL_Event ev;
@@ -243,7 +262,7 @@ void setup(state* s, int w, int h) {
 	glewInit();
 
 	glEnable(GL_DEPTH_TEST);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glViewport(0, 0, w, h);
 
 	GLuint vert, frag;
