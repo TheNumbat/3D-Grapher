@@ -5,6 +5,7 @@
 using namespace std;
 
 // TODO:
+	// Thread partition still not 100% correct BabyRage
 	// UI
 		// Text rendering
 		// Text input
@@ -173,9 +174,6 @@ void loop(state* s) {
 		proj = perspective(radians(75.0f), (GLfloat)s->w / (GLfloat)s->h, 0.1f, 100.0f);
 
 
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-
 		glUseProgram(s->graphShader);
 
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
@@ -189,6 +187,7 @@ void loop(state* s) {
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * s->indicies.size(), s->indicies.size() ? &s->indicies[0] : NULL, GL_STATIC_DRAW);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->verticies.size(), s->verticies.size() ? &s->verticies[0] : NULL, GL_STATIC_DRAW);
 		
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glEnable(GL_BLEND);
 		glEnable(GL_DEPTH_TEST);
 		glDrawElements(GL_TRIANGLES, s->indicies.size(), GL_UNSIGNED_INT, (void*)0);
