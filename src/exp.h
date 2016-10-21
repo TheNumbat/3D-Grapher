@@ -270,8 +270,10 @@ bool in(istream& in, vector<op>& EQ) {
 				if (s.top() == open_p) {
 					s.pop();
 				}
-				EQ.push_back(s.top());
-				s.pop();
+				if (s.size()) {
+					EQ.push_back(s.top());
+					s.pop();
+				}
 			}
 			break;
 		case multiply:

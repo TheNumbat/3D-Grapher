@@ -5,13 +5,23 @@
 using namespace std;
 
 // TODO:
-	// Thread partition still not 100% correct BabyRage
+	// Fixes:
+		// Thread partitioning still not 100% correct
+		// Different x/y resolutions screw it up
+		// isnan / isinf need more tests
 	// UI
+		// Axis scales
 		// Text rendering
 		// Text input
-		// Selection boxes (UI system?)
-	// Transparency, blending, maybe sorting
-	// Stuff like partials - algebriac? probably just numeric
+		// Actual input system
+	// Rendering
+		// Camera movement, look, pan, etc.
+		// Transparency, blending, maybe sorting
+		// Lighting
+		// Multiple graphs
+	// More features
+		// Partials
+		// Double integrals?
 
 void loop(state* s);
 void setup(state* s, int w, int h);
@@ -125,13 +135,17 @@ void gengraph(state* s) {
 	for (int x = 0; x < s->g.xrez; x++) {
 		for (int y = 0; y < s->g.yrez; y++) {
 			GLuint index = x*s->g.xrez + y + x;
-			s->indicies.push_back(index);
-			s->indicies.push_back(index + 1);
-			s->indicies.push_back(index + s->g.xrez + 1);
 
-			s->indicies.push_back(index + 1);
-			s->indicies.push_back(index + s->g.xrez + 1);
-			s->indicies.push_back(index + s->g.xrez + 2);
+			if (!isnan(s->verticies[index * 3 + 2]) &&
+				!isinf(s->verticies[index * 3 + 2])) {
+				s->indicies.push_back(index);
+				s->indicies.push_back(index + 1);
+				s->indicies.push_back(index + s->g.xrez + 1);
+
+				s->indicies.push_back(index + 1);
+				s->indicies.push_back(index + s->g.xrez + 1);
+				s->indicies.push_back(index + s->g.xrez + 2);
+			}
 		}
 	}
 
