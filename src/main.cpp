@@ -79,8 +79,10 @@ float clamp(float one, float two) {
 }
 
 void genthread(gendata* g) {
-	for (float x = g->xmin; x <= g->xmax; x += g->dx) {
-		for (float y = g->ymin; y <= g->ymax; y += g->dy) {
+	float x = g->xmin;
+	for (unsigned int tx = 0; tx < g->txrez; tx++, x += g->dx) {
+		float y = g->s->g.ymin;
+		for (unsigned int ty = 0; ty <= g->s->g.yrez; ty++, y += g->dy) {
 			float z = eval(g->s->g.eq, x, y);
 
 			if (z < g->zmin) g->zmin = z;
@@ -104,27 +106,26 @@ void gengraph(state* s) {
 
 	float dx = (s->g.xmax - s->g.xmin) / s->g.xrez;
 	float dy = (s->g.ymax - s->g.ymin) / s->g.yrez;
-
-	float txDelta = (s->g.xmax - s->g.xmin) / numthreads;
-	txDelta = clamp(txDelta, dx);
-	float txmin = s->g.xmin, txmax = s->g.xmin;
+	float xmin = s->g.xmin;
+	unsigned int txDelta = s->g.xrez / numthreads;
+	unsigned int txLast = s->g.xrez % txDelta + txDelta + 1;
 	
 	vector<thread> threads;
 	gendata* data = new gendata[numthreads];
 	for (int i = 0; i < numthreads; i++) {
 		if (i == numthreads - 1)
-			txmax = s->g.xmax;
+			data[i].txrez = txLast;
 		else
-			txmax = txmin + txDelta;
+			data[i].txrez = txDelta;
+
 		data[i].s = s;
 		data[i].dx = dx;
 		data[i].dy = dy;
-		data[i].xmin = txmin;
-		data[i].xmax = txmax;
-		data[i].ymin = s->g.ymin;
-		data[i].ymax = s->g.ymax;
+		data[i].xmin = xmin;
+
 		threads.push_back(thread(genthread, &data[i]));
-		txmin = txmax + dx;
+
+		xmin += txDelta * dx;
 	}
 	for (int i = 0; i < numthreads; i++) {
 		threads[i].join();
@@ -132,19 +133,19 @@ void gengraph(state* s) {
 		data[i].ret.clear();
 	}
 
-	for (int x = 0; x < s->g.xrez; x++) {
-		for (int y = 0; y < s->g.yrez; y++) {
-			GLuint index = x*s->g.xrez + y + x;
+	for (unsigned int x = 0; x < s->g.xrez; x++) {
+		for (unsigned int y = 0; y < s->g.yrez; y++) {
+			GLuint index = x * (s->g.yrez + 1) + y;
 
 			if (!isnan(s->verticies[index * 3 + 2]) &&
 				!isinf(s->verticies[index * 3 + 2])) {
 				s->indicies.push_back(index);
 				s->indicies.push_back(index + 1);
-				s->indicies.push_back(index + s->g.xrez + 1);
+				s->indicies.push_back(index + s->g.yrez + 1);
 
 				s->indicies.push_back(index + 1);
-				s->indicies.push_back(index + s->g.xrez + 1);
-				s->indicies.push_back(index + s->g.xrez + 2);
+				s->indicies.push_back(index + s->g.yrez + 1);
+				s->indicies.push_back(index + s->g.yrez + 2);
 			}
 		}
 	}

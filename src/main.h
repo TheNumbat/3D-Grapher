@@ -22,7 +22,8 @@ using namespace std;
 
 struct graph {
 	vector<op> eq;
-	float xmin, xmax, ymin, ymax, xrez, yrez;
+	float xmin, xmax, ymin, ymax;
+	unsigned int xrez, yrez;
 };
 
 struct state {
@@ -46,7 +47,8 @@ struct gendata {
 	};
 	state* s;
 	vector<float> ret;
-	float dx, dy, xmin, xmax, ymin, ymax, zmin, zmax;
+	float zmin, zmax, xmin, dx, dy;
+	unsigned int txrez;
 };
 
 const GLchar* colorvertex = {
