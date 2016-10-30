@@ -5,10 +5,6 @@
 using namespace std;
 
 // TODO:
-	// Fixes:
-		// Thread partitioning still not 100% correct
-		// Different x/y resolutions screw it up
-		// isnan / isinf need more tests
 	// UI
 		// Axis scales
 		// Text rendering
@@ -22,6 +18,7 @@ using namespace std;
 	// More features
 		// Partials
 		// Double integrals?
+		// Probably a ton more stuff I can't think of right now
 
 void loop(state* s);
 void setup(state* s, int w, int h);
