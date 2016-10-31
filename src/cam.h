@@ -5,12 +5,14 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <math.h>
+#include <SDL.h>
 
 using namespace glm;
 
 struct cam {
 	vec3 pos, front, up, right, globalUp;
 	float pitch, yaw, speed, fov;
+	Uint32 lastUpdate;
 };
 
 mat4 getView(cam c) {
@@ -33,10 +35,11 @@ cam defaultCam() {
 	cam c;
 	c.pitch = 0.0f;
 	c.yaw = -20.0f;
-	c.speed = 0.5f;
+	c.speed = 5.0f;
 	c.fov = 90.0f;
 	c.pos = vec3(-5, -5, 0);
 	c.globalUp = vec3(0, 1, 0);
+	c.lastUpdate = SDL_GetTicks();
 	updoot(c);
 	return c;
 }

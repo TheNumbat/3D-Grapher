@@ -11,7 +11,7 @@ using namespace std;
 		// Text input
 		// Actual input system
 	// Rendering
-		// Make sure camera movement is good
+		// Improve Zoom
 		// Transparency, blending, maybe sorting
 		// Lighting
 		// Multiple graphs
@@ -39,9 +39,9 @@ int main(int argc, char** args) {
 	st.g.xmax = 20;
 	st.g.ymin = -20;
 	st.g.ymax = 20;
-	st.g.xrez = 200;
-	st.g.yrez = 200;
-	exp = "cos(x)*sin(y)";
+	st.g.xrez = 250;
+	st.g.yrez = 250;
+	exp = "5*cos(x)*sin(y)*sin(x)*cos(y)";
 
 	ss << exp;
 	in(ss, st.g.eq);
@@ -171,8 +171,12 @@ void kill(state* s) {
 }
 
 void loop(state* s) {
-	glBindVertexArray(s->VAO);
+	
 	int mx = s->w / 2, my = s->h / 2;
+	const unsigned char* keys = SDL_GetKeyboardState(NULL);
+
+	glBindVertexArray(s->VAO);
+
 	while (s->running) {
 		
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -192,14 +196,19 @@ void loop(state* s) {
 		glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "model"), 1, GL_FALSE, value_ptr(model));
 		glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "view"), 1, GL_FALSE, value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "proj"), 1, GL_FALSE, value_ptr(proj));
-		glUniform4f(glGetUniformLocation(s->graphShader, "vcolor"), 0.2f, 0.2f, 0.2f, 1.0f);
 
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * s->indicies.size(), s->indicies.size() ? &s->indicies[0] : NULL, GL_STATIC_DRAW);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->verticies.size(), s->verticies.size() ? &s->verticies[0] : NULL, GL_STATIC_DRAW);
-		
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 		glEnable(GL_BLEND);
 		glEnable(GL_DEPTH_TEST);
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glUniform4f(glGetUniformLocation(s->graphShader, "vcolor"), 0.8f, 0.8f, 0.8f, 1.0f);
+		glDrawElements(GL_TRIANGLES, s->indicies.size(), GL_UNSIGNED_INT, (void*)0);
+		
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glUniform4f(glGetUniformLocation(s->graphShader, "vcolor"), 0.0f, 0.0f, 0.0f, 1.0f);
 		glDrawElements(GL_TRIANGLES, s->indicies.size(), GL_UNSIGNED_INT, (void*)0);
 
 
@@ -249,29 +258,23 @@ void loop(state* s) {
 				mx = ev.motion.x;
 				my = ev.motion.y;
 				s->c.yaw += dx;
-				s->c.pitch += dy;
+				s->c.pitch -= dy;
 				if (s->c.yaw > 360.0f) s->c.yaw = 0.0f;
 				else if (s->c.yaw < 0.0f) s->c.yaw = 360.0f;
-				if (s->c.pitch > 90.0f) s->c.pitch = 90.0f;
-				else if (s->c.pitch < -90.0f) s->c.pitch = -90.0f;
+				if (s->c.pitch > 89.9f) s->c.pitch = 89.9f;
+				else if (s->c.pitch < -89.9f) s->c.pitch = -89.9f;
 				updoot(s->c);
-				cout << s->c.yaw << " " << s->c.pitch << endl;
+				break;
+			}
+			case SDL_MOUSEWHEEL: {
+				float sens = 5.0f;
+				s->c.fov -= ev.wheel.y * sens;
+				if (s->c.fov > 179.9f) s->c.fov = 179.9f;
+				else if (s->c.fov < 0.1f) s->c.fov = 0.1f;
 				break;
 			}
 			case SDL_KEYDOWN: {
 				switch (ev.key.keysym.sym) {
-				case SDLK_w:
-					s->c.pos += s->c.front * s->c.speed;
-					break;
-				case SDLK_s:
-					s->c.pos -= s->c.front * s->c.speed;
-					break;
-				case SDLK_a:
-					s->c.pos -= s->c.right * s->c.speed;
-					break;
-				case SDLK_d:
-					s->c.pos += s->c.right * s->c.speed;
-					break;
 				case SDLK_ESCAPE:
 					s->running = false;
 					break;
@@ -280,7 +283,20 @@ void loop(state* s) {
 			}
 			}
 		}
-
+		float dT = (SDL_GetTicks() - s->c.lastUpdate) / 1000.0f;
+		s->c.lastUpdate = SDL_GetTicks();
+		if (keys[SDL_SCANCODE_W]) {
+			s->c.pos += s->c.front * s->c.speed * dT;
+		}
+		if (keys[SDL_SCANCODE_S]) {
+			s->c.pos -= s->c.front * s->c.speed * dT;
+		}
+		if (keys[SDL_SCANCODE_A]) {
+			s->c.pos -= s->c.right * s->c.speed * dT;
+		}
+		if (keys[SDL_SCANCODE_D]) {
+			s->c.pos += s->c.right * s->c.speed * dT;
+		}
 		SDL_GL_SwapWindow(s->window);
 	}
 }
