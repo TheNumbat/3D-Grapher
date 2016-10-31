@@ -11,7 +11,7 @@ using namespace std;
 		// Text input
 		// Actual input system
 	// Rendering
-		// Camera movement, look, pan, etc.
+		// Make sure camera movement is good
 		// Transparency, blending, maybe sorting
 		// Lighting
 		// Multiple graphs
@@ -30,27 +30,18 @@ void gengraph(state* s);
 int main(int argc, char** args) {
 	
 	state st;
-	setup(&st, 640, 480);
+	setup(&st, 1280, 720);
 
-	welcome(cout);
 	string exp;
 	stringstream ss;
-	cout << "xmin: ";
-	cin >> st.g.xmin;
-	cout << "xmax: ";
-	cin >> st.g.xmax;
-	cout << "ymin: ";
-	cin >> st.g.ymin;
-	cout << "ymax: ";
-	cin >> st.g.ymax;
-	cout << "xrez: ";
-	cin >> st.g.xrez;
-	cout << "yrez: ";
-	cin >> st.g.yrez;
-	cout << "exp: ";
 
-	cin.ignore();
-	getline(cin, exp);
+	st.g.xmin = -20;
+	st.g.xmax = 20;
+	st.g.ymin = -20;
+	st.g.ymax = 20;
+	st.g.xrez = 200;
+	st.g.yrez = 200;
+	exp = "cos(x)*sin(y)";
 
 	ss << exp;
 	in(ss, st.g.eq);
@@ -181,18 +172,16 @@ void kill(state* s) {
 
 void loop(state* s) {
 	glBindVertexArray(s->VAO);
-	mat4 cam;
+	int mx = s->w / 2, my = s->h / 2;
 	while (s->running) {
 		
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-		mat4 model, proj;
-		cam = lookAt(vec3(5.0f * sin(SDL_GetTicks() / 2000.0f), 5, 5.0f * cos(SDL_GetTicks() / 2000.0f)), vec3(0, 0, 0), vec3(0, 1, 0));
-		cam = rotate(cam, radians(90.0f), vec3(1, 0, 0));
-		cam = rotate(cam, radians(180.0f), vec3(0, 1, 0));
-		proj = perspective(radians(75.0f), (GLfloat)s->w / (GLfloat)s->h, 0.1f, 100.0f);
+		mat4 model, view, proj;
+		view = getView(s->c);
+		proj = perspective(radians(s->c.fov), (GLfloat)s->w / (GLfloat)s->h, 0.1f, 1000.0f);
 
 
 		glUseProgram(s->graphShader);
@@ -201,7 +190,7 @@ void loop(state* s) {
 		glEnableVertexAttribArray(0);
 
 		glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "model"), 1, GL_FALSE, value_ptr(model));
-		glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "view"), 1, GL_FALSE, value_ptr(cam));
+		glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "view"), 1, GL_FALSE, value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "proj"), 1, GL_FALSE, value_ptr(proj));
 		glUniform4f(glGetUniformLocation(s->graphShader, "vcolor"), 0.2f, 0.2f, 0.2f, 1.0f);
 
@@ -223,7 +212,7 @@ void loop(state* s) {
 		glEnableVertexAttribArray(1);
 
 		glUniformMatrix4fv(glGetUniformLocation(s->axisShader, "model"), 1, GL_FALSE, value_ptr(model));
-		glUniformMatrix4fv(glGetUniformLocation(s->axisShader, "view"), 1, GL_FALSE, value_ptr(cam));
+		glUniformMatrix4fv(glGetUniformLocation(s->axisShader, "view"), 1, GL_FALSE, value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(s->axisShader, "proj"), 1, GL_FALSE, value_ptr(proj));
 
 		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
@@ -238,21 +227,57 @@ void loop(state* s) {
 		SDL_Event ev;
 		while (SDL_PollEvent(&ev) != 0) {
 			switch (ev.type) {
-			case SDL_QUIT:
+			case SDL_QUIT: {
 				s->running = false;
 				break;
-			case SDL_WINDOWEVENT:
+			}
+			case SDL_WINDOWEVENT: {
 				if (ev.window.event == SDL_WINDOWEVENT_RESIZED) {
 					s->w = ev.window.data1;
 					s->h = ev.window.data2;
 					glViewport(0, 0, s->w, s->h);
 				}
+				SDL_CaptureMouse(SDL_TRUE);
+				SDL_ShowCursor(0);
+				SDL_SetRelativeMouseMode(SDL_TRUE);
 				break;
-			case SDL_KEYDOWN:
-				if (ev.key.keysym.sym == SDLK_ESCAPE) {
+			}
+			case SDL_MOUSEMOTION: {
+				float sens = 0.1f;
+				float dx = (ev.motion.x - mx) * sens;
+				float dy = (ev.motion.y - my) * sens;
+				mx = ev.motion.x;
+				my = ev.motion.y;
+				s->c.yaw += dx;
+				s->c.pitch += dy;
+				if (s->c.yaw > 360.0f) s->c.yaw = 0.0f;
+				else if (s->c.yaw < 0.0f) s->c.yaw = 360.0f;
+				if (s->c.pitch > 90.0f) s->c.pitch = 90.0f;
+				else if (s->c.pitch < -90.0f) s->c.pitch = -90.0f;
+				updoot(s->c);
+				cout << s->c.yaw << " " << s->c.pitch << endl;
+				break;
+			}
+			case SDL_KEYDOWN: {
+				switch (ev.key.keysym.sym) {
+				case SDLK_w:
+					s->c.pos += s->c.front * s->c.speed;
+					break;
+				case SDLK_s:
+					s->c.pos -= s->c.front * s->c.speed;
+					break;
+				case SDLK_a:
+					s->c.pos -= s->c.right * s->c.speed;
+					break;
+				case SDLK_d:
+					s->c.pos += s->c.right * s->c.speed;
+					break;
+				case SDLK_ESCAPE:
 					s->running = false;
+					break;
 				}
 				break;
+			}
 			}
 		}
 
@@ -274,6 +299,9 @@ void setup(state* s, int w, int h) {
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetSwapInterval(-1);
+	SDL_CaptureMouse(SDL_TRUE);
+	SDL_ShowCursor(0);
+	SDL_SetRelativeMouseMode(SDL_TRUE);
 
 	s->context = SDL_GL_CreateContext(s->window);
 	assert(s->context);
@@ -323,5 +351,6 @@ void setup(state* s, int w, int h) {
 
 	glBindVertexArray(0);
 
+	s->c = defaultCam();
 	s->running = true;
 }
