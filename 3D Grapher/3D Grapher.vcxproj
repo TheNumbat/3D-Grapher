@@ -126,6 +126,7 @@
     <ClCompile Include="..\src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\cam.h" />
     <ClInclude Include="..\src\exp.h" />
     <ClInclude Include="..\src\main.h" />
   </ItemGroup>

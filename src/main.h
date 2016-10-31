@@ -17,6 +17,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "cam.h"
+
 using namespace glm;
 using namespace std;
 
@@ -36,6 +38,7 @@ struct state {
 	vector<GLuint> indicies;
 
 	graph g;
+	cam c;
 
 	bool running;
 };
