@@ -18,7 +18,9 @@ using namespace std;
 	// More features
 		// Partials
 		// Double integrals?
+		// Vector feilds
 		// Probably a ton more stuff I can't think of right now
+		// 2D and 4D graphs
 
 void loop(state* s);
 void setup(state* s, int w, int h);
@@ -105,7 +107,7 @@ void gengraph(state* s) {
 	float dy = (s->g.ymax - s->g.ymin) / s->g.yrez;
 	float xmin = s->g.xmin;
 	unsigned int txDelta = s->g.xrez / numthreads;
-	unsigned int txLast = (txDelta > 0 ? s->g.xrez % txDelta : s->g.xrez) + txDelta + 1;
+	unsigned int txLast = s->g.xrez - (numthreads - 1) * txDelta + 1;
 	
 	vector<thread> threads;
 	vector<gendata*> data;
@@ -179,16 +181,17 @@ void kill(state* s) {
 
 void loop(state* s) {
 	glBindVertexArray(s->VAO);
+	mat4 cam;
 	while (s->running) {
 		
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-		mat4 model, view, proj;
-		view = lookAt(vec3(5.0f * sin(SDL_GetTicks() / 2000.0f), 5, 5.0f * cos(SDL_GetTicks() / 2000.0f)), vec3(0, 0, 0), vec3(0, 1, 0));
-		view = rotate(view, radians(90.0f), vec3(1, 0, 0));
-		view = rotate(view, radians(180.0f), vec3(0, 1, 0));
+		mat4 model, proj;
+		cam = lookAt(vec3(5.0f * sin(SDL_GetTicks() / 2000.0f), 5, 5.0f * cos(SDL_GetTicks() / 2000.0f)), vec3(0, 0, 0), vec3(0, 1, 0));
+		cam = rotate(cam, radians(90.0f), vec3(1, 0, 0));
+		cam = rotate(cam, radians(180.0f), vec3(0, 1, 0));
 		proj = perspective(radians(75.0f), (GLfloat)s->w / (GLfloat)s->h, 0.1f, 100.0f);
 
 
@@ -198,7 +201,7 @@ void loop(state* s) {
 		glEnableVertexAttribArray(0);
 
 		glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "model"), 1, GL_FALSE, value_ptr(model));
-		glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "view"), 1, GL_FALSE, value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "view"), 1, GL_FALSE, value_ptr(cam));
 		glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "proj"), 1, GL_FALSE, value_ptr(proj));
 		glUniform4f(glGetUniformLocation(s->graphShader, "vcolor"), 0.2f, 0.2f, 0.2f, 1.0f);
 
@@ -220,7 +223,7 @@ void loop(state* s) {
 		glEnableVertexAttribArray(1);
 
 		glUniformMatrix4fv(glGetUniformLocation(s->axisShader, "model"), 1, GL_FALSE, value_ptr(model));
-		glUniformMatrix4fv(glGetUniformLocation(s->axisShader, "view"), 1, GL_FALSE, value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(s->axisShader, "view"), 1, GL_FALSE, value_ptr(cam));
 		glUniformMatrix4fv(glGetUniformLocation(s->axisShader, "proj"), 1, GL_FALSE, value_ptr(proj));
 
 		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
@@ -279,7 +282,6 @@ void setup(state* s, int w, int h) {
 	glewInit();
 
 	glEnable(GL_DEPTH_TEST);
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glViewport(0, 0, w, h);
 
 	GLuint vert, frag, cvert, cfrag;
