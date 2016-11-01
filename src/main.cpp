@@ -11,7 +11,6 @@ using namespace std;
 		// Text input
 		// Actual input system
 	// Rendering
-		// Improve Zoom
 		// Transparency, blending, maybe sorting
 		// Lighting
 		// Multiple graphs
@@ -267,10 +266,9 @@ void loop(state* s) {
 				break;
 			}
 			case SDL_MOUSEWHEEL: {
-				float sens = 5.0f;
-				s->c.fov -= ev.wheel.y * sens;
-				if (s->c.fov > 179.9f) s->c.fov = 179.9f;
-				else if (s->c.fov < 0.1f) s->c.fov = 0.1f;
+				s->c.fov -= ev.wheel.y;
+				if (s->c.fov > 179.0f) s->c.fov = 179.0f;
+				else if (s->c.fov < 1.0f) s->c.fov = 1.0f;
 				break;
 			}
 			case SDL_KEYDOWN: {
