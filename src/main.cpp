@@ -40,7 +40,7 @@ int main(int argc, char** args) {
 	st.g.ymax = 20;
 	st.g.xrez = 250;
 	st.g.yrez = 250;
-	exp = "5*cos(x)*sin(y)*sin(x)*cos(y)";
+	exp = "sin(x)*sin(y)";
 
 	ss << exp;
 	in(ss, st.g.eq);
@@ -203,11 +203,13 @@ void loop(state* s) {
 		glEnable(GL_DEPTH_TEST);
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glPolygonOffset(0.0f, 0.0f);
 		glUniform4f(glGetUniformLocation(s->graphShader, "vcolor"), 0.8f, 0.8f, 0.8f, 1.0f);
 		glDrawElements(GL_TRIANGLES, s->indicies.size(), GL_UNSIGNED_INT, (void*)0);
 		
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glUniform4f(glGetUniformLocation(s->graphShader, "vcolor"), 0.0f, 0.0f, 0.0f, 1.0f);
+		glPolygonOffset(-1.0f, -1.0f);
+		glUniform4f(glGetUniformLocation(s->graphShader, "vcolor"), 0.2f, 0.2f, 0.2f, 1.0f);
 		glDrawElements(GL_TRIANGLES, s->indicies.size(), GL_UNSIGNED_INT, (void*)0);
 
 
@@ -323,6 +325,7 @@ void setup(state* s, int w, int h) {
 	glewExperimental = GL_TRUE;
 	glewInit();
 
+	glEnable(GL_POLYGON_OFFSET_FILL);
 	glEnable(GL_DEPTH_TEST);
 	glViewport(0, 0, w, h);
 
