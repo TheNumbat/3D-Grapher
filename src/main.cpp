@@ -177,6 +177,7 @@ void loop(state* s) {
 	glBindVertexArray(s->VAO);
 
 	while (s->running) {
+		Uint64 start = SDL_GetPerformanceCounter();
 		
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -297,6 +298,10 @@ void loop(state* s) {
 		if (keys[SDL_SCANCODE_D]) {
 			s->c.pos += s->c.right * s->c.speed * dT;
 		}
+		
+		Uint64 end = SDL_GetPerformanceCounter();
+		cout << "frame: " << 1000.0f * (end - start) / (float)SDL_GetPerformanceFrequency() << "ms" << endl;
+
 		SDL_GL_SwapWindow(s->window);
 	}
 }
