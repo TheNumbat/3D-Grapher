@@ -228,9 +228,6 @@ void loop(state* s) {
 			
 			glUniform4f(glGetUniformLocation(s->graphShader, "vcolor"), 0.2f, 0.2f, 0.2f, 1.0f);
 			glDrawElements(GL_TRIANGLES, s->indicies.size(), GL_UNSIGNED_INT, (void*)0);
-
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			glPolygonOffset(0.0f, 0.0f);
 		}
 
 		glUseProgram(s->axisShader);
@@ -248,6 +245,7 @@ void loop(state* s) {
 			glUniformMatrix4fv(glGetUniformLocation(s->axisShader, "proj"), 1, GL_FALSE, value_ptr(proj));
 
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glPolygonOffset(0.0f, 0.0f);
 			glDisable(GL_BLEND);
 			glDisable(GL_DEPTH_TEST);
 
