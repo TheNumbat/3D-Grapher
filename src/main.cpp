@@ -164,20 +164,36 @@ void gengraph(state* s) {
 }
 
 void kill(state* s) {
+	glBindVertexArray(s->VAO);
+	glDeleteBuffers(1, &s->axisVBO);
+	glDeleteBuffers(1, &s->graphVBO);
+	glDeleteBuffers(1, &s->EBO);
 	SDL_GL_DeleteContext(s->context);
 	SDL_DestroyWindow(s->window);
 	SDL_Quit();
 }
 
 void loop(state* s) {
-	
+
 	int mx = s->w / 2, my = s->h / 2;
 	const unsigned char* keys = SDL_GetKeyboardState(NULL);
 
 	glBindVertexArray(s->VAO);
 
+	glBindBuffer(GL_ARRAY_BUFFER, s->graphVBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->EBO);
+
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * s->indicies.size(), s->indicies.size() ? &s->indicies[0] : NULL, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->verticies.size(), s->verticies.size() ? &s->verticies[0] : NULL, GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, s->axisVBO);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
+
 	while (s->running) {
 		
+		Uint64 start = SDL_GetPerformanceCounter();
+
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -186,52 +202,58 @@ void loop(state* s) {
 		view = getView(s->c);
 		proj = perspective(radians(s->c.fov), (GLfloat)s->w / (GLfloat)s->h, 0.1f, 1000.0f);
 
-
 		glUseProgram(s->graphShader);
+		{
+			glBindBuffer(GL_ARRAY_BUFFER, s->graphVBO);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->EBO);
 
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-		glEnableVertexAttribArray(0);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+			glEnableVertexAttribArray(0);
 
-		glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "model"), 1, GL_FALSE, value_ptr(model));
-		glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "view"), 1, GL_FALSE, value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "proj"), 1, GL_FALSE, value_ptr(proj));
+			glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "model"), 1, GL_FALSE, value_ptr(model));
+			glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "view"), 1, GL_FALSE, value_ptr(view));
+			glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "proj"), 1, GL_FALSE, value_ptr(proj));
 
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * s->indicies.size(), s->indicies.size() ? &s->indicies[0] : NULL, GL_STATIC_DRAW);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->verticies.size(), s->verticies.size() ? &s->verticies[0] : NULL, GL_STATIC_DRAW);
+			glEnable(GL_BLEND);
+			glEnable(GL_DEPTH_TEST);
 
-		glEnable(GL_BLEND);
-		glEnable(GL_DEPTH_TEST);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glPolygonOffset(0.0f, 0.0f);
+			
+			glUniform4f(glGetUniformLocation(s->graphShader, "vcolor"), 0.8f, 0.8f, 0.8f, 1.0f);
+			glDrawElements(GL_TRIANGLES, s->indicies.size(), GL_UNSIGNED_INT, (void*)0);
 
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glPolygonOffset(0.0f, 0.0f);
-		glUniform4f(glGetUniformLocation(s->graphShader, "vcolor"), 0.8f, 0.8f, 0.8f, 1.0f);
-		glDrawElements(GL_TRIANGLES, s->indicies.size(), GL_UNSIGNED_INT, (void*)0);
-		
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glPolygonOffset(-1.0f, -1.0f);
-		glUniform4f(glGetUniformLocation(s->graphShader, "vcolor"), 0.2f, 0.2f, 0.2f, 1.0f);
-		glDrawElements(GL_TRIANGLES, s->indicies.size(), GL_UNSIGNED_INT, (void*)0);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			glPolygonOffset(-1.0f, -1.0f);
+			
+			glUniform4f(glGetUniformLocation(s->graphShader, "vcolor"), 0.2f, 0.2f, 0.2f, 1.0f);
+			glDrawElements(GL_TRIANGLES, s->indicies.size(), GL_UNSIGNED_INT, (void*)0);
 
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glPolygonOffset(0.0f, 0.0f);
+		}
 
 		glUseProgram(s->axisShader);
+		{
+			glBindBuffer(GL_ARRAY_BUFFER, s->axisVBO);
 
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
-		glEnableVertexAttribArray(0);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+			glEnableVertexAttribArray(0);
 
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-		glEnableVertexAttribArray(1);
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+			glEnableVertexAttribArray(1);
 
-		glUniformMatrix4fv(glGetUniformLocation(s->axisShader, "model"), 1, GL_FALSE, value_ptr(model));
-		glUniformMatrix4fv(glGetUniformLocation(s->axisShader, "view"), 1, GL_FALSE, value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(s->axisShader, "proj"), 1, GL_FALSE, value_ptr(proj));
+			glUniformMatrix4fv(glGetUniformLocation(s->axisShader, "model"), 1, GL_FALSE, value_ptr(model));
+			glUniformMatrix4fv(glGetUniformLocation(s->axisShader, "view"), 1, GL_FALSE, value_ptr(view));
+			glUniformMatrix4fv(glGetUniformLocation(s->axisShader, "proj"), 1, GL_FALSE, value_ptr(proj));
 
-		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glDisable(GL_BLEND);
+			glDisable(GL_DEPTH_TEST);
 
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glDisable(GL_BLEND);
-		glDisable(GL_DEPTH_TEST);
-		glDrawArrays(GL_LINES, 0, 6);
-		
+			glDrawArrays(GL_LINES, 0, 6);
+		}
+
 		glUseProgram(0);
 
 		SDL_Event ev;
@@ -297,7 +319,11 @@ void loop(state* s) {
 		if (keys[SDL_SCANCODE_D]) {
 			s->c.pos += s->c.right * s->c.speed * dT;
 		}
+		
 		SDL_GL_SwapWindow(s->window);
+
+		Uint64 end = SDL_GetPerformanceCounter();
+		cout << "frame: " << (end - start) / (1000.0f  * SDL_GetPerformanceFrequency()) << "ms" << endl;
 	}
 }
 
@@ -314,7 +340,7 @@ void setup(state* s, int w, int h) {
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetSwapInterval(-1);
+	SDL_GL_SetSwapInterval(1);
 	SDL_CaptureMouse(SDL_TRUE);
 	SDL_ShowCursor(0);
 	SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -359,12 +385,10 @@ void setup(state* s, int w, int h) {
 	glDeleteShader(cfrag);
 	
 	glGenVertexArrays(1, &s->VAO);
-	glGenBuffers(1, &s->VBO);
+	glGenBuffers(1, &s->axisVBO);
+	glGenBuffers(1, &s->graphVBO);
 	glGenBuffers(1, &s->EBO);
 	glBindVertexArray(s->VAO);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, s->VBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->EBO);
 
 	glBindVertexArray(0);
 

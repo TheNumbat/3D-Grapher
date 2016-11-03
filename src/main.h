@@ -32,7 +32,7 @@ struct state {
 	SDL_Window* window;
 	int w, h;
 	SDL_GLContext context;
-	GLuint axisShader, graphShader, VAO, VBO, EBO;
+	GLuint axisShader, graphShader, VAO, axisVBO, graphVBO, EBO;
 	
 	vector<GLfloat> verticies;
 	vector<GLuint> indicies;
