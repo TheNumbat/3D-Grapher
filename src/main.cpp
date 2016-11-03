@@ -318,10 +318,10 @@ void loop(state* s) {
 			s->c.pos += s->c.right * s->c.speed * dT;
 		}
 		
-		SDL_GL_SwapWindow(s->window);
-
 		Uint64 end = SDL_GetPerformanceCounter();
-		cout << "frame: " << (end - start) / (1000.0f  * SDL_GetPerformanceFrequency()) << "ms" << endl;
+		cout << "frame: " << 1000.0f * (end - start) / (float)SDL_GetPerformanceFrequency() << "ms" << endl;
+
+		SDL_GL_SwapWindow(s->window);
 	}
 }
 
@@ -338,7 +338,7 @@ void setup(state* s, int w, int h) {
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetSwapInterval(1);
+	
 	SDL_CaptureMouse(SDL_TRUE);
 	SDL_ShowCursor(0);
 	SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -352,6 +352,8 @@ void setup(state* s, int w, int h) {
 	glEnable(GL_POLYGON_OFFSET_FILL);
 	glEnable(GL_DEPTH_TEST);
 	glViewport(0, 0, w, h);
+
+	SDL_GL_SetSwapInterval(0);
 
 	GLuint vert, frag, cvert, cfrag;
 	vert = glCreateShader(GL_VERTEX_SHADER);
