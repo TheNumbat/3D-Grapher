@@ -14,12 +14,13 @@ using namespace std;
 		// Transparency, blending, maybe sorting
 		// Lighting
 		// Multiple graphs
-	// More features
+	// Math Features
 		// Partials
-		// Double integrals?
+		// Level Curves
 		// Vector feilds
-		// Probably a ton more stuff I can't think of right now
 		// 2D and 4D graphs
+		// E Regions
+		// Tangent Planes
 
 void loop(state* s);
 void setup(state* s, int w, int h);
@@ -264,7 +265,7 @@ void loop(state* s) {
 				if (ev.window.event == SDL_WINDOWEVENT_RESIZED) {
 					s->w = ev.window.data1;
 					s->h = ev.window.data2;
-					glViewport(0, 0, s->w, s->h);
+					glViewport(0, 0, s->w - 250, s->h);
 				}
 				SDL_CaptureMouse(SDL_TRUE);
 				SDL_ShowCursor(0);
@@ -349,7 +350,7 @@ void setup(state* s, int w, int h) {
 
 	glEnable(GL_POLYGON_OFFSET_FILL);
 	glEnable(GL_DEPTH_TEST);
-	glViewport(0, 0, w, h);
+	glViewport(0, 0, w - 250, h);
 
 	SDL_GL_SetSwapInterval(-1);
 
