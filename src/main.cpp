@@ -353,7 +353,7 @@ void setup(state* s, int w, int h) {
 	glEnable(GL_DEPTH_TEST);
 	glViewport(0, 0, w, h);
 
-	SDL_GL_SetSwapInterval(0);
+	SDL_GL_SetSwapInterval(-1);
 
 	GLuint vert, frag, cvert, cfrag;
 	vert = glCreateShader(GL_VERTEX_SHADER);
