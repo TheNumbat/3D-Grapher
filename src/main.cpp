@@ -115,7 +115,6 @@ void loop(state* s) {
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
 		mat4 model, view, proj;
 		view = getView(s->c);
 		proj = perspective(radians(s->c.fov), (GLfloat)s->w / (GLfloat)s->h, 0.1f, 1000.0f);
@@ -178,7 +177,7 @@ void loop(state* s) {
 			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)(2 * sizeof(GLfloat)));
 			glEnableVertexAttribArray(1);
 
-			glEnable(GL_DEPTH_TEST);
+			glDisable(GL_BLEND);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 			glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -250,6 +249,7 @@ void loop(state* s) {
 		if (keys[SDL_SCANCODE_D]) {
 			s->c.pos += s->c.right * s->c.speed * dT;
 		}
+
 		SDL_GL_SwapWindow(s->window);
 
 		Uint64 end = SDL_GetPerformanceCounter();
@@ -287,8 +287,8 @@ void setup(state* s, int w, int h) {
 
 	glEnable(GL_POLYGON_OFFSET_FILL);
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glDisable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glViewport(0, 0, w - 250, h);
 
 	SDL_GL_SetSwapInterval(-1);
@@ -345,15 +345,14 @@ void setup(state* s, int w, int h) {
 
 	glGenTextures(1, &s->texture);
 	SDL_RWops* ops = SDL_RWFromMem((void*)DroidSans_ttf, sizeof(DroidSans_ttf));
-	TTF_Font* font = TTF_OpenFontRW(ops, 1, 24);
-	SDL_Color fg = { 255, 255, 255, 255 }; SDL_Color bg = { 0, 0, 0, 255 };
-	SDL_Surface* tex = TTF_RenderText_Shaded(font, "wew lad", fg, bg);
-	SDL_ConvertSurfaceFormat(tex, SDL_PIXELFORMAT_RGBA8888, 0);
+	TTF_Font* font = TTF_OpenFontRW(ops, 1, 72);
+	SDL_Color fg = { 0, 0, 0, 0 }; SDL_Color bg = { 255, 255, 255, 0 };
+	SDL_Surface* buf = TTF_RenderText_Blended(font, "wew lad", fg);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->w, tex->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex->pixels);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, buf->w, buf->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf->pixels);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
-	SDL_FreeSurface(tex);
+	SDL_FreeSurface(buf);
 
 	s->c = defaultCam();
 	s->running = true;
