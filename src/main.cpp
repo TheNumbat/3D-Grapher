@@ -11,6 +11,8 @@ using namespace std;
 
 // TODO:
 	// UI
+		// Get a good GUI system working or make my own
+			// nanoGUI? style is (puke)
 		// Axis scales
 		// Text rendering
 		// Text input
@@ -26,6 +28,16 @@ using namespace std;
 		// 2D and 4D graphs
 		// E Regions
 		// Tangent Planes
+	// Code
+		// Speed up evaluation
+			// Polynomial Interpolation?
+			// Lazy evaluation?
+			// Optimize code?
+			// Compile expression as C and link into it? lmao
+				// would need to include gcc or something
+		// Clean up postfix alg
+	// Notes
+		// To include binary file as data: xxd -i infile.bin outfile.h
 
 void loop(state* s);
 void setup(state* s, int w, int h);
