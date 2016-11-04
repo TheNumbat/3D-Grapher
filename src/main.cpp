@@ -22,6 +22,7 @@ using namespace std;
 		// Multiple graphs
 		// glPolygonOffset inconsistant
 	// Math Features
+		// Highlight curve along a set x/y
 		// Partials
 		// Level Curves
 		// Vector feilds
@@ -262,6 +263,7 @@ void setup(state* s, int w, int h) {
 	
 	SDL_Init(SDL_INIT_EVERYTHING);
 	IMG_Init(IMG_INIT_PNG);
+	TTF_Init();
 
 	s->window = SDL_CreateWindow("3D Grapher", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
@@ -342,9 +344,12 @@ void setup(state* s, int w, int h) {
 	glGenBuffers(1, &s->EBO);
 
 	glGenTextures(1, &s->texture);
-	SDL_RWops* ops = SDL_RWFromMem((void*)button_png, sizeof(button_png));
-	SDL_Surface* tex = IMG_LoadPNG_RW(ops);
-	//SDL_ConvertSurfaceFormat(tex, SDL_PIXELFORMAT_RGBA8888, 0);
+	SDL_RWops* ops = SDL_RWFromMem((void*)DroidSans_ttf, sizeof(DroidSans_ttf));
+	TTF_Font* font = TTF_OpenFontRW(ops, 1, 24);
+	SDL_Color fg = { 255, 255, 255, 255 }; SDL_Color bg = { 0, 0, 0, 255 };
+	SDL_Surface* tex = TTF_RenderText_Shaded(font, "wew lad", fg, bg);
+	SDL_ConvertSurfaceFormat(tex, SDL_PIXELFORMAT_RGBA8888, 0);
+
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->w, tex->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex->pixels);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);

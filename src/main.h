@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <SDL.h>
 #include <SDL_image.h>
+#include <SDL_ttf.h>
 #include <GL\glew.h>
 
 #include <glm/glm.hpp>
@@ -16,6 +17,7 @@
 #include "exp.h"
 
 #include "texture.data"
+#include "font.data"
 
 using namespace glm;
 using namespace std;
@@ -114,7 +116,7 @@ const GLchar* ftextured2D{
 	"uniform sampler2D tex;\n"
 
 	"void main() {\n"
-	"	color = texture(tex, 1.0f - coord);\n"
+	"	color = texture(tex, vec2(coord.x, 1.0f - coord.y));\n"
 	"}\n"
 };
 
@@ -138,11 +140,11 @@ GLfloat axes[] = {
 };
 
 const GLfloat uitest[] = {
-	-0.5f,  0.5f,		0.0f, 1.0f,
-	-0.5f, -0.5f,		0.0f, 0.0f,
-	 0.5f,  0.5f,		1.0f, 1.0f,
+	-1.0f,  0.25f,		0.0f, 1.0f,
+	-1.0f, -0.25f,		0.0f, 0.0f,
+	 1.0f,  0.25f,		1.0f, 1.0f,
 
-	 0.5f,  0.5f,		1.0f, 1.0f,
-	-0.5f, -0.5f,		0.0f, 0.0f,
-	 0.5f, -0.5f,		1.0f, 0.0f
+	 1.0f,  0.25f,		1.0f, 1.0f,
+	-1.0f, -0.25f,		0.0f, 0.0f,
+	 1.0f, -0.25f,		1.0f, 0.0f
 };

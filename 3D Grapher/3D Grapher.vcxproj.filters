@@ -33,9 +33,4 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\src\texture.data">
-      <Filter>Header Files</Filter>
-    </None>
-  </ItemGroup>
 </Project>
