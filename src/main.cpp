@@ -265,19 +265,27 @@ void setup(state* s, int w, int h) {
 
 	SDL_GL_SetSwapInterval(-1);
 
-	GLuint vert, frag, cvert, cfrag;
+	GLuint vert, frag, cvert, cfrag, uvert, ufrag;
 	vert = glCreateShader(GL_VERTEX_SHADER);
 	cvert = glCreateShader(GL_VERTEX_SHADER);
 	frag = glCreateShader(GL_FRAGMENT_SHADER);
 	cfrag = glCreateShader(GL_FRAGMENT_SHADER);
+	uvert = glCreateShader(GL_VERTEX_SHADER);
+	ufrag = glCreateShader(GL_FRAGMENT_SHADER);
+
 	glShaderSource(vert, 1, &vertex, NULL);
 	glShaderSource(cvert, 1, &colorvertex, NULL);
+	glShaderSource(uvert, 1, &vtextured2D, NULL);
 	glShaderSource(frag, 1, &fragment, NULL);
 	glShaderSource(cfrag, 1, &colorfragment, NULL);
+	glShaderSource(ufrag, 1, &ftextured2D, NULL);
+
 	glCompileShader(vert);
 	glCompileShader(cvert);
 	glCompileShader(frag);
 	glCompileShader(cfrag);
+	glCompileShader(uvert);
+	glCompileShader(ufrag);
 
 	s->graphShader = glCreateProgram();
 	glAttachShader(s->graphShader, vert);
@@ -289,18 +297,22 @@ void setup(state* s, int w, int h) {
 	glAttachShader(s->axisShader, cfrag);
 	glLinkProgram(s->axisShader);
 
+	s->uiShader = glCreateProgram();
+	glAttachShader(s->uiShader, uvert);
+	glAttachShader(s->uiShader, ufrag);
+	glLinkProgram(s->uiShader);
+
 	glDeleteShader(vert);
 	glDeleteShader(cvert);
 	glDeleteShader(frag);
 	glDeleteShader(cfrag);
+	glDeleteShader(uvert);
+	glDeleteShader(ufrag);
 	
 	glGenVertexArrays(1, &s->VAO);
 	glGenBuffers(1, &s->axisVBO);
 	glGenBuffers(1, &s->graphVBO);
 	glGenBuffers(1, &s->EBO);
-	glBindVertexArray(s->VAO);
-
-	glBindVertexArray(0);
 
 	s->c = defaultCam();
 	s->running = true;

@@ -27,7 +27,7 @@ struct state {
 	SDL_Window* window;
 	int w, h;
 	SDL_GLContext context;
-	GLuint axisShader, graphShader, VAO, axisVBO, graphVBO, EBO;
+	GLuint axisShader, graphShader, uiShader, VAO, axisVBO, graphVBO, EBO;
 	
 	vector<GLfloat> verticies;
 	vector<GLuint> indicies;
@@ -85,6 +85,32 @@ const GLchar* fragment = {
 
 	"void main() {\n"
 	"	color = vcolor;\n"
+	"}\n"
+};
+
+const GLchar* vtextured2D = {
+	"#version 330 core\n"
+
+	"layout (location = 0) in vec2 position;\n"
+	"layout (location = 1) in vec2 tcoord;\n"
+
+	"out vec2 coord;\n"
+
+	"void main() {\n"
+	"	gl_Position = vec4(position, 0.0f, 1.0f);\n"
+	"	coord = tcoord;\n"
+	"}\n"
+};
+
+const GLchar* ftextured2D{
+	"#version 330 core\n"
+
+	"in vec2 coord;\n"
+	"out vec4 color;\n"
+	"uniform sampler2D tex;\n"
+
+	"void main() {\n"
+	"	color = texture(tex, coord);\n"
 	"}\n"
 };
 
