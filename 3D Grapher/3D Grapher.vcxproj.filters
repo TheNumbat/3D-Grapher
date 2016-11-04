@@ -29,5 +29,8 @@
     <ClInclude Include="..\src\cam.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\graph.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,13 +1,7 @@
 
 #pragma once
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
 #include <vector>
-#include <limits>
-#include <thread>
 
 #include <assert.h>
 #include <SDL.h>
@@ -18,6 +12,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "cam.h"
+#include "exp.h"
 
 using namespace glm;
 using namespace std;
@@ -41,17 +36,6 @@ struct state {
 	cam c;
 
 	bool running;
-};
-
-struct gendata {
-	gendata() {
-		zmin = FLT_MAX;
-		zmax = -FLT_MAX;
-	};
-	state* s;
-	vector<float> ret;
-	float zmin, zmax, xmin, dx, dy;
-	unsigned int txrez;
 };
 
 const GLchar* colorvertex = {

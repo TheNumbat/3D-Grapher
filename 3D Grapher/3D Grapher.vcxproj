@@ -128,6 +128,7 @@
   <ItemGroup>
     <ClInclude Include="..\src\cam.h" />
     <ClInclude Include="..\src\exp.h" />
+    <ClInclude Include="..\src\graph.h" />
     <ClInclude Include="..\src\main.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
