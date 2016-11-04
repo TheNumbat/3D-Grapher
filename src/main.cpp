@@ -57,7 +57,7 @@ int main(int argc, char** args) {
 	st.g.ymax = 20;
 	st.g.xrez = 250;
 	st.g.yrez = 250;
-	exp = "sin(x)*sin(y)";
+	exp = "sin(x)^sin(y)";
 
 	ss << exp;
 	in(ss, st.g.eq);
