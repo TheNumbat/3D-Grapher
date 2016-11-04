@@ -11,8 +11,7 @@ using namespace std;
 
 // TODO:
 	// UI
-		// Get a good GUI system working or make my own
-			// nanoGUI? style is (puke)
+		// Make GUI system
 		// Axis scales
 		// Text rendering
 		// Text input
@@ -21,6 +20,7 @@ using namespace std;
 		// Transparency, blending, maybe sorting
 		// Lighting
 		// Multiple graphs
+		// glPolygonOffset inconsistant
 	// Math Features
 		// Partials
 		// Level Curves
@@ -28,6 +28,8 @@ using namespace std;
 		// 2D and 4D graphs
 		// E Regions
 		// Tangent Planes
+		// More functions (sec, csc, cot, max, min)
+		// Negatives & remove asterisks
 	// Code
 		// Speed up evaluation
 			// Polynomial Interpolation?
@@ -37,7 +39,7 @@ using namespace std;
 				// would need to include gcc or something
 		// Clean up postfix alg
 	// Notes
-		// To include binary file as data: xxd -i infile.bin outfile.h
+		// To encode binary file as data: xxd -i infile.bin outfile.h
 
 void loop(state* s);
 void setup(state* s, int w, int h);
@@ -57,7 +59,7 @@ int main(int argc, char** args) {
 	st.g.ymax = 20;
 	st.g.xrez = 250;
 	st.g.yrez = 250;
-	exp = "sin(x)^sin(y)";
+	exp = "sin(x)*sin(y)";
 
 	ss << exp;
 	in(ss, st.g.eq);
@@ -102,6 +104,10 @@ void loop(state* s) {
 
 	glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
 
+	glBindBuffer(GL_ARRAY_BUFFER, s->uiVBO);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(uitest), uitest, GL_STATIC_DRAW);
+
 	while (s->running) {
 		Uint64 start = SDL_GetPerformanceCounter();
 		
@@ -125,17 +131,16 @@ void loop(state* s) {
 			glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "view"), 1, GL_FALSE, value_ptr(view));
 			glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "proj"), 1, GL_FALSE, value_ptr(proj));
 
-			glEnable(GL_BLEND);
 			glEnable(GL_DEPTH_TEST);
 
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			glPolygonOffset(0.0f, 0.0f);
+			glPolygonOffset(1.0f, 0.0f);
 			
 			glUniform4f(glGetUniformLocation(s->graphShader, "vcolor"), 0.8f, 0.8f, 0.8f, 1.0f);
 			glDrawElements(GL_TRIANGLES, s->indicies.size(), GL_UNSIGNED_INT, (void*)0);
 
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			glPolygonOffset(-1.0f, -1.0f);
+			glPolygonOffset(0.0f, 0.0f);
 			
 			glUniform4f(glGetUniformLocation(s->graphShader, "vcolor"), 0.2f, 0.2f, 0.2f, 1.0f);
 			glDrawElements(GL_TRIANGLES, s->indicies.size(), GL_UNSIGNED_INT, (void*)0);
@@ -156,12 +161,28 @@ void loop(state* s) {
 			glUniformMatrix4fv(glGetUniformLocation(s->axisShader, "proj"), 1, GL_FALSE, value_ptr(proj));
 
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			glPolygonOffset(0.0f, 0.0f);
-			glDisable(GL_BLEND);
 			glDisable(GL_DEPTH_TEST);
 
 			glDrawArrays(GL_LINES, 0, 6);
 		}
+
+		glViewport(s->w - 250, 0, 250, s->h);
+		glUseProgram(s->uiShader);
+		{
+			glBindBuffer(GL_ARRAY_BUFFER, s->uiVBO);
+
+			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)0);
+			glEnableVertexAttribArray(0);
+
+			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)(2 * sizeof(GLfloat)));
+			glEnableVertexAttribArray(1);
+
+			glEnable(GL_DEPTH_TEST);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
+		glViewport(0, 0, s->w - 250, s->h);
 
 		glUseProgram(0);
 
@@ -238,6 +259,9 @@ void loop(state* s) {
 void setup(state* s, int w, int h) {
 	s->w = w;
 	s->h = h;
+	
+	SDL_Init(SDL_INIT_EVERYTHING);
+	IMG_Init(IMG_INIT_PNG);
 
 	s->window = SDL_CreateWindow("3D Grapher", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
@@ -261,6 +285,8 @@ void setup(state* s, int w, int h) {
 
 	glEnable(GL_POLYGON_OFFSET_FILL);
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glViewport(0, 0, w - 250, h);
 
 	SDL_GL_SetSwapInterval(-1);
@@ -312,7 +338,17 @@ void setup(state* s, int w, int h) {
 	glGenVertexArrays(1, &s->VAO);
 	glGenBuffers(1, &s->axisVBO);
 	glGenBuffers(1, &s->graphVBO);
+	glGenBuffers(1, &s->uiVBO);
 	glGenBuffers(1, &s->EBO);
+
+	glGenTextures(1, &s->texture);
+	SDL_RWops* ops = SDL_RWFromMem((void*)button_png, sizeof(button_png));
+	SDL_Surface* tex = IMG_LoadPNG_RW(ops);
+	//SDL_ConvertSurfaceFormat(tex, SDL_PIXELFORMAT_RGBA8888, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->w, tex->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex->pixels);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	SDL_FreeSurface(tex);
 
 	s->c = defaultCam();
 	s->running = true;

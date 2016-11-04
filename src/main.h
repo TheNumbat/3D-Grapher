@@ -5,6 +5,7 @@
 
 #include <assert.h>
 #include <SDL.h>
+#include <SDL_image.h>
 #include <GL\glew.h>
 
 #include <glm/glm.hpp>
@@ -13,6 +14,8 @@
 
 #include "cam.h"
 #include "exp.h"
+
+#include "texture.data"
 
 using namespace glm;
 using namespace std;
@@ -27,7 +30,8 @@ struct state {
 	SDL_Window* window;
 	int w, h;
 	SDL_GLContext context;
-	GLuint axisShader, graphShader, uiShader, VAO, axisVBO, graphVBO, EBO;
+	GLuint axisShader, graphShader, uiShader, VAO, axisVBO, graphVBO, uiVBO, EBO;
+	GLuint texture;
 	
 	vector<GLfloat> verticies;
 	vector<GLuint> indicies;
@@ -110,7 +114,7 @@ const GLchar* ftextured2D{
 	"uniform sampler2D tex;\n"
 
 	"void main() {\n"
-	"	color = texture(tex, coord);\n"
+	"	color = texture(tex, 1.0f - coord);\n"
 	"}\n"
 };
 
@@ -131,4 +135,14 @@ GLfloat axes[] = {
 
 	 0.0f, 0.0f, 0.0f,  	0.0f, 0.0f, 1.0f,
 	 0.0f, 0.0f, 0.0f,  	0.0f, 0.0f, 1.0f
+};
+
+const GLfloat uitest[] = {
+	-0.5f,  0.5f,		0.0f, 1.0f,
+	-0.5f, -0.5f,		0.0f, 0.0f,
+	 0.5f,  0.5f,		1.0f, 1.0f,
+
+	 0.5f,  0.5f,		1.0f, 1.0f,
+	-0.5f, -0.5f,		0.0f, 0.0f,
+	 0.5f, -0.5f,		1.0f, 0.0f
 };
