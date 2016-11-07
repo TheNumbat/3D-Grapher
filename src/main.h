@@ -5,8 +5,6 @@
 
 #include <assert.h>
 #include <SDL.h>
-#include <SDL_image.h>
-#include <SDL_ttf.h>
 #include <GL\glew.h>
 
 #include <glm/glm.hpp>
@@ -18,6 +16,12 @@
 
 #include "texture.data"
 #include "font.data"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+#define STB_TRUETYPE_IMPLEMENTATION
+#include "stb_truetype.h"
 
 using namespace glm;
 using namespace std;

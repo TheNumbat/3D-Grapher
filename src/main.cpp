@@ -82,6 +82,7 @@ void kill(state* s) {
 	glBindVertexArray(s->VAO);
 	glDeleteBuffers(1, &s->axisVBO);
 	glDeleteBuffers(1, &s->graphVBO);
+	glDeleteBuffers(1, &s->uiVBO);
 	glDeleteBuffers(1, &s->EBO);
 	SDL_GL_DeleteContext(s->context);
 	SDL_DestroyWindow(s->window);
@@ -262,8 +263,6 @@ void setup(state* s, int w, int h) {
 	s->h = h;
 	
 	SDL_Init(SDL_INIT_EVERYTHING);
-	IMG_Init(IMG_INIT_PNG);
-	TTF_Init();
 
 	s->window = SDL_CreateWindow("3D Grapher", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
@@ -343,16 +342,33 @@ void setup(state* s, int w, int h) {
 	glGenBuffers(1, &s->uiVBO);
 	glGenBuffers(1, &s->EBO);
 
-	glGenTextures(1, &s->texture);
-	SDL_RWops* ops = SDL_RWFromMem((void*)DroidSans_ttf, sizeof(DroidSans_ttf));
-	TTF_Font* font = TTF_OpenFontRW(ops, 1, 72);
-	SDL_Color fg = { 0, 0, 0, 0 }; SDL_Color bg = { 255, 255, 255, 0 };
-	SDL_Surface* buf = TTF_RenderText_Blended(font, "wew lad", fg);
+	//glGenTextures(1, &s->texture);
+	
+	//int tw, th, bpp;
+	//unsigned char* tex = stbi_load_from_memory(button_png, button_png_len, &tw, &th, &bpp, 0);	
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, buf->w, buf->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf->pixels);
+	/*unsigned char* baked = new unsigned char[512 * 512];
+	stbtt_bakedchar cdata[96];
+	stbtt_BakeFontBitmap(DroidSans_ttf, 0, 24, baked, 512, 512, 32, 96, cdata);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, 512, 512, 0, GL_ALPHA, GL_UNSIGNED_BYTE, baked);
 	glGenerateMipmap(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	SDL_FreeSurface(buf);
+	glBindTexture(GL_TEXTURE_2D, 0);*/
+
+	unsigned char* ttf_buffer = new unsigned char[1 << 20];
+	unsigned char* temp_bitmap = new unsigned char[512 * 512];
+	stbtt_bakedchar* cdata = new stbtt_bakedchar[96];
+
+	fread(ttf_buffer, 1, 1 << 20, fopen("DroidSans.ttf", "rb"));
+	stbtt_BakeFontBitmap(ttf_buffer, 0, 32.0, temp_bitmap, 512, 512, 32, 96, cdata); // no guarantee this fits!
+																					 // can free ttf_buffer at this point
+	delete[] ttf_buffer;
+
+	glGenTextures(1, &s->texture);
+	glBindTexture(GL_TEXTURE_2D, s->texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, 512, 512, 0, GL_ALPHA, GL_UNSIGNED_BYTE, temp_bitmap);
+	// can free temp_bitmap at this point
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	s->c = defaultCam();
 	s->running = true;
