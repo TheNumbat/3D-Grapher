@@ -75,8 +75,8 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(ProjectDir)..\glew-2.0.0\include;$(ProjectDir)..\SDL2-2.0.4\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)..\glew-2.0.0\lib\Release\Win32;$(ProjectDir)..\SDL2-2.0.4\lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\glm\include;$(ProjectDir)..\SDL2-2.0.4\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)..\SDL2-2.0.4\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(ProjectDir)..\glew-2.0.0\include;$(ProjectDir)..\SDL2-2.0.4\include;$(IncludePath)</IncludePath>
@@ -88,10 +88,12 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;glew32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
+      <DelayLoadDLLs>SDL2.dll;SDL2_ttf.dll</DelayLoadDLLs>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -135,10 +137,14 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   <ItemGroup>
     <ClInclude Include="..\src\cam.h" />
     <ClInclude Include="..\src\exp.h" />
+    <ClInclude Include="..\src\glfuns.h" />
     <ClInclude Include="..\src\graph.h" />
     <ClInclude Include="..\src\main.h" />
-    <ClInclude Include="..\src\stb_image.h" />
-    <ClInclude Include="..\src\stb_truetype.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\font.data" />
+    <None Include="..\src\SDL2.data" />
+    <None Include="..\src\SDL2_ttf.data" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

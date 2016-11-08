@@ -1,11 +1,8 @@
 
 #pragma once
 
-#include "main.h"
-
 #include <thread>
 #include <limits>
-
 
 struct gendata {
 	gendata() {

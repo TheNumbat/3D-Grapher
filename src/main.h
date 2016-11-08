@@ -5,23 +5,17 @@
 
 #include <assert.h>
 #include <SDL.h>
-#include <GL\glew.h>
+#include <SDL_ttf.h>
+#include <SDL_opengl.h>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
+
+#include "font.data"
 
 #include "cam.h"
 #include "exp.h"
-
-#include "texture.data"
-#include "font.data"
-
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
-#define STB_TRUETYPE_IMPLEMENTATION
-#include "stb_truetype.h"
 
 using namespace glm;
 using namespace std;
@@ -41,6 +35,7 @@ struct state {
 	
 	vector<GLfloat> verticies;
 	vector<GLuint> indicies;
+	vector<GLfloat> UI;
 
 	graph g;
 	cam c;
@@ -143,12 +138,5 @@ GLfloat axes[] = {
 	 0.0f, 0.0f, 0.0f,  	0.0f, 0.0f, 1.0f
 };
 
-const GLfloat uitest[] = {
-	-1.0f,  0.25f,		0.0f, 1.0f,
-	-1.0f, -0.25f,		0.0f, 0.0f,
-	 1.0f,  0.25f,		1.0f, 1.0f,
-
-	 1.0f,  0.25f,		1.0f, 1.0f,
-	-1.0f, -0.25f,		0.0f, 0.0f,
-	 1.0f, -0.25f,		1.0f, 0.0f
-};
+#include "graph.h"
+#include "glfuns.h"

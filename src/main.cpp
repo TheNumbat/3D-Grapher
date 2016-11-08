@@ -1,11 +1,10 @@
 ﻿
-#include "main.h"
-#include "graph.h"
-
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
+
+#include "main.h"
 
 using namespace std;
 
@@ -47,7 +46,7 @@ void setup(state* s, int w, int h);
 void kill(state* s);
 
 int main(int argc, char** args) {
-	
+
 	state st;
 	setup(&st, 1280, 720);
 
@@ -108,7 +107,7 @@ void loop(state* s) {
 
 	glBindBuffer(GL_ARRAY_BUFFER, s->uiVBO);
 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(uitest), uitest, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->UI.size(), s->UI.size() ? &s->UI[0] : NULL, GL_STATIC_DRAW);
 
 	while (s->running) {
 		Uint64 start = SDL_GetPerformanceCounter();
@@ -181,7 +180,7 @@ void loop(state* s) {
 			glDisable(GL_BLEND);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-			glDrawArrays(GL_TRIANGLES, 0, 6);
+			glDrawArrays(GL_TRIANGLES, 0, s->UI.size() / 4);
 		}
 		glViewport(0, 0, s->w - 250, s->h);
 
@@ -259,9 +258,10 @@ void loop(state* s) {
 }
 
 void setup(state* s, int w, int h) {
+
 	s->w = w;
 	s->h = h;
-	
+
 	SDL_Init(SDL_INIT_EVERYTHING);
 
 	s->window = SDL_CreateWindow("3D Grapher", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -273,7 +273,7 @@ void setup(state* s, int w, int h) {
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	
+
 	SDL_CaptureMouse(SDL_TRUE);
 	SDL_ShowCursor(0);
 	SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -281,13 +281,12 @@ void setup(state* s, int w, int h) {
 	s->context = SDL_GL_CreateContext(s->window);
 	assert(s->context);
 
-	glewExperimental = GL_TRUE;
-	glewInit();
+	setupFuns();
 
 	glEnable(GL_POLYGON_OFFSET_FILL);
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glViewport(0, 0, w - 250, h);
 
 	SDL_GL_SetSwapInterval(-1);
@@ -335,41 +334,39 @@ void setup(state* s, int w, int h) {
 	glDeleteShader(cfrag);
 	glDeleteShader(uvert);
 	glDeleteShader(ufrag);
-	
+
 	glGenVertexArrays(1, &s->VAO);
 	glGenBuffers(1, &s->axisVBO);
 	glGenBuffers(1, &s->graphVBO);
 	glGenBuffers(1, &s->uiVBO);
 	glGenBuffers(1, &s->EBO);
 
-	//glGenTextures(1, &s->texture);
-	
-	//int tw, th, bpp;
-	//unsigned char* tex = stbi_load_from_memory(button_png, button_png_len, &tw, &th, &bpp, 0);	
-
-	/*unsigned char* baked = new unsigned char[512 * 512];
-	stbtt_bakedchar cdata[96];
-	stbtt_BakeFontBitmap(DroidSans_ttf, 0, 24, baked, 512, 512, 32, 96, cdata);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, 512, 512, 0, GL_ALPHA, GL_UNSIGNED_BYTE, baked);
-	glGenerateMipmap(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, 0);*/
-
-	unsigned char* ttf_buffer = new unsigned char[1 << 20];
-	unsigned char* temp_bitmap = new unsigned char[512 * 512];
-	stbtt_bakedchar* cdata = new stbtt_bakedchar[96];
-
-	fread(ttf_buffer, 1, 1 << 20, fopen("DroidSans.ttf", "rb"));
-	stbtt_BakeFontBitmap(ttf_buffer, 0, 32.0, temp_bitmap, 512, 512, 32, 96, cdata); // no guarantee this fits!
-																					 // can free ttf_buffer at this point
-	delete[] ttf_buffer;
+	TTF_Init();
+	TTF_Font* font = TTF_OpenFontRW(SDL_RWFromConstMem((const void*)DroidSans_ttf, DroidSans_ttf_len), 1, 96);
+	SDL_Surface* surf1 = TTF_RenderText_Shaded(font, "f(x,y) = sin(x)*sin(y)", { 0, 0, 0 }, { 255, 255, 255 });
+	SDL_Surface* surf = SDL_ConvertSurfaceFormat(surf1, SDL_PIXELFORMAT_RGB888, 0);
 
 	glGenTextures(1, &s->texture);
 	glBindTexture(GL_TEXTURE_2D, s->texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, 512, 512, 0, GL_ALPHA, GL_UNSIGNED_BYTE, temp_bitmap);
-	// can free temp_bitmap at this point
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surf->w, surf->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, surf->pixels);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	SDL_FreeSurface(surf1);
+	SDL_FreeSurface(surf);
 
 	s->c = defaultCam();
 	s->running = true;
+
+#define push(x, y, tx, ty) s->UI.push_back(x); \
+						   s->UI.push_back(y); \
+						   s->UI.push_back(tx); \
+						   s->UI.push_back(ty);
+
+	push(-1.0f, 1.0f, 0.0f, 1.0f);
+	push(1.0f, 1.0f, 1.0f, 1.0f);
+	push(-1.0f, 0.9f, 0.0f, 0.0f);
+
+	push(1.0f, 1.0f, 1.0f, 1.0f);
+	push(-1.0f, 0.9f, 0.0f, 0.0f);
+	push(1.0f, 0.9f, 1.0f, 0.0f);
 }

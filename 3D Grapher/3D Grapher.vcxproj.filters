@@ -32,11 +32,19 @@
     <ClInclude Include="..\src\graph.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\stb_image.h">
+    <ClInclude Include="..\src\glfuns.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\stb_truetype.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\SDL2.data">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\src\SDL2_ttf.data">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\src\font.data">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
