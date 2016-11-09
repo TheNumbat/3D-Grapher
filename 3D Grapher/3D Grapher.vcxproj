@@ -79,8 +79,8 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <LibraryPath>$(ProjectDir)..\SDL2-2.0.4\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(ProjectDir)..\glew-2.0.0\include;$(ProjectDir)..\SDL2-2.0.4\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDIr)..\glew-2.0.0\lib\Release\Win32;$(ProjectDir)..\SDL2-2.0.4\lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\glm\include;$(ProjectDir)..\SDL2-2.0.4\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)..\SDL2-2.0.4\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -88,7 +88,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -114,7 +114,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;glew32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_ttf.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>
@@ -140,6 +140,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="..\src\glfuns.h" />
     <ClInclude Include="..\src\graph.h" />
     <ClInclude Include="..\src\main.h" />
+    <ClInclude Include="..\src\ui.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\font.data" />

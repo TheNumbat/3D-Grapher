@@ -1,4 +1,5 @@
 
+
 #pragma once
 
 PFNGLBINDVERTEXARRAYPROC			glBindVertexArray;
@@ -20,6 +21,10 @@ PFNGLATTACHSHADERPROC				glAttachShader;
 PFNGLLINKPROGRAMPROC				glLinkProgram;
 PFNGLGENVERTEXARRAYSPROC			glGenVertexArrays;
 PFNGLGENBUFFERSPROC					glGenBuffers;
+PFNGLDELETEVERTEXARRAYSPROC			glDeleteVertexArrays;
+PFNGLDELETEPROGRAMPROC				glDeleteProgram;
+PFNGLACTIVETEXTUREPROC				_glActiveTexture; 
+PFNGLUNIFORM1IPROC					glUniform1i;
 
 void setupFuns() {
 	glBindVertexArray			= (PFNGLBINDVERTEXARRAYPROC)			wglGetProcAddress("glBindVertexArray");
@@ -41,4 +46,8 @@ void setupFuns() {
 	glLinkProgram				= (PFNGLLINKPROGRAMPROC)				wglGetProcAddress("glLinkProgram");
 	glGenVertexArrays			= (PFNGLGENVERTEXARRAYSPROC)			wglGetProcAddress("glGenVertexArrays");
 	glGenBuffers				= (PFNGLGENBUFFERSPROC)					wglGetProcAddress("glGenBuffers");
+	glDeleteVertexArrays		= (PFNGLDELETEVERTEXARRAYSPROC)			wglGetProcAddress("glDeleteVertexArrays");
+	glDeleteProgram				= (PFNGLDELETEPROGRAMPROC)				wglGetProcAddress("glDeleteProgram");
+	_glActiveTexture			= (PFNGLACTIVETEXTUREPROC)				wglGetProcAddress("glActiveTexture");
+	glUniform1i					= (PFNGLUNIFORM1IPROC)					wglGetProcAddress("glUniform1i");
 }

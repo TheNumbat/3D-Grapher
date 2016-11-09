@@ -20,6 +20,7 @@ using namespace std;
 		// Lighting
 		// Multiple graphs
 		// glPolygonOffset inconsistant
+		// Transparent UI
 	// Math Features
 		// Highlight curve along a set x/y
 		// Partials
@@ -28,15 +29,12 @@ using namespace std;
 		// 2D and 4D graphs
 		// E Regions
 		// Tangent Planes
+		// Polar & Spherical Graphs
 		// More functions (sec, csc, cot, max, min)
 		// Negatives & remove asterisks
+		// Maxs & mins (abs and rel)
 	// Code
-		// Speed up evaluation
-			// Polynomial Interpolation?
-			// Lazy evaluation?
-			// Optimize code?
-			// Compile expression as C and link into it? lmao
-				// would need to include gcc or something
+		// Speed up evaluation - NVM release build is way fast enough
 		// Clean up postfix alg
 	// Notes
 		// To encode binary file as data: xxd -i infile.bin outfile.h
@@ -53,15 +51,15 @@ int main(int argc, char** args) {
 	string exp;
 	stringstream ss;
 
-	st.g.xmin = -20;
-	st.g.xmax = 20;
-	st.g.ymin = -20;
-	st.g.ymax = 20;
+	st.g.xmin = -25;
+	st.g.xmax = 25;
+	st.g.ymin = -25;
+	st.g.ymax = 25;
 	st.g.xrez = 250;
 	st.g.yrez = 250;
-	exp = "sin(x)*sin(y)";
+	st.g.eq_str = "sin(x)*sin(y)";
 
-	ss << exp;
+	ss << st.g.eq_str;
 	in(ss, st.g.eq);
 	printeq(cout, st.g.eq);
 
@@ -78,11 +76,12 @@ int main(int argc, char** args) {
 }
 
 void kill(state* s) {
-	glBindVertexArray(s->VAO);
+	TTF_CloseFont(s->font);
 	glDeleteBuffers(1, &s->axisVBO);
 	glDeleteBuffers(1, &s->graphVBO);
-	glDeleteBuffers(1, &s->uiVBO);
 	glDeleteBuffers(1, &s->EBO);
+	glDeleteVertexArrays(1, &s->axisVAO);
+	glDeleteVertexArrays(1, &s->graphVAO);
 	SDL_GL_DeleteContext(s->context);
 	SDL_DestroyWindow(s->window);
 	SDL_Quit();
@@ -90,24 +89,33 @@ void kill(state* s) {
 
 void loop(state* s) {
 
-	int mx = s->w / 2, my = s->h / 2;
+	int mx = (s->w - 250) / 2, my = s->h / 2;
 	const unsigned char* keys = SDL_GetKeyboardState(NULL);
 
-	glBindVertexArray(s->VAO);
+	glBindVertexArray(s->graphVAO);
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, s->graphVBO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->EBO);
 
-	glBindBuffer(GL_ARRAY_BUFFER, s->graphVBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * s->indicies.size(), s->indicies.size() ? &s->indicies[0] : NULL, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->verticies.size(), s->verticies.size() ? &s->verticies[0] : NULL, GL_STATIC_DRAW);
 
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * s->indicies.size(), s->indicies.size() ? &s->indicies[0] : NULL, GL_STATIC_DRAW);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->verticies.size(), s->verticies.size() ? &s->verticies[0] : NULL, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+		glEnableVertexAttribArray(0);
+	}
 
-	glBindBuffer(GL_ARRAY_BUFFER, s->axisVBO);
+	glBindVertexArray(s->axisVAO);
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, s->axisVBO);
 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ARRAY_BUFFER, s->uiVBO);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+		glEnableVertexAttribArray(0);
 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->UI.size(), s->UI.size() ? &s->UI[0] : NULL, GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+		glEnableVertexAttribArray(1);
+	}
 
 	while (s->running) {
 		Uint64 start = SDL_GetPerformanceCounter();
@@ -119,13 +127,9 @@ void loop(state* s) {
 		view = getView(s->c);
 		proj = perspective(radians(s->c.fov), (GLfloat)s->w / (GLfloat)s->h, 0.1f, 1000.0f);
 
-		glUseProgram(s->graphShader);
+		glBindVertexArray(s->graphVAO);
 		{
-			glBindBuffer(GL_ARRAY_BUFFER, s->graphVBO);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->EBO);
-
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-			glEnableVertexAttribArray(0);
+			glUseProgram(s->graphShader);
 
 			glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "model"), 1, GL_FALSE, value_ptr(model));
 			glUniformMatrix4fv(glGetUniformLocation(s->graphShader, "view"), 1, GL_FALSE, value_ptr(view));
@@ -146,15 +150,9 @@ void loop(state* s) {
 			glDrawElements(GL_TRIANGLES, s->indicies.size(), GL_UNSIGNED_INT, (void*)0);
 		}
 
-		glUseProgram(s->axisShader);
+		glBindVertexArray(s->axisVAO);
 		{
-			glBindBuffer(GL_ARRAY_BUFFER, s->axisVBO);
-
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
-			glEnableVertexAttribArray(0);
-
-			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-			glEnableVertexAttribArray(1);
+			glUseProgram(s->axisShader);
 
 			glUniformMatrix4fv(glGetUniformLocation(s->axisShader, "model"), 1, GL_FALSE, value_ptr(model));
 			glUniformMatrix4fv(glGetUniformLocation(s->axisShader, "view"), 1, GL_FALSE, value_ptr(view));
@@ -166,25 +164,14 @@ void loop(state* s) {
 			glDrawArrays(GL_LINES, 0, 6);
 		}
 
-		glViewport(s->w - 250, 0, 250, s->h);
-		glUseProgram(s->uiShader);
-		{
-			glBindBuffer(GL_ARRAY_BUFFER, s->uiVBO);
-
-			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)0);
-			glEnableVertexAttribArray(0);
-
-			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)(2 * sizeof(GLfloat)));
-			glEnableVertexAttribArray(1);
-
-			glDisable(GL_BLEND);
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-			glDrawArrays(GL_TRIANGLES, 0, s->UI.size() / 4);
-		}
+		glViewport(s->w - 250, 0, 3, s->h);
+		glScissor(s->w - 250, 0, 3, s->h);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glScissor(0, 0, s->w, s->h);
+		glViewport(s->w - 245, 0, 245, s->h);
+		s->ui.render();
 		glViewport(0, 0, s->w - 250, s->h);
-
-		glUseProgram(0);
 
 		SDL_Event ev;
 		while (SDL_PollEvent(&ev) != 0) {
@@ -199,9 +186,6 @@ void loop(state* s) {
 					s->h = ev.window.data2;
 					glViewport(0, 0, s->w - 250, s->h);
 				}
-				SDL_CaptureMouse(SDL_TRUE);
-				SDL_ShowCursor(0);
-				SDL_SetRelativeMouseMode(SDL_TRUE);
 				break;
 			}
 			case SDL_MOUSEMOTION: {
@@ -210,19 +194,38 @@ void loop(state* s) {
 				float dy = (ev.motion.y - my) * sens;
 				mx = ev.motion.x;
 				my = ev.motion.y;
-				s->c.yaw += dx;
-				s->c.pitch -= dy;
-				if (s->c.yaw > 360.0f) s->c.yaw = 0.0f;
-				else if (s->c.yaw < 0.0f) s->c.yaw = 360.0f;
-				if (s->c.pitch > 89.9f) s->c.pitch = 89.9f;
-				else if (s->c.pitch < -89.9f) s->c.pitch = -89.9f;
-				updoot(s->c);
+				if (s->instate == in_cam) {					
+					s->c.yaw += dx;
+					s->c.pitch -= dy;
+					if (s->c.yaw > 360.0f) s->c.yaw = 0.0f;
+					else if (s->c.yaw < 0.0f) s->c.yaw = 360.0f;
+					if (s->c.pitch > 89.9f) s->c.pitch = 89.9f;
+					else if (s->c.pitch < -89.9f) s->c.pitch = -89.9f;
+					updoot(s->c);
+				}
 				break;
 			}
 			case SDL_MOUSEWHEEL: {
 				s->c.fov -= ev.wheel.y;
 				if (s->c.fov > 179.0f) s->c.fov = 179.0f;
 				else if (s->c.fov < 1.0f) s->c.fov = 1.0f;
+				break;
+			}
+			case SDL_MOUSEBUTTONDOWN: {
+				if (s->instate == in_idle && ev.button.x < s->w - 250) {
+					s->instate = in_cam;
+					SDL_CaptureMouse(SDL_TRUE);
+					SDL_SetRelativeMouseMode(SDL_TRUE);
+				}
+				break;
+			}
+			case SDL_MOUSEBUTTONUP: {
+				if (s->instate == in_cam) {
+					s->instate = in_idle;
+					SDL_CaptureMouse(SDL_FALSE);
+					SDL_SetRelativeMouseMode(SDL_FALSE);
+					SDL_WarpMouseInWindow(s->window, (s->w - 250) / 2, s->h / 2);
+				}
 				break;
 			}
 			case SDL_KEYDOWN: {
@@ -253,7 +256,7 @@ void loop(state* s) {
 		SDL_GL_SwapWindow(s->window);
 
 		Uint64 end = SDL_GetPerformanceCounter();
-		//cout << "frame: " << 1000.0f * (end - start) / (float)SDL_GetPerformanceFrequency() << "ms" << endl;
+		cout << "frame: " << 1000.0f * (end - start) / (float)SDL_GetPerformanceFrequency() << "ms" << endl;
 	}
 }
 
@@ -274,10 +277,6 @@ void setup(state* s, int w, int h) {
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-	SDL_CaptureMouse(SDL_TRUE);
-	SDL_ShowCursor(0);
-	SDL_SetRelativeMouseMode(SDL_TRUE);
-
 	s->context = SDL_GL_CreateContext(s->window);
 	assert(s->context);
 
@@ -285,33 +284,28 @@ void setup(state* s, int w, int h) {
 
 	glEnable(GL_POLYGON_OFFSET_FILL);
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_SCISSOR_TEST);
 	glDisable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glViewport(0, 0, w - 250, h);
 
 	SDL_GL_SetSwapInterval(-1);
 
-	GLuint vert, frag, cvert, cfrag, uvert, ufrag;
+	GLuint vert, frag, cvert, cfrag;
 	vert = glCreateShader(GL_VERTEX_SHADER);
 	cvert = glCreateShader(GL_VERTEX_SHADER);
 	frag = glCreateShader(GL_FRAGMENT_SHADER);
 	cfrag = glCreateShader(GL_FRAGMENT_SHADER);
-	uvert = glCreateShader(GL_VERTEX_SHADER);
-	ufrag = glCreateShader(GL_FRAGMENT_SHADER);
 
 	glShaderSource(vert, 1, &vertex, NULL);
 	glShaderSource(cvert, 1, &colorvertex, NULL);
-	glShaderSource(uvert, 1, &vtextured2D, NULL);
 	glShaderSource(frag, 1, &fragment, NULL);
 	glShaderSource(cfrag, 1, &colorfragment, NULL);
-	glShaderSource(ufrag, 1, &ftextured2D, NULL);
 
 	glCompileShader(vert);
 	glCompileShader(cvert);
 	glCompileShader(frag);
 	glCompileShader(cfrag);
-	glCompileShader(uvert);
-	glCompileShader(ufrag);
 
 	s->graphShader = glCreateProgram();
 	glAttachShader(s->graphShader, vert);
@@ -323,50 +317,59 @@ void setup(state* s, int w, int h) {
 	glAttachShader(s->axisShader, cfrag);
 	glLinkProgram(s->axisShader);
 
-	s->uiShader = glCreateProgram();
-	glAttachShader(s->uiShader, uvert);
-	glAttachShader(s->uiShader, ufrag);
-	glLinkProgram(s->uiShader);
-
 	glDeleteShader(vert);
 	glDeleteShader(cvert);
 	glDeleteShader(frag);
 	glDeleteShader(cfrag);
-	glDeleteShader(uvert);
-	glDeleteShader(ufrag);
 
-	glGenVertexArrays(1, &s->VAO);
+	glGenVertexArrays(1, &s->axisVAO);
+	glGenVertexArrays(1, &s->graphVAO);
 	glGenBuffers(1, &s->axisVBO);
 	glGenBuffers(1, &s->graphVBO);
-	glGenBuffers(1, &s->uiVBO);
 	glGenBuffers(1, &s->EBO);
 
 	TTF_Init();
-	TTF_Font* font = TTF_OpenFontRW(SDL_RWFromConstMem((const void*)DroidSans_ttf, DroidSans_ttf_len), 1, 96);
-	SDL_Surface* surf1 = TTF_RenderText_Shaded(font, "f(x,y) = sin(x)*sin(y)", { 0, 0, 0 }, { 255, 255, 255 });
-	SDL_Surface* surf = SDL_ConvertSurfaceFormat(surf1, SDL_PIXELFORMAT_RGB888, 0);
-
-	glGenTextures(1, &s->texture);
-	glBindTexture(GL_TEXTURE_2D, s->texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surf->w, surf->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, surf->pixels);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	SDL_FreeSurface(surf1);
-	SDL_FreeSurface(surf);
+	s->font = TTF_OpenFontRW(SDL_RWFromConstMem((const void*)DroidSans_ttf, DroidSans_ttf_len), 1, 48);
 
 	s->c = defaultCam();
 	s->running = true;
+	s->instate = in_idle;
 
-#define push(x, y, tx, ty) s->UI.push_back(x); \
-						   s->UI.push_back(y); \
-						   s->UI.push_back(tx); \
-						   s->UI.push_back(ty);
+	s->ui.init();
 
-	push(-1.0f, 1.0f, 0.0f, 1.0f);
-	push(1.0f, 1.0f, 1.0f, 1.0f);
-	push(-1.0f, 0.9f, 0.0f, 0.0f);
+#define normw(x) (((float)x)/(245.0f))
+#define normh(x) (((float)x)/(s->h))
+	{
+		int tw, th;
+		string str = "f(x,y) =";
+		TTF_SizeText(s->font, str.c_str(), &tw, &th);
+		UItext* text = new UItext(s->font, str);
 
-	push(1.0f, 1.0f, 1.0f, 1.0f);
-	push(-1.0f, 0.9f, 0.0f, 0.0f);
-	push(1.0f, 0.9f, 1.0f, 0.0f);
+		text->points[0] = { -1.0f, 1.0f, 0.0f, 1.0f };
+		text->points[1] = { -1.0f + normw(tw), 1.0f, 1.0f, 1.0f };
+		text->points[2] = { -1.0f, 1.0f - normh(th), 0.0f, 0.0f };
+
+		text->points[3] = { -1.0f + normw(tw), 1.0f, 1.0f, 1.0f };
+		text->points[4] = { -1.0f, 1.0f - normh(th), 0.0f, 0.0f };
+		text->points[5] = { -1.0f + normw(tw), 1.0f - normh(th), 1.0f, 0.0f };
+
+		s->ui.elements.push_back(text);
+	}
+
+	{
+		int tw, th;
+		string str = "=============";
+		TTF_SizeText(s->font, str.c_str(), &tw, &th);
+		UItext* text = new UItext(s->font, str);
+
+		text->points[0] = { -1.0f, 1.0f, 0.0f, 1.0f };
+		text->points[1] = { -1.0f + normw(tw), 1.0f, 1.0f, 1.0f };
+		text->points[2] = { -1.0f, 1.0f - normh(th), 0.0f, 0.0f };
+
+		text->points[3] = { -1.0f + normw(tw), 1.0f, 1.0f, 1.0f };
+		text->points[4] = { -1.0f, 1.0f - normh(th), 0.0f, 0.0f };
+		text->points[5] = { -1.0f + normw(tw), 1.0f - normh(th), 1.0f, 0.0f };
+
+		s->ui.elements.push_back(text);
+	}
 }

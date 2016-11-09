@@ -5,7 +5,6 @@
 
 #include <assert.h>
 #include <SDL.h>
-#include <SDL_ttf.h>
 #include <SDL_opengl.h>
 
 #include <glm.hpp>
@@ -16,29 +15,37 @@
 
 #include "cam.h"
 #include "exp.h"
+#include "ui.h"
 
 using namespace glm;
 using namespace std;
 
 struct graph {
 	vector<op> eq;
+	string eq_str;
 	float xmin, xmax, ymin, ymax;
 	unsigned int xrez, yrez;
+};
+
+enum inputstate {
+	in_idle,
+	in_cam
 };
 
 struct state {
 	SDL_Window* window;
 	int w, h;
 	SDL_GLContext context;
-	GLuint axisShader, graphShader, uiShader, VAO, axisVBO, graphVBO, uiVBO, EBO;
-	GLuint texture;
+	GLuint axisShader, graphShader, axisVAO, graphVAO, axisVBO, graphVBO, EBO;
 	
 	vector<GLfloat> verticies;
 	vector<GLuint> indicies;
-	vector<GLfloat> UI;
-
+	
+	UI ui;
+	TTF_Font* font;
 	graph g;
 	cam c;
+	inputstate instate;
 
 	bool running;
 };
@@ -90,32 +97,6 @@ const GLchar* fragment = {
 
 	"void main() {\n"
 	"	color = vcolor;\n"
-	"}\n"
-};
-
-const GLchar* vtextured2D = {
-	"#version 330 core\n"
-
-	"layout (location = 0) in vec2 position;\n"
-	"layout (location = 1) in vec2 tcoord;\n"
-
-	"out vec2 coord;\n"
-
-	"void main() {\n"
-	"	gl_Position = vec4(position, 0.0f, 1.0f);\n"
-	"	coord = tcoord;\n"
-	"}\n"
-};
-
-const GLchar* ftextured2D{
-	"#version 330 core\n"
-
-	"in vec2 coord;\n"
-	"out vec4 color;\n"
-	"uniform sampler2D tex;\n"
-
-	"void main() {\n"
-	"	color = texture(tex, vec2(coord.x, 1.0f - coord.y));\n"
 	"}\n"
 };
 

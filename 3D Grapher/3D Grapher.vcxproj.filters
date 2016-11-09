@@ -35,6 +35,9 @@
     <ClInclude Include="..\src\glfuns.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\SDL2.data">
