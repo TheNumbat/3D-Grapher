@@ -46,10 +46,6 @@ void kill(state* s);
 int main(int argc, char** args) {
 
 	state st;
-	setup(&st, 1280, 720);
-
-	string exp;
-	stringstream ss;
 
 	st.g.xmin = -25;
 	st.g.xmax = 25;
@@ -57,7 +53,12 @@ int main(int argc, char** args) {
 	st.g.ymax = 25;
 	st.g.xrez = 250;
 	st.g.yrez = 250;
-	st.g.eq_str = "sin(x)*sin(y)";
+	st.g.eq_str = "x^2-y^2";
+
+	setup(&st, 1280, 720);
+
+	string exp;
+	stringstream ss;
 
 	ss << st.g.eq_str;
 	in(ss, st.g.eq);
@@ -170,6 +171,7 @@ void loop(state* s) {
 		glClear(GL_COLOR_BUFFER_BIT);
 		glScissor(0, 0, s->w, s->h);
 		glViewport(s->w - 245, 0, 245, s->h);
+		s->ui.elements[1]->reload("WEW LAD");
 		s->ui.render();
 		glViewport(0, 0, s->w - 250, s->h);
 
@@ -358,17 +360,16 @@ void setup(state* s, int w, int h) {
 
 	{
 		int tw, th;
-		string str = "=============";
-		TTF_SizeText(s->font, str.c_str(), &tw, &th);
-		UItext* text = new UItext(s->font, str);
+		TTF_SizeText(s->font, s->g.eq_str.c_str(), &tw, &th);
+		UItext* text = new UItext(s->font, s->g.eq_str);
 
-		text->points[0] = { -1.0f, 1.0f, 0.0f, 1.0f };
-		text->points[1] = { -1.0f + normw(tw), 1.0f, 1.0f, 1.0f };
-		text->points[2] = { -1.0f, 1.0f - normh(th), 0.0f, 0.0f };
+		text->points[0] = { -1.0f, -1.0f, 0.0f, 0.0f };
+		text->points[1] = { -1.0f + normw(tw), -1.0f, 1.0f, 0.0f };
+		text->points[2] = { -1.0f, -1.0f + normh(th), 0.0f, 1.0f };
 
-		text->points[3] = { -1.0f + normw(tw), 1.0f, 1.0f, 1.0f };
-		text->points[4] = { -1.0f, 1.0f - normh(th), 0.0f, 0.0f };
-		text->points[5] = { -1.0f + normw(tw), 1.0f - normh(th), 1.0f, 0.0f };
+		text->points[3] = { -1.0f + normw(tw), -1.0f, 1.0f, 0.0f };
+		text->points[4] = { -1.0f, -1.0f + normh(th), 0.0f, 1.0f };
+		text->points[5] = { -1.0f + normw(tw), -1.0f + normh(th), 1.0f, 1.0f };
 
 		s->ui.elements.push_back(text);
 	}
