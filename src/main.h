@@ -29,7 +29,8 @@ struct graph {
 
 enum inputstate {
 	in_idle,
-	in_cam
+	in_cam,
+	in_text
 };
 
 struct state {

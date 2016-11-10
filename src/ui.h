@@ -124,22 +124,32 @@ struct UItext : public UIelement {
 
 struct graphelement {
 	int pxoffset;
+	int pxoffset_bot;
 	vector<int> UIelements;
+	string str;
+	bool operator==(const graphelement& other) {
+		return pxoffset == other.pxoffset && pxoffset_bot == other.pxoffset_bot && str == other.str;
+	}
 };
 
 struct UI {
 	vector<UIelement*> elements;
 	vector<graphelement> gelements;
+	graphelement* selected;
 	GLuint program;
 	int editing;
 	~UI() {
 		reset();
 	}
-	void reset() {
+	vector<string> reset() {
 		for (UIelement* e : elements)
 			delete e;
+		vector<string> ret;
+		for (graphelement& ge : gelements)
+			ret.push_back(ge.str);
 		elements.clear();
 		gelements.clear();
+		return ret;
 	}
 	void init() {
 		GLuint vert, frag;
@@ -162,7 +172,7 @@ struct UI {
 				elements[i]->render(program);
 		}
 		for (auto g : gelements) {
-			glScissor(0, h - g.pxoffset / 2 - 10, round(0.25f * w) - 3, 3);
+			glScissor(0, h - g.pxoffset_bot / 2 - 10, round(0.25f * w) - 3, 3);
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
 			glScissor(0, 0, w, h);

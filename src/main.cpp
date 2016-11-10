@@ -44,7 +44,9 @@ using namespace std;
 void loop(state* s);
 void setup(state* s, int w, int h);
 void kill(state* s);
-int addMultiLineText(state* s, string str, float x, float y, float woffset, float hoffset);
+int addMultiLineText(state* s, string str, float x, float y, float woffset, float hoffset, bool addGE = true);
+void resetUI(state* s);
+void regengraph(state* s);
 
 int main(int argc, char** args) {
 
@@ -190,10 +192,7 @@ void loop(state* s) {
 				if (ev.window.event == SDL_WINDOWEVENT_RESIZED) {
 					s->w = ev.window.data1;
 					s->h = ev.window.data2;
-					s->ui.reset();
-					int offset = 0;
-					offset = addMultiLineText(s, "EQUATIONS", -1.0f, 1.0f, normw(10), normh(10));
-					offset = addMultiLineText(s, s->g.eq_str, -1.0f, 1.0f, normw(10), normh(25 + offset));
+					resetUI(s);
 					glViewport(0, 0, s->w, s->h);
 				}
 				break;
@@ -227,6 +226,13 @@ void loop(state* s) {
 					SDL_CaptureMouse(SDL_TRUE);
 					SDL_SetRelativeMouseMode(SDL_TRUE);
 				}
+				for (graphelement& g : s->ui.gelements) {
+					if (s->instate == in_idle && ev.button.x < round(0.25f * s->w) && ev.button.y > (g.pxoffset - 5) / 2 && ev.button.y < (g.pxoffset_bot + 5) / 2) {
+						s->ui.selected = &g;
+						s->instate = in_text;
+						SDL_StartTextInput();
+					}
+				}
 				break;
 			}
 			case SDL_MOUSEBUTTONUP: {
@@ -241,8 +247,36 @@ void loop(state* s) {
 			case SDL_KEYDOWN: {
 				switch (ev.key.keysym.sym) {
 				case SDLK_ESCAPE:
-					s->running = false;
+					if (s->instate == in_text)
+						s->instate = in_idle;
 					break;
+				case SDLK_BACKSPACE:
+					if (s->instate == in_text) {
+						if (s->ui.selected->str.size()) {
+							s->ui.selected->str.pop_back();
+							resetUI(s);
+						}
+						else {
+							s->ui.gelements.erase(remove(s->ui.gelements.begin(), s->ui.gelements.end(), *s->ui.selected), s->ui.gelements.end());
+							s->instate = in_idle;
+							resetUI(s);
+						}
+					}
+					break;
+				case SDLK_RETURN:
+					if (s->instate = in_text) {
+						s->g.eq_str = s->ui.selected->str;
+						regengraph(s);
+						s->instate = in_idle;
+					}
+					break;
+				}
+				break;
+			}
+			case SDL_TEXTINPUT: {
+				if (s->instate == in_text) {
+					s->ui.selected->str += ev.text.text;
+					resetUI(s);
 				}
 				break;
 			}
@@ -250,23 +284,67 @@ void loop(state* s) {
 		}
 		float dT = (SDL_GetTicks() - s->c.lastUpdate) / 1000.0f;
 		s->c.lastUpdate = SDL_GetTicks();
-		if (keys[SDL_SCANCODE_W]) {
-			s->c.pos += s->c.front * s->c.speed * dT;
-		}
-		if (keys[SDL_SCANCODE_S]) {
-			s->c.pos -= s->c.front * s->c.speed * dT;
-		}
-		if (keys[SDL_SCANCODE_A]) {
-			s->c.pos -= s->c.right * s->c.speed * dT;
-		}
-		if (keys[SDL_SCANCODE_D]) {
-			s->c.pos += s->c.right * s->c.speed * dT;
+		if (s->instate == in_cam) {
+			if (keys[SDL_SCANCODE_W]) {
+				s->c.pos += s->c.front * s->c.speed * dT;
+			}
+			if (keys[SDL_SCANCODE_S]) {
+				s->c.pos -= s->c.front * s->c.speed * dT;
+			}
+			if (keys[SDL_SCANCODE_A]) {
+				s->c.pos -= s->c.right * s->c.speed * dT;
+			}
+			if (keys[SDL_SCANCODE_D]) {
+				s->c.pos += s->c.right * s->c.speed * dT;
+			}
 		}
 
 		SDL_GL_SwapWindow(s->window);
 
 		Uint64 end = SDL_GetPerformanceCounter();
-		cout << "frame: " << 1000.0f * (end - start) / (float)SDL_GetPerformanceFrequency() << "ms" << endl;
+		//cout << "frame: " << 1000.0f * (end - start) / (float)SDL_GetPerformanceFrequency() << "ms" << endl;
+	}
+}
+
+void regengraph(state* s) {
+	s->indicies.clear();
+	s->verticies.clear();
+	s->g.eq.clear();
+
+	stringstream ss;
+
+	ss << s->g.eq_str;
+	in(ss, s->g.eq);
+	printeq(cout, s->g.eq);
+
+	Uint64 start = SDL_GetPerformanceCounter();
+	gengraph(s);
+	Uint64 end = SDL_GetPerformanceCounter();
+	cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << endl;
+
+	glBindVertexArray(s->graphVAO);
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, s->graphVBO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->EBO);
+
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * s->indicies.size(), s->indicies.size() ? &s->indicies[0] : NULL, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->verticies.size(), s->verticies.size() ? &s->verticies[0] : NULL, GL_STATIC_DRAW);
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+		glEnableVertexAttribArray(0);
+	}
+
+	glBindVertexArray(s->axisVAO);
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, s->axisVBO);
+
+		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+		glEnableVertexAttribArray(0);
+
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+		glEnableVertexAttribArray(1);
 	}
 }
 
@@ -346,8 +424,10 @@ void setup(state* s, int w, int h) {
 	s->instate = in_idle;
 
 	s->ui.init();
+	resetUI(s);
+
 	int offset = 0;
-	offset = addMultiLineText(s, "EQUATIONS", -1.0f, 1.0f, normw(10), normh(10));
+	offset = addMultiLineText(s, "EQUATIONS", -1.0f, 1.0f, normw(10), normh(25 + offset));
 	offset = addMultiLineText(s, s->g.eq_str, -1.0f, 1.0f, normw(10), normh(25 + offset));
 
 	/*SDL_Surface* temp = SDL_LoadBMP("wewlad.bmp");
@@ -364,20 +444,24 @@ void setup(state* s, int w, int h) {
 	s->ui.elements.push_back(texture);*/
 }
 
-int addMultiLineText(state* s, string str, float x, float y, float woffset, float hoffset) {
+int addMultiLineText(state* s, string str, float x, float y, float woffset, float hoffset, bool addGE) {
+	graphelement ge;
+	ge.str = str;
+	ge.pxoffset = hoffset * s->h;
 	int tw, th;
 	TTF_SizeText(s->font, str.c_str(), &tw, &th);
 	int stroffset = 0;
-	graphelement ge;
 	for (float i = normw(tw); i > 0 && stroffset != str.size(); i -= 1.0f)
 	{
-		tw = 0;
 		int end = stroffset + 1;
-		do {
-			if (end >= str.size()) break;
-			TTF_SizeText(s->font, str.substr(stroffset, end - stroffset).c_str(), &tw, &th);
-			end++;
-		} while (tw < (1.0f - x) * round(0.23f * s->w));
+		if (str.size() > 1) {
+			tw = 0;
+			do {
+				if (end == str.size()) break;
+				TTF_SizeText(s->font, str.substr(stroffset, end - stroffset).c_str(), &tw, &th);
+				end++;
+			} while (tw < (1.0f - x) * round(0.23f * s->w));
+		}
 		float normW = normw(tw);
 		float normH = normh(th);
 
@@ -397,7 +481,14 @@ int addMultiLineText(state* s, string str, float x, float y, float woffset, floa
 		s->ui.elements.push_back(text);
 		ge.UIelements.push_back(s->ui.elements.size() - 1);
 	}
-	ge.pxoffset = hoffset * s->h;
+	ge.pxoffset_bot = hoffset * s->h;
 	s->ui.gelements.push_back(ge);
 	return hoffset * s->h;
+}
+
+void resetUI(state* s) {
+	vector<string> gstrs = s->ui.reset();
+	int offset = 0;
+	for(string& str : gstrs)
+		offset = addMultiLineText(s, str, -1.0f, 1.0f, normw(10), normh(25 + offset));
 }
