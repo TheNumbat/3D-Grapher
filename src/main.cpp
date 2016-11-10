@@ -19,7 +19,6 @@ using namespace std;
 		// Transparency, blending, maybe sorting
 		// Lighting
 		// Multiple graphs
-		// glPolygonOffset inconsistant
 		// Transparent UI
 	// Math Features
 		// Highlight curve along a set x/y
@@ -39,9 +38,13 @@ using namespace std;
 	// Notes
 		// To encode binary file as data: xxd -i infile.bin outfile.h
 
+#define normw(x) (((float)x)/(s->w * 0.25f))
+#define normh(x) (((float)x)/(s->h))
+
 void loop(state* s);
 void setup(state* s, int w, int h);
 void kill(state* s);
+int addMultiLineText(state* s, string str, float x, float y, float woffset, float hoffset);
 
 int main(int argc, char** args) {
 
@@ -53,7 +56,7 @@ int main(int argc, char** args) {
 	st.g.ymax = 25;
 	st.g.xrez = 250;
 	st.g.yrez = 250;
-	st.g.eq_str = "x^2-y^2";
+	st.g.eq_str = "sin(x)*sin(y)*(sin(x)*sin(y))^(3/2)";
 
 	setup(&st, 1280, 720);
 
@@ -165,15 +168,16 @@ void loop(state* s) {
 			glDrawArrays(GL_LINES, 0, 6);
 		}
 
-		glViewport(s->w - 250, 0, 3, s->h);
-		glScissor(s->w - 250, 0, 3, s->h);
+		glViewport(0, round(0.25f * s->w) - 3, 3, s->h);
+		glScissor(round(0.25f * s->w) - 3, 0, 3, s->h);
+
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+		
 		glScissor(0, 0, s->w, s->h);
-		glViewport(s->w - 245, 0, 245, s->h);
-		s->ui.elements[1]->reload("WEW LAD");
-		s->ui.render();
-		glViewport(0, 0, s->w - 250, s->h);
+		glViewport(0, 0, round(0.25f * s->w) - 3, s->h);
+		s->ui.render(s->w, s->h);
+		glViewport(round(0.25f * s->w), 0, round(0.75f * s->w), s->h);
 
 		SDL_Event ev;
 		while (SDL_PollEvent(&ev) != 0) {
@@ -186,7 +190,11 @@ void loop(state* s) {
 				if (ev.window.event == SDL_WINDOWEVENT_RESIZED) {
 					s->w = ev.window.data1;
 					s->h = ev.window.data2;
-					glViewport(0, 0, s->w - 250, s->h);
+					s->ui.reset();
+					int offset = 0;
+					offset = addMultiLineText(s, "EQUATIONS", -1.0f, 1.0f, normw(10), normh(10));
+					offset = addMultiLineText(s, s->g.eq_str, -1.0f, 1.0f, normw(10), normh(25 + offset));
+					glViewport(0, 0, s->w, s->h);
 				}
 				break;
 			}
@@ -214,7 +222,7 @@ void loop(state* s) {
 				break;
 			}
 			case SDL_MOUSEBUTTONDOWN: {
-				if (s->instate == in_idle && ev.button.x < s->w - 250) {
+				if (s->instate == in_idle && ev.button.x > round(0.25f * s->w)) {
 					s->instate = in_cam;
 					SDL_CaptureMouse(SDL_TRUE);
 					SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -226,7 +234,7 @@ void loop(state* s) {
 					s->instate = in_idle;
 					SDL_CaptureMouse(SDL_FALSE);
 					SDL_SetRelativeMouseMode(SDL_FALSE);
-					SDL_WarpMouseInWindow(s->window, (s->w - 250) / 2, s->h / 2);
+					SDL_WarpMouseInWindow(s->window, round(s->w * 0.625f), s->h / 2);
 				}
 				break;
 			}
@@ -338,39 +346,58 @@ void setup(state* s, int w, int h) {
 	s->instate = in_idle;
 
 	s->ui.init();
+	int offset = 0;
+	offset = addMultiLineText(s, "EQUATIONS", -1.0f, 1.0f, normw(10), normh(10));
+	offset = addMultiLineText(s, s->g.eq_str, -1.0f, 1.0f, normw(10), normh(25 + offset));
 
-#define normw(x) (((float)x)/(245.0f))
-#define normh(x) (((float)x)/(s->h))
+	/*SDL_Surface* temp = SDL_LoadBMP("wewlad.bmp");
+	UItexture* texture = new UItexture(temp);
+	SDL_FreeSurface(temp);
+
+	texture->points[0] = { -1.0f, 0.0f, 0.0f, 1.0f };
+	texture->points[1] = { 1.0f, 0.0f, 1.0f, 1.0f };
+	texture->points[2] = { -1.0f, -1.0f, 0.0f, 0.0f };
+
+	texture->points[3] = { 1.0f, 0.0f, 1.0f, 1.0f };
+	texture->points[4] = { -1.0f, -1.0f, 0.0f, 0.0f };
+	texture->points[5] = { 1.0f, -1.0f, 1.0f, 0.0f };
+	s->ui.elements.push_back(texture);*/
+}
+
+int addMultiLineText(state* s, string str, float x, float y, float woffset, float hoffset) {
+	int tw, th;
+	TTF_SizeText(s->font, str.c_str(), &tw, &th);
+	int stroffset = 0;
+	graphelement ge;
+	for (float i = normw(tw); i > 0 && stroffset != str.size(); i -= 1.0f)
 	{
-		int tw, th;
-		string str = "f(x,y) =";
-		TTF_SizeText(s->font, str.c_str(), &tw, &th);
-		UItext* text = new UItext(s->font, str);
+		tw = 0;
+		int end = stroffset + 1;
+		do {
+			if (end >= str.size()) break;
+			TTF_SizeText(s->font, str.substr(stroffset, end - stroffset).c_str(), &tw, &th);
+			end++;
+		} while (tw < (1.0f - x) * round(0.23f * s->w));
+		float normW = normw(tw);
+		float normH = normh(th);
 
-		text->points[0] = { -1.0f, 1.0f, 0.0f, 1.0f };
-		text->points[1] = { -1.0f + normw(tw), 1.0f, 1.0f, 1.0f };
-		text->points[2] = { -1.0f, 1.0f - normh(th), 0.0f, 0.0f };
+		UItext* text = new UItext(s->font, str.substr(stroffset, end - stroffset));
+		stroffset = end;
 
-		text->points[3] = { -1.0f + normw(tw), 1.0f, 1.0f, 1.0f };
-		text->points[4] = { -1.0f, 1.0f - normh(th), 0.0f, 0.0f };
-		text->points[5] = { -1.0f + normw(tw), 1.0f - normh(th), 1.0f, 0.0f };
+		text->points[0] = { x + woffset		   , y - hoffset		, 0.0f, 1.0f };
+		text->points[1] = { x + normW + woffset, y - hoffset		, 1.0f, 1.0f };
+		text->points[2] = { x + woffset		   , y - normH - hoffset, 0.0f, 0.0f };
+
+		text->points[3] = { x + normW + woffset, y - hoffset		, 1.0f, 1.0f };
+		text->points[4] = { x + woffset		   , y - normH - hoffset, 0.0f, 0.0f };
+		text->points[5] = { x + normW + woffset, y - normH - hoffset, 1.0f, 0.0f };
+
+		hoffset += normH;
 
 		s->ui.elements.push_back(text);
+		ge.UIelements.push_back(s->ui.elements.size() - 1);
 	}
-
-	{
-		int tw, th;
-		TTF_SizeText(s->font, s->g.eq_str.c_str(), &tw, &th);
-		UItext* text = new UItext(s->font, s->g.eq_str);
-
-		text->points[0] = { -1.0f, -1.0f, 0.0f, 0.0f };
-		text->points[1] = { -1.0f + normw(tw), -1.0f, 1.0f, 0.0f };
-		text->points[2] = { -1.0f, -1.0f + normh(th), 0.0f, 1.0f };
-
-		text->points[3] = { -1.0f + normw(tw), -1.0f, 1.0f, 0.0f };
-		text->points[4] = { -1.0f, -1.0f + normh(th), 0.0f, 1.0f };
-		text->points[5] = { -1.0f + normw(tw), -1.0f + normh(th), 1.0f, 1.0f };
-
-		s->ui.elements.push_back(text);
-	}
+	ge.pxoffset = hoffset * s->h;
+	s->ui.gelements.push_back(ge);
+	return hoffset * s->h;
 }
