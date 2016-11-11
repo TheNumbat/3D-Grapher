@@ -23,6 +23,8 @@ using namespace std;
 struct graph {
 	vector<op> eq;
 	string eq_str;
+	vector<GLfloat> verticies;
+	vector<GLuint> indicies;
 	float xmin, xmax, ymin, ymax;
 	unsigned int xrez, yrez;
 };
@@ -38,9 +40,6 @@ struct state {
 	int w, h;
 	SDL_GLContext context;
 	GLuint axisShader, graphShader, axisVAO, graphVAO, axisVBO, graphVBO, EBO;
-	
-	vector<GLfloat> verticies;
-	vector<GLuint> indicies;
 	
 	UI ui;
 	TTF_Font* font;

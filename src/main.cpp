@@ -44,7 +44,7 @@ using namespace std;
 void loop(state* s);
 void setup(state* s, int w, int h);
 void kill(state* s);
-int addMultiLineText(state* s, string str, float x, float y, float woffset, float hoffset, bool addGE = true);
+int addMultiLineText(state* s, string str, float x, float y, float woffset, float hoffset);
 void resetUI(state* s);
 void regengraph(state* s);
 
@@ -103,8 +103,8 @@ void loop(state* s) {
 		glBindBuffer(GL_ARRAY_BUFFER, s->graphVBO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->EBO);
 
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * s->indicies.size(), s->indicies.size() ? &s->indicies[0] : NULL, GL_STATIC_DRAW);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->verticies.size(), s->verticies.size() ? &s->verticies[0] : NULL, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * s->g.indicies.size(), s->g.indicies.size() ? &s->g.indicies[0] : NULL, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->g.verticies.size(), s->g.verticies.size() ? &s->g.verticies[0] : NULL, GL_STATIC_DRAW);
 
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 		glEnableVertexAttribArray(0);
@@ -147,13 +147,13 @@ void loop(state* s) {
 			glPolygonOffset(1.0f, 0.0f);
 			
 			glUniform4f(glGetUniformLocation(s->graphShader, "vcolor"), 0.8f, 0.8f, 0.8f, 1.0f);
-			glDrawElements(GL_TRIANGLES, s->indicies.size(), GL_UNSIGNED_INT, (void*)0);
+			glDrawElements(GL_TRIANGLES, s->g.indicies.size(), GL_UNSIGNED_INT, (void*)0);
 
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			glPolygonOffset(0.0f, 0.0f);
 			
 			glUniform4f(glGetUniformLocation(s->graphShader, "vcolor"), 0.2f, 0.2f, 0.2f, 1.0f);
-			glDrawElements(GL_TRIANGLES, s->indicies.size(), GL_UNSIGNED_INT, (void*)0);
+			glDrawElements(GL_TRIANGLES, s->g.indicies.size(), GL_UNSIGNED_INT, (void*)0);
 		}
 
 		glBindVertexArray(s->axisVAO);
@@ -226,12 +226,19 @@ void loop(state* s) {
 					SDL_CaptureMouse(SDL_TRUE);
 					SDL_SetRelativeMouseMode(SDL_TRUE);
 				}
+				int lastpx;
 				for (graphelement& g : s->ui.gelements) {
 					if (s->instate == in_idle && ev.button.x < round(0.25f * s->w) && ev.button.y > (g.pxoffset - 5) / 2 && ev.button.y < (g.pxoffset_bot + 5) / 2) {
 						s->ui.selected = &g;
 						s->instate = in_text;
 						SDL_StartTextInput();
 					}
+					lastpx = g.pxoffset_bot;
+				}
+				if (s->instate == in_idle && ev.button.x < round(0.25f * s->w) && ev.button.y >(lastpx - 5) / 2 && ev.button.y < s->h) {
+					addMultiLineText(s, " ", -1.0f, 1.0f, normw(10), normh(25 + lastpx));
+					s->ui.selected = &s->ui.gelements.back();
+					s->instate = in_text;
 				}
 				break;
 			}
@@ -252,8 +259,10 @@ void loop(state* s) {
 					break;
 				case SDLK_BACKSPACE:
 					if (s->instate == in_text) {
-						if (s->ui.selected->str.size()) {
+						if (s->ui.selected->str != " ") {
 							s->ui.selected->str.pop_back();
+							if (!s->ui.selected->str.size())
+								s->ui.selected->str = " ";
 							resetUI(s);
 						}
 						else {
@@ -327,8 +336,8 @@ void regengraph(state* s) {
 		glBindBuffer(GL_ARRAY_BUFFER, s->graphVBO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->EBO);
 
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * s->indicies.size(), s->indicies.size() ? &s->indicies[0] : NULL, GL_STATIC_DRAW);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->verticies.size(), s->verticies.size() ? &s->verticies[0] : NULL, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * s->g.indicies.size(), s->g.indicies.size() ? &s->g.indicies[0] : NULL, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->g.verticies.size(), s->g.verticies.size() ? &s->g.verticies[0] : NULL, GL_STATIC_DRAW);
 
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 		glEnableVertexAttribArray(0);
@@ -444,7 +453,7 @@ void setup(state* s, int w, int h) {
 	s->ui.elements.push_back(texture);*/
 }
 
-int addMultiLineText(state* s, string str, float x, float y, float woffset, float hoffset, bool addGE) {
+int addMultiLineText(state* s, string str, float x, float y, float woffset, float hoffset) {
 	graphelement ge;
 	ge.str = str;
 	ge.pxoffset = hoffset * s->h;
