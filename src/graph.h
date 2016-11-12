@@ -48,7 +48,7 @@ void gengraph(state* s) {
 	bool HT = (cpuinfo[3] & (1 << 28)) > 0;
 	if (HT) numthreads /= 2;
 
-	s->verticies.clear();
+	s->g.verticies.clear();
 
 	float dx = (s->g.xmax - s->g.xmin) / s->g.xrez;
 	float dy = (s->g.ymax - s->g.ymin) / s->g.yrez;
@@ -80,7 +80,7 @@ void gengraph(state* s) {
 	}
 	for (int i = 0; i < threads.size(); i++) {
 		threads[i].join();
-		s->verticies.insert(s->verticies.end(), data[i]->ret.begin(), data[i]->ret.end());
+		s->g.verticies.insert(s->g.verticies.end(), data[i]->ret.begin(), data[i]->ret.end());
 		data[i]->ret.clear();
 	}
 
@@ -88,15 +88,15 @@ void gengraph(state* s) {
 		for (unsigned int y = 0; y < s->g.yrez; y++) {
 			GLuint index = x * (s->g.yrez + 1) + y;
 
-			if (!isnan(s->verticies[index * 3 + 2]) &&
-				!isinf(s->verticies[index * 3 + 2])) {
-				s->indicies.push_back(index);
-				s->indicies.push_back(index + 1);
-				s->indicies.push_back(index + s->g.yrez + 1);
+			if (!isnan(s->g.verticies[index * 3 + 2]) &&
+				!isinf(s->g.verticies[index * 3 + 2])) {
+				s->g.indicies.push_back(index);
+				s->g.indicies.push_back(index + 1);
+				s->g.indicies.push_back(index + s->g.yrez + 1);
 
-				s->indicies.push_back(index + 1);
-				s->indicies.push_back(index + s->g.yrez + 1);
-				s->indicies.push_back(index + s->g.yrez + 2);
+				s->g.indicies.push_back(index + 1);
+				s->g.indicies.push_back(index + s->g.yrez + 1);
+				s->g.indicies.push_back(index + s->g.yrez + 2);
 			}
 		}
 	}

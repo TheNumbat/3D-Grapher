@@ -316,8 +316,8 @@ void loop(state* s) {
 }
 
 void regengraph(state* s) {
-	s->indicies.clear();
-	s->verticies.clear();
+	s->g.indicies.clear();
+	s->g.verticies.clear();
 	s->g.eq.clear();
 
 	stringstream ss;
