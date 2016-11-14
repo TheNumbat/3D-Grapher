@@ -6,8 +6,8 @@
 
 using namespace std;
 
-const double val_e = 2.7182818284590452353602874713527;
-const double val_pi = 3.141592653589793238462643383279;
+const float val_e = 2.7182818284590452353602874713527f;
+const float val_pi = 3.141592653589793238462643383279f;
 
 typedef int op;
 
@@ -88,8 +88,8 @@ void welcome(ostream& out) {
 float eval(const vector<op>& EQ, float x, float y) {
 	stack<float> s;
 	float one = 0, two = 0, result = 0;
-	int size = EQ.size();
-	for (int index = 0; index < size; index++) {
+	size_t size = EQ.size();
+	for (unsigned int index = 0; index < size; index++) {
 		switch (EQ[index]) {
 		case add:
 			get2();
@@ -216,7 +216,7 @@ float eval(const vector<op>& EQ, float x, float y) {
 				i2++;
 				index++;
 			}
-			s.push(atof(num.c_str()));
+			s.push((float)atof(num.c_str()));
 			break;
 		}
 	}
@@ -242,7 +242,6 @@ int precedence(char c) {
 
 bool in(istream& in, vector<op>& EQ) {
 	char buf = 0;
-	int  pos;
 	stack<op> s;
 	queue<op> q;
 	bool queued = false, added = false, ins = true;

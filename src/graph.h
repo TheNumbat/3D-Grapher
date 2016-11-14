@@ -58,7 +58,7 @@ void gengraph(state* s) {
 
 	vector<thread> threads;
 	vector<gendata*> data;
-	for (int i = 0; i < numthreads; i++) {
+	for (unsigned int i = 0; i < numthreads; i++) {
 		if (txDelta || i == numthreads - 1) {
 			gendata* d = new gendata;
 
@@ -78,7 +78,7 @@ void gengraph(state* s) {
 			xmin += txDelta * dx;
 		}
 	}
-	for (int i = 0; i < threads.size(); i++) {
+	for (unsigned int i = 0; i < threads.size(); i++) {
 		threads[i].join();
 		s->g.verticies.insert(s->g.verticies.end(), data[i]->ret.begin(), data[i]->ret.end());
 		data[i]->ret.clear();
@@ -107,7 +107,7 @@ void gengraph(state* s) {
 	axes[y_max] = s->g.ymax;
 
 	float zmin = FLT_MAX, zmax = -FLT_MAX;
-	for (int i = 0; i < threads.size(); i++) {
+	for (unsigned int i = 0; i < threads.size(); i++) {
 		if (data[i]->zmin < zmin) zmin = data[i]->zmin;
 		if (data[i]->zmax > zmax) zmax = data[i]->zmax;
 	}

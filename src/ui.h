@@ -172,7 +172,7 @@ struct UI {
 				elements[i]->render(program);
 		}
 		for (auto g : gelements) {
-			glScissor(0, h - g.pxoffset_bot / 2 - 10, round(0.25f * w) - 3, 3);
+			glScissor(0, (int)(h - g.pxoffset_bot / 2 - 10), (int)(round(0.25f * w) - 3), 3);
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT);
 			glScissor(0, 0, w, h);

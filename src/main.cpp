@@ -52,6 +52,9 @@ void regengraph(state* s);
 
 int main(int argc, char** args) {
 
+	ifstream fin("SDL2.dll", ios::binary);
+	cout << "wew" << fin.good() << endl;
+
 	state st;
 
 	st.g.xmin = -25;
@@ -149,13 +152,13 @@ void loop(state* s) {
 			glPolygonOffset(1.0f, 0.0f);
 			
 			glUniform4f(glGetUniformLocation(s->graphShader, "vcolor"), 0.8f, 0.8f, 0.8f, 1.0f);
-			glDrawElements(GL_TRIANGLES, s->g.indicies.size(), GL_UNSIGNED_INT, (void*)0);
+			glDrawElements(GL_TRIANGLES, (int)s->g.indicies.size(), GL_UNSIGNED_INT, (void*)0);
 
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			glPolygonOffset(0.0f, 0.0f);
 			
 			glUniform4f(glGetUniformLocation(s->graphShader, "vcolor"), 0.2f, 0.2f, 0.2f, 1.0f);
-			glDrawElements(GL_TRIANGLES, s->g.indicies.size(), GL_UNSIGNED_INT, (void*)0);
+			glDrawElements(GL_TRIANGLES, (int)s->g.indicies.size(), GL_UNSIGNED_INT, (void*)0);
 		}
 
 		glBindVertexArray(s->axisVAO);
@@ -172,16 +175,16 @@ void loop(state* s) {
 			glDrawArrays(GL_LINES, 0, 6);
 		}
 
-		glViewport(0, round(0.25f * s->w) - 3, 3, s->h);
-		glScissor(round(0.25f * s->w) - 3, 0, 3, s->h);
+		glViewport(0, (int)(round(0.25f * s->w) - 3), 3, s->h);
+		glScissor((int)(round(0.25f * s->w) - 3), 0, 3, s->h);
 
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		
 		glScissor(0, 0, s->w, s->h);
-		glViewport(0, 0, round(0.25f * s->w) - 3, s->h);
+		glViewport(0, 0, (int)(round(0.25f * s->w) - 3), s->h);
 		s->ui.render(s->w, s->h);
-		glViewport(round(0.25f * s->w), 0, round(0.75f * s->w), s->h);
+		glViewport((int)round(0.25f * s->w), 0, (int)round(0.75f * s->w), s->h);
 
 		SDL_Event ev;
 		while (SDL_PollEvent(&ev) != 0) {
@@ -249,7 +252,7 @@ void loop(state* s) {
 					s->instate = in_idle;
 					SDL_CaptureMouse(SDL_FALSE);
 					SDL_SetRelativeMouseMode(SDL_FALSE);
-					SDL_WarpMouseInWindow(s->window, round(s->w * 0.625f), s->h / 2);
+					SDL_WarpMouseInWindow(s->window, (int)round(s->w * 0.625f), s->h / 2);
 				}
 				break;
 			}
@@ -445,7 +448,7 @@ void setup(state* s, int w, int h) {
 int addMultiLineText(state* s, string str, float x, float y, float woffset, float hoffset) {
 	graphelement ge;
 	ge.str = str;
-	ge.pxoffset = hoffset * s->h;
+	ge.pxoffset = (int)round(hoffset * s->h);
 	int tw, th;
 	TTF_SizeText(s->font, str.c_str(), &tw, &th);
 	int stroffset = 0;
@@ -477,11 +480,11 @@ int addMultiLineText(state* s, string str, float x, float y, float woffset, floa
 		hoffset += normH;
 
 		s->ui.elements.push_back(text);
-		ge.UIelements.push_back(s->ui.elements.size() - 1);
+		ge.UIelements.push_back((int)s->ui.elements.size() - 1);
 	}
-	ge.pxoffset_bot = hoffset * s->h;
+	ge.pxoffset_bot = (int)(hoffset * s->h);
 	s->ui.gelements.push_back(ge);
-	return hoffset * s->h;
+	return (int)(hoffset * s->h);
 }
 
 void resetUI(state* s) {
