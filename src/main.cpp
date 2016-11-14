@@ -20,7 +20,9 @@ using namespace std;
 		// Lighting
 		// Multiple graphs
 		// Transparent UI
+		// Antialiasing
 	// Math Features
+		// Parametric Eqs
 		// Highlight curve along a set x/y
 		// Partials
 		// Level Curves
@@ -438,19 +440,6 @@ void setup(state* s, int w, int h) {
 	int offset = 0;
 	offset = addMultiLineText(s, "EQUATIONS", -1.0f, 1.0f, normw(10), normh(25 + offset));
 	offset = addMultiLineText(s, s->g.eq_str, -1.0f, 1.0f, normw(10), normh(25 + offset));
-
-	/*SDL_Surface* temp = SDL_LoadBMP("wewlad.bmp");
-	UItexture* texture = new UItexture(temp);
-	SDL_FreeSurface(temp);
-
-	texture->points[0] = { -1.0f, 0.0f, 0.0f, 1.0f };
-	texture->points[1] = { 1.0f, 0.0f, 1.0f, 1.0f };
-	texture->points[2] = { -1.0f, -1.0f, 0.0f, 0.0f };
-
-	texture->points[3] = { 1.0f, 0.0f, 1.0f, 1.0f };
-	texture->points[4] = { -1.0f, -1.0f, 0.0f, 0.0f };
-	texture->points[5] = { 1.0f, -1.0f, 1.0f, 0.0f };
-	s->ui.elements.push_back(texture);*/
 }
 
 int addMultiLineText(state* s, string str, float x, float y, float woffset, float hoffset) {

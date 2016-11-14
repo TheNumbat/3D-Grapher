@@ -144,8 +144,6 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\font.data" />
-    <None Include="..\src\SDL2.data" />
-    <None Include="..\src\SDL2_ttf.data" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
