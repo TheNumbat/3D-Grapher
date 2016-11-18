@@ -17,7 +17,7 @@ struct cam {
 
 mat4 getView(cam c) {
 	mat4 ret = lookAt(c.pos, c.pos + c.front, c.up);
-	ret = rotate(ret, radians(90.0f), vec3(1, 0, 0));
+	ret = rotate(ret, radians(-90.0f), vec3(1, 0, 0));
 	return ret;
 }
 
