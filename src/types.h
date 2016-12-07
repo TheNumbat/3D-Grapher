@@ -86,10 +86,12 @@ struct widget {
 		glBindVertexArray(0);
 	}
 	virtual int render(int y_pos, int w, int h, int xoffset, GLuint program) = 0;
-	virtual void process(SDL_Event ev) = 0;
+	virtual bool process(SDL_Event ev, int w, state* s) = 0;
 	function<void(state*)> callback;
 	point pts[6];
 	GLuint VAO, VBO, texture;
+	int current_y, current_yh;
+	bool active;
 };
 
 struct UI {

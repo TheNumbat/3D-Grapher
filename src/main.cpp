@@ -3,7 +3,7 @@
 #include <fstream>
 #include <string>
 
-const float UI_SCREEN_RATIO = 0.25f;
+const float UI_SCREEN_RATIO = 0.2f;
 
 #include "font.data"
 #include "glfuns.h"
@@ -60,7 +60,7 @@ int main(int argc, char** args) {
 	st.g.ymax = 10;
 	st.g.xrez = 200;
 	st.g.yrez = 200;
-	st.g.eq_str = "sin(x)*sin(y)*sin(x)*sin(y)";
+	st.g.eq_str = "5*(sin(x)*sin(y))^3";
 
 	setup(&st, 1280, 720);
 	regengraph(&st);
@@ -147,6 +147,12 @@ void loop(state* s) {
 
 		SDL_Event ev;
 		while (SDL_PollEvent(&ev) != 0) {
+			bool intercepted = false;
+			for (widget* w : s->ui.widgets) {
+				intercepted = w->process(ev, (int)round(s->w * UI_SCREEN_RATIO), s);
+				if (intercepted) break;
+			}
+			if (intercepted) continue;
 			switch (ev.type) {
 			case SDL_QUIT: {
 				s->running = false;
@@ -186,7 +192,7 @@ void loop(state* s) {
 				break;
 			}
 			case SDL_MOUSEBUTTONDOWN: {
-				if (s->instate == in_idle) {
+				if (s->instate == in_idle && ev.button.x > (int)round(s->w * UI_SCREEN_RATIO)) {
 					s->instate = in_cam;
 					SDL_CaptureMouse(SDL_TRUE);
 					SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -312,16 +318,6 @@ void setup(state* s, int w, int h) {
 	TTF_Init();
 	font = TTF_OpenFontRW(SDL_RWFromConstMem((const void*)DroidSans_ttf, DroidSans_ttf_len), 1, 24);
 
-	{
-		fxy_equation* eqw = new fxy_equation();
-		eqw->exp = s->g.eq_str;
-		s->ui.widgets.push_back(eqw);
-	}
-	{
-		fxy_equation* eqw = new fxy_equation();
-		eqw->exp = s->g.eq_str;
-		s->ui.widgets.push_back(eqw);
-	}
 	{
 		fxy_equation* eqw = new fxy_equation();
 		eqw->exp = s->g.eq_str;

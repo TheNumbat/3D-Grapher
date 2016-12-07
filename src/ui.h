@@ -8,8 +8,11 @@
 struct fxy_equation : public widget {
 	fxy_equation() {
 		callback = [this](state* s) -> void {s->g.eq_str = exp; regengraph(s);};
+		current_y = current_yh = 0;
+		active = false;
 	}
 	int render(int y_pos, int w, int h, int xoffset, GLuint program) {
+		current_y = y_pos;
 		break_str(w - xoffset);
 		for (string l : lines) {
 			SDL_Surface* temp = TTF_RenderText_Shaded(font, l.c_str(), { 0, 0, 0 }, { 255, 255, 255 });
@@ -33,10 +36,44 @@ struct fxy_equation : public widget {
 			SDL_FreeSurface(temp);
 			SDL_FreeSurface(text);
 		}
+		current_yh = y_pos;
 		return y_pos;
 	}
-	void process(SDL_Event ev) {
-
+	bool process(SDL_Event ev, int w, state* s) {
+		switch (ev.type) {
+		case SDL_QUIT:
+			return false;
+		case SDL_MOUSEBUTTONDOWN:
+			if (ev.button.x < w && ev.button.y > current_y && ev.button.y < current_yh) {
+				active = true;
+				SDL_StartTextInput();
+				return true;
+			}
+			break;
+		case SDL_TEXTINPUT:
+			if (active) {
+				if (exp == " ") exp.clear();
+				exp.append(ev.text.text);
+			}
+			break;
+		case SDL_KEYDOWN:
+			if (active) {
+				if (ev.key.keysym.sym == SDLK_ESCAPE) {
+					active = false;
+					SDL_StopTextInput();
+				}
+				else if (ev.key.keysym.sym == SDLK_RETURN) {
+					active = false;
+					callback(s);
+				}
+				else if (ev.key.keysym.sym == SDLK_BACKSPACE) {
+					if (exp != " ") exp.pop_back();
+					if (!exp.size()) exp = " ";
+				}
+			}
+			break;
+		}
+		return active;
 	}
 	void break_str(int w) {
 		lines.clear();
