@@ -274,7 +274,7 @@ bool in(istream& in, vector<op>& EQ) {
 		case modulo:
 		case power:
 			ins = true;
-			while (s.size() && precedence(s.top()) > precedence(buf)) {
+			while (s.size() && precedence(s.top()) >= precedence(buf)) {
 				EQ.push_back(s.top());
 				s.pop();
 				added = true;

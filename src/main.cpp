@@ -63,7 +63,7 @@ int main(int argc, char** args) {
 	st.g.ymax = 25;
 	st.g.xrez = 250;
 	st.g.yrez = 250;
-	st.g.eq_str = "sqrt((x)+y)";
+	st.g.eq_str = "x-y-x";
 
 	setup(&st, 1280, 720);
 
