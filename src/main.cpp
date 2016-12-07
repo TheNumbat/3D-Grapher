@@ -1,7 +1,6 @@
 ﻿
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <string>
 
 #include "main.h"
@@ -67,11 +66,7 @@ int main(int argc, char** args) {
 
 	setup(&st, 1280, 720);
 
-	string exp;
-	stringstream ss;
-
-	ss << st.g.eq_str;
-	in(ss, st.g.eq);
+	in(st.g.eq_str, st.g.eq);
 	printeq(cout, st.g.eq);
 
 	Uint64 start = SDL_GetPerformanceCounter();
@@ -325,10 +320,7 @@ void regengraph(state* s) {
 	s->g.verticies.clear();
 	s->g.eq.clear();
 
-	stringstream ss;
-
-	ss << s->g.eq_str;
-	in(ss, s->g.eq);
+	in(s->g.eq_str, s->g.eq);
 	printeq(cout, s->g.eq);
 
 	Uint64 start = SDL_GetPerformanceCounter();
