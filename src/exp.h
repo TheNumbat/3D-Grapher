@@ -2,6 +2,7 @@
 #pragma once
 
 #include <iostream>
+#include <sstream>
 #include <vector>
 
 using namespace std;
@@ -13,7 +14,7 @@ typedef int op;
 
 void welcome(ostream& out);
 float eval(const vector<op>& EQ, float x, float y, float z = 0.0f);
-bool in(istream& in, vector<op>& EQ);
+bool in(string str, vector<op>& EQ);
 void printeq(ostream& out, vector<op> eq);
 
 enum operators : op {
@@ -206,25 +207,31 @@ float eval(const vector<op>& EQ, float x, float y, float z) {
 		case op_sec:
 			get1();
 			result = 1.0f / cos(one);
+			s.push(result);
 			break;
 		case op_csc:
 			get1();
 			result = 1.0f / sin(one);
+			s.push(result);
 			break;
 		case op_cot:
 			get1();
 			result = 1.0f / tan(one);
+			s.push(result);
 		case op_asec:
 			get1(); 
 			result = acos(1.0f / one);
+			s.push(result);
 			break;
 		case op_acsc:
 			get1();
 			result = asin(1.0f / one);
+			s.push(result);
 			break;
 		case op_acot:
 			get1();
 			result = atan(1.0f / one);
+			s.push(result);
 			break;
 		case var_x:
 			s.push(x);
@@ -273,10 +280,12 @@ int precedence(char c) {
 	}
 }
 
-bool in(istream& in, vector<op>& EQ) {
+bool in(string str, vector<op>& EQ) {
 	char buf = 0;
 	stack<op> s;
 	queue<op> q;
+	stringstream in;
+	in << str;
 	bool queued = false, added = false, ins = true;
 	while (!in.eof()) {
 		if (ins)
@@ -321,6 +330,9 @@ bool in(istream& in, vector<op>& EQ) {
 		case const_e:
 			ins = true;
 			EQ.push_back(buf);
+			break;
+		case ',':
+			ins = true;
 			break;
 		default: // Functions & numbers
 			if (!num(buf)) {
@@ -435,8 +447,21 @@ void printeq(ostream& out, vector<op> eq) {
 			out << "log";
 		else if (c == op_log2)
 			out << "log2";
+		else if (c == op_sec)
+			out << "sec";
+		else if (c == op_csc)
+			out << "csc";
+		else if (c == op_cot)
+			out << "cot";
+		else if (c == op_asec)
+			out << "asec";
+		else if (c == op_acsc)
+			out << "acsc";
+		else if (c == op_acot)
+			out << "acot";
 		else
 			out << (char)c;
+		out << " ";
 	}
 	out << endl;
 }
