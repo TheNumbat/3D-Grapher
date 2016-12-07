@@ -10,17 +10,16 @@ using namespace std;
 
 // TODO:
 	// UI
-		// Make GUI system
+		// Better desmos-style UI
 		// Axis scales
-		// Text rendering
-		// Text input
 		// Actual input system
 	// Rendering
 		// Transparency, blending, maybe sorting
 		// Lighting
 		// Multiple graphs
-		// Transparent UI
+		// Semitransparent UI
 		// Antialiasing
+		// Axis normalization
 	// Math Features
 		// Parametric Eqs
 		// Highlight curve along a set x/y
@@ -57,13 +56,14 @@ int main(int argc, char** args) {
 
 	state st;
 
-	st.g.xmin = -25;
-	st.g.xmax = 25;
-	st.g.ymin = -25;
-	st.g.ymax = 25;
-	st.g.xrez = 250;
-	st.g.yrez = 250;
-	st.g.eq_str = "sin(x)*sin(y)*(sin(x)*sin(y))^(3/2)";
+	st.g.xmin = -10;
+	st.g.xmax = 10;
+	st.g.ymin = -10;
+	st.g.ymax = 10;
+	st.g.xrez = 20;
+	st.g.yrez = 20;
+	st.g.eq_str = "0";
+	// sqrt( (x) + y ) -> rip
 
 	setup(&st, 1280, 720);
 
