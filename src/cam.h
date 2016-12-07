@@ -1,19 +1,7 @@
 
 #pragma once
 
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
-#include <math.h>
-#include <SDL.h>
-
 using namespace glm;
-
-struct cam {
-	vec3 pos, front, up, right, globalUp;
-	float pitch, yaw, speed, fov;
-	Uint32 lastUpdate;
-};
 
 mat4 getView(cam c) {
 	mat4 ret = lookAt(c.pos, c.pos + c.front, c.up);

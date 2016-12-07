@@ -1,14 +1,33 @@
 
 #pragma once
 
-#include "font.data"
-#include "types.h"
+#include <SDL_opengl.h>
 
-#include "glfuns.h"
-#include "exp.h"
-#include "cam.h"
-#include "graph.h"
-#include "ui.h"
+const GLchar* vtextured2D = {
+	"#version 330 core\n"
+
+	"layout (location = 0) in vec2 position;\n"
+	"layout (location = 1) in vec2 tcoord;\n"
+
+	"out vec2 coord;\n"
+
+	"void main() {\n"
+	"	gl_Position = vec4(position, 0.0f, 1.0f);\n"
+	"	coord = tcoord;\n"
+	"}\n"
+};
+
+const GLchar* ftextured2D{
+	"#version 330 core\n"
+
+	"in vec2 coord;\n"
+	"out vec4 color;\n"
+	"uniform sampler2D tex;\n"
+
+	"void main() {\n"
+	"	color = texture(tex, vec2(coord.x, 1.0f - coord.y));\n"
+	"}\n"
+};
 
 const GLchar* colorvertex = {
 	"#version 330 core\n"
@@ -58,23 +77,4 @@ const GLchar* fragment = {
 	"void main() {\n"
 	"	color = vcolor;\n"
 	"}\n"
-};
-
-// index into axes
-const int x_min = 0;
-const int x_max = 6;
-const int y_min = 13;
-const int y_max = 19;
-const int z_min = 26;
-const int z_max = 32;
-
-GLfloat axes[] = {
-	 0.0f, 0.0f, 0.0f,		1.0f, 0.0f, 0.0f,
-	 0.0f, 0.0f, 0.0f,  	1.0f, 0.0f, 0.0f,
-
-	 0.0f, 0.0f, 0.0f,  	0.0f, 1.0f, 0.0f,
-	 0.0f, 0.0f, 0.0f,  	0.0f, 1.0f, 0.0f,
-
-	 0.0f, 0.0f, 0.0f,  	0.0f, 0.0f, 1.0f,
-	 0.0f, 0.0f, 0.0f,  	0.0f, 0.0f, 1.0f
 };

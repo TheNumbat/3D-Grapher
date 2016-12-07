@@ -3,7 +3,15 @@
 #include <fstream>
 #include <string>
 
-#include "main.h"
+const float UI_SCREEN_RATIO = 0.25f;
+
+#include "font.data"
+#include "glfuns.h"
+#include "types.h"
+#include "shaders.h"
+#include "graph.h"
+#include "cam.h"
+#include "ui.h"
 
 using namespace std;
 
@@ -41,7 +49,6 @@ using namespace std;
 void loop(state* s);
 void setup(state* s, int w, int h);
 void kill(state* s);
-void regengraph(state* s);
 
 int main(int argc, char** args) {
 
@@ -53,7 +60,7 @@ int main(int argc, char** args) {
 	st.g.ymax = 10;
 	st.g.xrez = 200;
 	st.g.yrez = 200;
-	st.g.eq_str = "0";
+	st.g.eq_str = "sin(x)*sin(y)*sin(x)*sin(y)";
 
 	setup(&st, 1280, 720);
 	regengraph(&st);
@@ -64,7 +71,7 @@ int main(int argc, char** args) {
 }
 
 void kill(state* s) {
-	TTF_CloseFont(s->font);
+	TTF_CloseFont(font);
 	glDeleteBuffers(1, &s->axisVBO);
 	glDeleteBuffers(1, &s->graphVBO);
 	glDeleteBuffers(1, &s->EBO);
@@ -127,6 +134,17 @@ void loop(state* s) {
 			glDrawArrays(GL_LINES, 0, 6);
 		}
 
+		glScissor((int)round(s->w * UI_SCREEN_RATIO), 0, 3, s->h);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glScissor(0, 0, (int)round(s->w * UI_SCREEN_RATIO), s->h);
+		glViewport(0, 0, (int)round(s->w * UI_SCREEN_RATIO), s->h);
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		s->ui.render((int)round(s->w * UI_SCREEN_RATIO), s->h, s->uiShader);
+		glScissor((int)round(s->w * UI_SCREEN_RATIO) + 3, 0, (int)round(s->w * (1 - UI_SCREEN_RATIO)), s->h);
+		glViewport((int)round(s->w * UI_SCREEN_RATIO) + 3, 0, (int)round(s->w * (1 - UI_SCREEN_RATIO)), s->h);
+
 		SDL_Event ev;
 		while (SDL_PollEvent(&ev) != 0) {
 			switch (ev.type) {
@@ -139,7 +157,8 @@ void loop(state* s) {
 					ev.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
 					s->w = ev.window.data1;
 					s->h = ev.window.data2;
-					glViewport(0, 0, s->w, s->h);
+					glViewport((int)round(s->w * UI_SCREEN_RATIO) + 3, 0, (int)round(s->w * (1 - UI_SCREEN_RATIO)), s->h);
+					glScissor((int)round(s->w * UI_SCREEN_RATIO) + 3, 0, (int)round(s->w * (1 - UI_SCREEN_RATIO)), s->h);
 				}
 				break;
 			}
@@ -154,8 +173,8 @@ void loop(state* s) {
 					s->c.pitch -= dy;
 					if (s->c.yaw > 360.0f) s->c.yaw = 0.0f;
 					else if (s->c.yaw < 0.0f) s->c.yaw = 360.0f;
-					if (s->c.pitch > 89.9f) s->c.pitch = 89.9f;
-					else if (s->c.pitch < -89.9f) s->c.pitch = -89.9f;
+					if (s->c.pitch > 89.0f) s->c.pitch = 89.0f;
+					else if (s->c.pitch < -89.0f) s->c.pitch = -89.0f;
 					updoot(s->c);
 				}
 				break;
@@ -179,7 +198,7 @@ void loop(state* s) {
 					s->instate = in_idle;
 					SDL_CaptureMouse(SDL_FALSE);
 					SDL_SetRelativeMouseMode(SDL_FALSE);
-					SDL_WarpMouseInWindow(s->window, s->w / 2, s->h / 2);
+					SDL_WarpMouseInWindow(s->window, (int)round(s->w * ((1 - UI_SCREEN_RATIO) / 2 + UI_SCREEN_RATIO)), s->h / 2);
 				}
 				break;
 			}
@@ -209,45 +228,6 @@ void loop(state* s) {
 	}
 }
 
-void regengraph(state* s) {
-	s->g.indicies.clear();
-	s->g.verticies.clear();
-	s->g.eq.clear();
-
-	in(s->g.eq_str, s->g.eq);
-	printeq(cout, s->g.eq);
-
-	Uint64 start = SDL_GetPerformanceCounter();
-	gengraph(s);
-	Uint64 end = SDL_GetPerformanceCounter();
-	cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << endl;
-
-	glBindVertexArray(s->graphVAO);
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, s->graphVBO);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->EBO);
-
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * s->g.indicies.size(), s->g.indicies.size() ? &s->g.indicies[0] : NULL, GL_STATIC_DRAW);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->g.verticies.size(), s->g.verticies.size() ? &s->g.verticies[0] : NULL, GL_STATIC_DRAW);
-
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-		glEnableVertexAttribArray(0);
-	}
-
-	glBindVertexArray(s->axisVAO);
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, s->axisVBO);
-
-		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
-
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
-		glEnableVertexAttribArray(0);
-
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-		glEnableVertexAttribArray(1);
-	}
-}
-
 void setup(state* s, int w, int h) {
 
 	s->w = w;
@@ -272,27 +252,34 @@ void setup(state* s, int w, int h) {
 
 	glEnable(GL_POLYGON_OFFSET_FILL);
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_SCISSOR_TEST);
 	glDisable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glViewport(0, 0, w, h);
+	glViewport((int)round(s->w * UI_SCREEN_RATIO) + 3, 0, (int)round(s->w * (1 - UI_SCREEN_RATIO)), s->h);
 
 	SDL_GL_SetSwapInterval(-1);
 
-	GLuint vert, frag, cvert, cfrag;
+	GLuint vert, frag, cvert, cfrag, tvert, tfrag;
 	vert = glCreateShader(GL_VERTEX_SHADER);
 	cvert = glCreateShader(GL_VERTEX_SHADER);
+	tvert = glCreateShader(GL_VERTEX_SHADER);
 	frag = glCreateShader(GL_FRAGMENT_SHADER);
 	cfrag = glCreateShader(GL_FRAGMENT_SHADER);
+	tfrag = glCreateShader(GL_FRAGMENT_SHADER);
 
 	glShaderSource(vert, 1, &vertex, NULL);
 	glShaderSource(cvert, 1, &colorvertex, NULL);
 	glShaderSource(frag, 1, &fragment, NULL);
 	glShaderSource(cfrag, 1, &colorfragment, NULL);
+	glShaderSource(tvert, 1, &vtextured2D, NULL);
+	glShaderSource(tfrag, 1, &ftextured2D, NULL);
 
 	glCompileShader(vert);
 	glCompileShader(cvert);
+	glCompileShader(tvert);
 	glCompileShader(frag);
 	glCompileShader(cfrag);
+	glCompileShader(tfrag);
 
 	s->graphShader = glCreateProgram();
 	glAttachShader(s->graphShader, vert);
@@ -304,10 +291,17 @@ void setup(state* s, int w, int h) {
 	glAttachShader(s->axisShader, cfrag);
 	glLinkProgram(s->axisShader);
 
+	s->uiShader = glCreateProgram();
+	glAttachShader(s->uiShader, tvert);
+	glAttachShader(s->uiShader, tfrag);
+	glLinkProgram(s->uiShader);
+
 	glDeleteShader(vert);
 	glDeleteShader(cvert);
+	glDeleteShader(tvert);
 	glDeleteShader(frag);
 	glDeleteShader(cfrag);
+	glDeleteShader(tfrag);
 
 	glGenVertexArrays(1, &s->axisVAO);
 	glGenVertexArrays(1, &s->graphVAO);
@@ -316,7 +310,23 @@ void setup(state* s, int w, int h) {
 	glGenBuffers(1, &s->EBO);
 
 	TTF_Init();
-	s->font = TTF_OpenFontRW(SDL_RWFromConstMem((const void*)DroidSans_ttf, DroidSans_ttf_len), 1, 48);
+	font = TTF_OpenFontRW(SDL_RWFromConstMem((const void*)DroidSans_ttf, DroidSans_ttf_len), 1, 24);
+
+	{
+		fxy_equation* eqw = new fxy_equation();
+		eqw->exp = s->g.eq_str;
+		s->ui.widgets.push_back(eqw);
+	}
+	{
+		fxy_equation* eqw = new fxy_equation();
+		eqw->exp = s->g.eq_str;
+		s->ui.widgets.push_back(eqw);
+	}
+	{
+		fxy_equation* eqw = new fxy_equation();
+		eqw->exp = s->g.eq_str;
+		s->ui.widgets.push_back(eqw);
+	}
 
 	s->c = defaultCam();
 	s->running = true;

@@ -3,16 +3,24 @@
 
 #include <thread>
 #include <limits>
+#include "exp.h"
 
-struct gendata {
-	gendata() {
-		zmin = FLT_MAX;
-		zmax = -FLT_MAX;
-	};
-	state* s;
-	vector<float> ret;
-	float zmin, zmax, xmin, dx, dy;
-	unsigned int txrez;
+const int x_min = 0;
+const int x_max = 6;
+const int y_min = 13;
+const int y_max = 19;
+const int z_min = 26;
+const int z_max = 32;
+
+GLfloat axes[] = {
+	0.0f, 0.0f, 0.0f,		1.0f, 0.0f, 0.0f,
+	0.0f, 0.0f, 0.0f,  	1.0f, 0.0f, 0.0f,
+
+	0.0f, 0.0f, 0.0f,  	0.0f, 1.0f, 0.0f,
+	0.0f, 0.0f, 0.0f,  	0.0f, 1.0f, 0.0f,
+
+	0.0f, 0.0f, 0.0f,  	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f, 0.0f,  	0.0f, 0.0f, 1.0f
 };
 
 float clamp(float one, float two) {
@@ -118,4 +126,43 @@ void gengraph(state* s) {
 
 	for (gendata* g : data)
 		delete g;
+}
+
+void regengraph(state* s) {
+	s->g.indicies.clear();
+	s->g.verticies.clear();
+	s->g.eq.clear();
+
+	in(s->g.eq_str, s->g.eq);
+	printeq(cout, s->g.eq);
+
+	Uint64 start = SDL_GetPerformanceCounter();
+	gengraph(s);
+	Uint64 end = SDL_GetPerformanceCounter();
+	cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << endl;
+
+	glBindVertexArray(s->graphVAO);
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, s->graphVBO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->EBO);
+
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * s->g.indicies.size(), s->g.indicies.size() ? &s->g.indicies[0] : NULL, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->g.verticies.size(), s->g.verticies.size() ? &s->g.verticies[0] : NULL, GL_STATIC_DRAW);
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+		glEnableVertexAttribArray(0);
+	}
+
+	glBindVertexArray(s->axisVAO);
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, s->axisVBO);
+
+		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+		glEnableVertexAttribArray(0);
+
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+		glEnableVertexAttribArray(1);
+	}
 }
