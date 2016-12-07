@@ -41,7 +41,6 @@ struct state {
 	SDL_GLContext context;
 	GLuint axisShader, graphShader, axisVAO, graphVAO, axisVBO, graphVBO, EBO;
 	
-	UI ui;
 	TTF_Font* font;
 	graph g;
 	cam c;
@@ -119,6 +118,5 @@ GLfloat axes[] = {
 	 0.0f, 0.0f, 0.0f,  	0.0f, 0.0f, 1.0f
 };
 
-#include "graph.h"
 #include "glfuns.h"
-
+#include "graph.h"
