@@ -63,7 +63,7 @@ int main(int argc, char** args) {
 	st.g.ymax = 25;
 	st.g.xrez = 250;
 	st.g.yrez = 250;
-	st.g.eq_str = "sin(x)*sin(y)*(sin(x)*sin(y))^(3/2)";
+	st.g.eq_str = "sqrt((x)+y)";
 
 	setup(&st, 1280, 720);
 

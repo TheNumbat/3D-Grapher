@@ -257,22 +257,14 @@ bool in(istream& in, vector<op>& EQ) {
 		case close_p:
 			ins = true;
 			if (s.size()) {
+				int cur;
 				do {
-					buf = s.top();
-					if (buf != open_p) {
-						EQ.push_back(buf);
+					cur = s.top();
+					if (cur != open_p) {
+						EQ.push_back(cur);
 					}
 					s.pop();
-				} while (s.size() && buf != open_p);
-			}
-			if (s.size()) {
-				if (s.top() == open_p) {
-					s.pop();
-				}
-				if (s.size()) {
-					EQ.push_back(s.top());
-					s.pop();
-				}
+				} while (s.size() && cur != open_p);
 			}
 			break;
 		case multiply:
@@ -282,20 +274,6 @@ bool in(istream& in, vector<op>& EQ) {
 		case modulo:
 		case power:
 			ins = true;
-			queued = false; added = false;
-			while (s.size() && precedence(s.top()) == precedence(buf)) {
-				q.push(s.top());
-				s.pop();
-				queued = true;
-			}
-			if (queued) {
-				EQ.push_back(q.front());
-				q.pop();
-			}
-			while (q.size()) {
-				s.push(q.front());
-				q.pop();
-			}
 			while (s.size() && precedence(s.top()) > precedence(buf)) {
 				EQ.push_back(s.top());
 				s.pop();
@@ -304,20 +282,11 @@ bool in(istream& in, vector<op>& EQ) {
 			s.push(buf);
 			break;
 		case var_x:
-			ins = true;
-			EQ.push_back('x');
-			break;
 		case var_y:
-			ins = true;
-			EQ.push_back('y');
-			break;
+		case const_pi:
 		case const_e:
 			ins = true;
-			EQ.push_back(const_e);
-			break;
-		case const_pi:
-			ins = true;
-			EQ.push_back(const_pi);
+			EQ.push_back(buf);
 			break;
 		default: // functions
 			if (!num(buf)) {
