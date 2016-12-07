@@ -12,7 +12,7 @@ const float val_pi = 3.141592653589793238462643383279f;
 typedef int op;
 
 void welcome(ostream& out);
-float eval(const vector<op>& EQ, float x, float y);
+float eval(const vector<op>& EQ, float x, float y, float z = 0.0f);
 bool in(istream& in, vector<op>& EQ);
 void printeq(ostream& out, vector<op> eq);
 
@@ -44,10 +44,17 @@ enum operators : op {
 	op_ln = 1013,
 	op_log = 1014,
 	op_log2 = 1015,
+	op_sec = 1016,
+	op_csc = 1017,
+	op_cot = 1018,
+	op_asec = 1019,
+	op_acsc = 1020,
+	op_acot = 1021,
 
 	// variables
 	var_x = 'x',
 	var_y = 'y',
+	var_z = 'z',
 
 	// constants
 	const_pi = 'P',
@@ -85,7 +92,7 @@ void welcome(ostream& out) {
 #define get1() one = s.top(); \
 			   s.pop();
 
-float eval(const vector<op>& EQ, float x, float y) {
+float eval(const vector<op>& EQ, float x, float y, float z) {
 	stack<float> s;
 	float one = 0, two = 0, result = 0;
 	size_t size = EQ.size();
@@ -196,11 +203,37 @@ float eval(const vector<op>& EQ, float x, float y) {
 			result = log2(one);
 			s.push(result);
 			break;
+		case op_sec:
+			get1();
+			result = 1.0f / cos(one);
+			break;
+		case op_csc:
+			get1();
+			result = 1.0f / sin(one);
+			break;
+		case op_cot:
+			get1();
+			result = 1.0f / tan(one);
+		case op_asec:
+			get1(); 
+			result = acos(1.0f / one);
+			break;
+		case op_acsc:
+			get1();
+			result = asin(1.0f / one);
+			break;
+		case op_acot:
+			get1();
+			result = atan(1.0f / one);
+			break;
 		case var_x:
 			s.push(x);
 			break;
 		case var_y:
 			s.push(y);
+			break;
+		case var_z:
+			s.push(z);
 			break;
 		case const_e:
 			s.push(val_e);
@@ -283,52 +316,68 @@ bool in(istream& in, vector<op>& EQ) {
 			break;
 		case var_x:
 		case var_y:
+		case var_z:
 		case const_pi:
 		case const_e:
 			ins = true;
 			EQ.push_back(buf);
 			break;
-		default: // functions
+		default: // Functions & numbers
 			if (!num(buf)) {
 				string str;
 				getline(in, str, '(');
 				str.insert(0, 1, buf);
-				if (str == "sqrt")
-					s.push(op_sqrt);
-				else if (str == "sin")
-					s.push(op_sin);
-				else if (str == "cos")
-					s.push(op_cos);
-				else if (str == "tan")
-					s.push(op_tan);
-				else if (str == "asin")
-					s.push(op_asin);
-				else if (str == "acos")
-					s.push(op_acos);
-				else if (str == "atan")
-					s.push(op_atan);
-				else if (str == "abs")
-					s.push(op_abs);
-				else if (str == "exp")
-					s.push(op_exp);
-				else if (str == "exptwo")
-					s.push(op_exptwo);
-				else if (str == "ceil")
-					s.push(op_ceil);
-				else if (str == "floor")
-					s.push(op_floor);
-				else if (str == "ln")
-					s.push(op_ln);
-				else if (str == "log")
-					s.push(op_log);
-				else if (str == "log2")
-					s.push(op_log2);
-				else {
-					if (!in.good())
-						cout << "   err: unkown name '" << str << "'" << endl;
-					else
-						cout << "   err: unkown function '" << str << "()'" << endl;
-					return false;
+				// Test function name
+				{
+					if (str == "sqrt")
+						s.push(op_sqrt);
+					else if (str == "sin")
+						s.push(op_sin);
+					else if (str == "cos")
+						s.push(op_cos);
+					else if (str == "tan")
+						s.push(op_tan);
+					else if (str == "asin")
+						s.push(op_asin);
+					else if (str == "acos")
+						s.push(op_acos);
+					else if (str == "atan")
+						s.push(op_atan);
+					else if (str == "abs")
+						s.push(op_abs);
+					else if (str == "exp")
+						s.push(op_exp);
+					else if (str == "exptwo")
+						s.push(op_exptwo);
+					else if (str == "ceil")
+						s.push(op_ceil);
+					else if (str == "floor")
+						s.push(op_floor);
+					else if (str == "ln")
+						s.push(op_ln);
+					else if (str == "log")
+						s.push(op_log);
+					else if (str == "log2")
+						s.push(op_log2);
+					else if (str == "sec")
+						s.push(op_sec);
+					else if (str == "csc")
+						s.push(op_csc);
+					else if (str == "cot")
+						s.push(op_cot);
+					else if (str == "asec")
+						s.push(op_asec);
+					else if (str == "ascs")
+						s.push(op_acsc);
+					else if (str == "acot")
+						s.push(op_acot);
+					else {
+						if (!in.good())
+							cout << "   err: unkown name '" << str << "'" << endl;
+						else
+							cout << "   err: unkown function '" << str << "()'" << endl;
+						return false;
+					}
 				}
 				s.push('(');
 			}
