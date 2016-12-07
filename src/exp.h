@@ -2,6 +2,7 @@
 #pragma once
 
 #include <iostream>
+#include <sstream>
 #include <vector>
 
 using namespace std;
@@ -12,8 +13,8 @@ const float val_pi = 3.141592653589793238462643383279f;
 typedef int op;
 
 void welcome(ostream& out);
-float eval(const vector<op>& EQ, float x, float y);
-bool in(istream& in, vector<op>& EQ);
+float eval(const vector<op>& EQ, float x, float y, float z = 0.0f);
+bool in(string str, vector<op>& EQ);
 void printeq(ostream& out, vector<op> eq);
 
 enum operators : op {
@@ -44,10 +45,17 @@ enum operators : op {
 	op_ln = 1013,
 	op_log = 1014,
 	op_log2 = 1015,
+	op_sec = 1016,
+	op_csc = 1017,
+	op_cot = 1018,
+	op_asec = 1019,
+	op_acsc = 1020,
+	op_acot = 1021,
 
 	// variables
 	var_x = 'x',
 	var_y = 'y',
+	var_z = 'z',
 
 	// constants
 	const_pi = 'P',
@@ -85,7 +93,7 @@ void welcome(ostream& out) {
 #define get1() one = s.top(); \
 			   s.pop();
 
-float eval(const vector<op>& EQ, float x, float y) {
+float eval(const vector<op>& EQ, float x, float y, float z) {
 	stack<float> s;
 	float one = 0, two = 0, result = 0;
 	size_t size = EQ.size();
@@ -196,11 +204,43 @@ float eval(const vector<op>& EQ, float x, float y) {
 			result = log2(one);
 			s.push(result);
 			break;
+		case op_sec:
+			get1();
+			result = 1.0f / cos(one);
+			s.push(result);
+			break;
+		case op_csc:
+			get1();
+			result = 1.0f / sin(one);
+			s.push(result);
+			break;
+		case op_cot:
+			get1();
+			result = 1.0f / tan(one);
+			s.push(result);
+		case op_asec:
+			get1(); 
+			result = acos(1.0f / one);
+			s.push(result);
+			break;
+		case op_acsc:
+			get1();
+			result = asin(1.0f / one);
+			s.push(result);
+			break;
+		case op_acot:
+			get1();
+			result = atan(1.0f / one);
+			s.push(result);
+			break;
 		case var_x:
 			s.push(x);
 			break;
 		case var_y:
 			s.push(y);
+			break;
+		case var_z:
+			s.push(z);
 			break;
 		case const_e:
 			s.push(val_e);
@@ -240,10 +280,12 @@ int precedence(char c) {
 	}
 }
 
-bool in(istream& in, vector<op>& EQ) {
+bool in(string str, vector<op>& EQ) {
 	char buf = 0;
 	stack<op> s;
 	queue<op> q;
+	stringstream in;
+	in << str;
 	bool queued = false, added = false, ins = true;
 	while (!in.eof()) {
 		if (ins)
@@ -257,22 +299,14 @@ bool in(istream& in, vector<op>& EQ) {
 		case close_p:
 			ins = true;
 			if (s.size()) {
+				int cur;
 				do {
-					buf = s.top();
-					if (buf != open_p) {
-						EQ.push_back(buf);
+					cur = s.top();
+					if (cur != open_p) {
+						EQ.push_back(cur);
 					}
 					s.pop();
-				} while (s.size() && buf != open_p);
-			}
-			if (s.size()) {
-				if (s.top() == open_p) {
-					s.pop();
-				}
-				if (s.size()) {
-					EQ.push_back(s.top());
-					s.pop();
-				}
+				} while (s.size() && cur != open_p);
 			}
 			break;
 		case multiply:
@@ -282,21 +316,7 @@ bool in(istream& in, vector<op>& EQ) {
 		case modulo:
 		case power:
 			ins = true;
-			queued = false; added = false;
-			while (s.size() && precedence(s.top()) == precedence(buf)) {
-				q.push(s.top());
-				s.pop();
-				queued = true;
-			}
-			if (queued) {
-				EQ.push_back(q.front());
-				q.pop();
-			}
-			while (q.size()) {
-				s.push(q.front());
-				q.pop();
-			}
-			while (s.size() && precedence(s.top()) > precedence(buf)) {
+			while (s.size() && precedence(s.top()) >= precedence(buf)) {
 				EQ.push_back(s.top());
 				s.pop();
 				added = true;
@@ -304,62 +324,72 @@ bool in(istream& in, vector<op>& EQ) {
 			s.push(buf);
 			break;
 		case var_x:
-			ins = true;
-			EQ.push_back('x');
-			break;
 		case var_y:
-			ins = true;
-			EQ.push_back('y');
-			break;
+		case var_z:
+		case const_pi:
 		case const_e:
 			ins = true;
-			EQ.push_back(const_e);
+			EQ.push_back(buf);
 			break;
-		case const_pi:
+		case ',':
 			ins = true;
-			EQ.push_back(const_pi);
 			break;
-		default: // functions
+		default: // Functions & numbers
 			if (!num(buf)) {
 				string str;
 				getline(in, str, '(');
 				str.insert(0, 1, buf);
-				if (str == "sqrt")
-					s.push(op_sqrt);
-				else if (str == "sin")
-					s.push(op_sin);
-				else if (str == "cos")
-					s.push(op_cos);
-				else if (str == "tan")
-					s.push(op_tan);
-				else if (str == "asin")
-					s.push(op_asin);
-				else if (str == "acos")
-					s.push(op_acos);
-				else if (str == "atan")
-					s.push(op_atan);
-				else if (str == "abs")
-					s.push(op_abs);
-				else if (str == "exp")
-					s.push(op_exp);
-				else if (str == "exptwo")
-					s.push(op_exptwo);
-				else if (str == "ceil")
-					s.push(op_ceil);
-				else if (str == "floor")
-					s.push(op_floor);
-				else if (str == "ln")
-					s.push(op_ln);
-				else if (str == "log")
-					s.push(op_log);
-				else if (str == "log2")
-					s.push(op_log2);
-				else {
-					if (!in.good())
-						cout << "   err: unkown name '" << str << "'" << endl;
-					else
-						cout << "   err: unkown function '" << str << "()'" << endl;
-					return false;
+				// Test function name
+				{
+					if (str == "sqrt")
+						s.push(op_sqrt);
+					else if (str == "sin")
+						s.push(op_sin);
+					else if (str == "cos")
+						s.push(op_cos);
+					else if (str == "tan")
+						s.push(op_tan);
+					else if (str == "asin")
+						s.push(op_asin);
+					else if (str == "acos")
+						s.push(op_acos);
+					else if (str == "atan")
+						s.push(op_atan);
+					else if (str == "abs")
+						s.push(op_abs);
+					else if (str == "exp")
+						s.push(op_exp);
+					else if (str == "exptwo")
+						s.push(op_exptwo);
+					else if (str == "ceil")
+						s.push(op_ceil);
+					else if (str == "floor")
+						s.push(op_floor);
+					else if (str == "ln")
+						s.push(op_ln);
+					else if (str == "log")
+						s.push(op_log);
+					else if (str == "log2")
+						s.push(op_log2);
+					else if (str == "sec")
+						s.push(op_sec);
+					else if (str == "csc")
+						s.push(op_csc);
+					else if (str == "cot")
+						s.push(op_cot);
+					else if (str == "asec")
+						s.push(op_asec);
+					else if (str == "ascs")
+						s.push(op_acsc);
+					else if (str == "acot")
+						s.push(op_acot);
+					else {
+						if (!in.good())
+							cout << "   err: unkown name '" << str << "'" << endl;
+						else
+							cout << "   err: unkown function '" << str << "()'" << endl;
+						return false;
+					}
 				}
 				s.push('(');
 			}
@@ -417,8 +447,21 @@ void printeq(ostream& out, vector<op> eq) {
 			out << "log";
 		else if (c == op_log2)
 			out << "log2";
+		else if (c == op_sec)
+			out << "sec";
+		else if (c == op_csc)
+			out << "csc";
+		else if (c == op_cot)
+			out << "cot";
+		else if (c == op_asec)
+			out << "asec";
+		else if (c == op_acsc)
+			out << "acsc";
+		else if (c == op_acot)
+			out << "acot";
 		else
 			out << (char)c;
+		out << " ";
 	}
 	out << endl;
 }

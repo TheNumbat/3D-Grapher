@@ -1,7 +1,6 @@
 ﻿
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <string>
 
 #include "main.h"
@@ -56,6 +55,7 @@ int main(int argc, char** args) {
 
 	state st;
 
+<<<<<<< HEAD
 	st.g.xmin = -10;
 	st.g.xmax = 10;
 	st.g.ymin = -10;
@@ -64,14 +64,19 @@ int main(int argc, char** args) {
 	st.g.yrez = 20;
 	st.g.eq_str = "0";
 	// sqrt( (x) + y ) -> rip
+=======
+	st.g.xmin = -25;
+	st.g.xmax = 25;
+	st.g.ymin = -25;
+	st.g.ymax = 25;
+	st.g.xrez = 250;
+	st.g.yrez = 250;
+	st.g.eq_str = "x-y-x";
+>>>>>>> origin/master
 
 	setup(&st, 1280, 720);
 
-	string exp;
-	stringstream ss;
-
-	ss << st.g.eq_str;
-	in(ss, st.g.eq);
+	in(st.g.eq_str, st.g.eq);
 	printeq(cout, st.g.eq);
 
 	Uint64 start = SDL_GetPerformanceCounter();
@@ -325,10 +330,7 @@ void regengraph(state* s) {
 	s->g.verticies.clear();
 	s->g.eq.clear();
 
-	stringstream ss;
-
-	ss << s->g.eq_str;
-	in(ss, s->g.eq);
+	in(s->g.eq_str, s->g.eq);
 	printeq(cout, s->g.eq);
 
 	Uint64 start = SDL_GetPerformanceCounter();
