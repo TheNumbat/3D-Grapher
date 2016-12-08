@@ -134,22 +134,13 @@ void loop(state* s) {
 			glDrawArrays(GL_LINES, 0, 6);
 		}
 
-		glScissor((int)round(s->w * UI_SCREEN_RATIO), 0, 3, s->h);
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		glScissor(0, 0, (int)round(s->w * UI_SCREEN_RATIO), s->h);
-		glViewport(0, 0, (int)round(s->w * UI_SCREEN_RATIO), s->h);
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		s->ui.render((int)round(s->w * UI_SCREEN_RATIO), s->h, s->uiShader);
-		glScissor((int)round(s->w * UI_SCREEN_RATIO) + 3, 0, (int)round(s->w * (1 - UI_SCREEN_RATIO)), s->h);
-		glViewport((int)round(s->w * UI_SCREEN_RATIO) + 3, 0, (int)round(s->w * (1 - UI_SCREEN_RATIO)), s->h);
+		s->ui.render(s->w, s->h, s->uiShader, s->rectShader);
 
 		SDL_Event ev;
 		while (SDL_PollEvent(&ev) != 0) {
 			bool intercepted = false;
 			for (widget* w : s->ui.widgets) {
-				intercepted = w->process(ev, (int)round(s->w * UI_SCREEN_RATIO), s);
+				intercepted = w->process(ev, s->w, s);
 				if (intercepted) break;
 			}
 			if (intercepted) continue;
@@ -163,8 +154,8 @@ void loop(state* s) {
 					ev.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
 					s->w = ev.window.data1;
 					s->h = ev.window.data2;
-					glViewport((int)round(s->w * UI_SCREEN_RATIO) + 3, 0, (int)round(s->w * (1 - UI_SCREEN_RATIO)), s->h);
-					glScissor((int)round(s->w * UI_SCREEN_RATIO) + 3, 0, (int)round(s->w * (1 - UI_SCREEN_RATIO)), s->h);
+					glViewport(0, 0, s->w, s->h);
+					glScissor(0, 0, s->w, s->h);
 				}
 				break;
 			}
@@ -230,7 +221,7 @@ void loop(state* s) {
 		SDL_GL_SwapWindow(s->window);
 
 		Uint64 end = SDL_GetPerformanceCounter();
-		//cout << "frame: " << 1000.0f * (end - start) / (float)SDL_GetPerformanceFrequency() << "ms" << endl;
+		cout << "frame: " << 1000.0f * (end - start) / (float)SDL_GetPerformanceFrequency() << "ms" << endl;
 	}
 }
 
@@ -254,24 +245,26 @@ void setup(state* s, int w, int h) {
 	s->context = SDL_GL_CreateContext(s->window);
 	assert(s->context);
 
+	SDL_GL_SetSwapInterval(1);
 	setupFuns();
 
 	glEnable(GL_POLYGON_OFFSET_FILL);
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_SCISSOR_TEST);
 	glDisable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glViewport((int)round(s->w * UI_SCREEN_RATIO) + 3, 0, (int)round(s->w * (1 - UI_SCREEN_RATIO)), s->h);
+	glViewport(0, 0, s->w, s->h);
 
 	SDL_GL_SetSwapInterval(-1);
 
-	GLuint vert, frag, cvert, cfrag, tvert, tfrag;
+	GLuint vert, frag, cvert, cfrag, tvert, tfrag, cvert_2d, cfrag_2d;
 	vert = glCreateShader(GL_VERTEX_SHADER);
 	cvert = glCreateShader(GL_VERTEX_SHADER);
 	tvert = glCreateShader(GL_VERTEX_SHADER);
+	cvert_2d = glCreateShader(GL_VERTEX_SHADER);
 	frag = glCreateShader(GL_FRAGMENT_SHADER);
 	cfrag = glCreateShader(GL_FRAGMENT_SHADER);
 	tfrag = glCreateShader(GL_FRAGMENT_SHADER);
+	cfrag_2d = glCreateShader(GL_FRAGMENT_SHADER);
 
 	glShaderSource(vert, 1, &vertex, NULL);
 	glShaderSource(cvert, 1, &colorvertex, NULL);
@@ -279,6 +272,8 @@ void setup(state* s, int w, int h) {
 	glShaderSource(cfrag, 1, &colorfragment, NULL);
 	glShaderSource(tvert, 1, &vtextured2D, NULL);
 	glShaderSource(tfrag, 1, &ftextured2D, NULL);
+	glShaderSource(cvert_2d, 1, &vcolor2D, NULL);
+	glShaderSource(cfrag_2d, 1, &fcolor2D, NULL);
 
 	glCompileShader(vert);
 	glCompileShader(cvert);
@@ -286,6 +281,8 @@ void setup(state* s, int w, int h) {
 	glCompileShader(frag);
 	glCompileShader(cfrag);
 	glCompileShader(tfrag);
+	glCompileShader(cvert_2d);
+	glCompileShader(cfrag_2d);
 
 	s->graphShader = glCreateProgram();
 	glAttachShader(s->graphShader, vert);
@@ -302,12 +299,19 @@ void setup(state* s, int w, int h) {
 	glAttachShader(s->uiShader, tfrag);
 	glLinkProgram(s->uiShader);
 
+	s->rectShader = glCreateProgram();
+	glAttachShader(s->rectShader, cvert_2d);
+	glAttachShader(s->rectShader, cfrag_2d);
+	glLinkProgram(s->rectShader);
+
 	glDeleteShader(vert);
 	glDeleteShader(cvert);
 	glDeleteShader(tvert);
 	glDeleteShader(frag);
 	glDeleteShader(cfrag);
 	glDeleteShader(tfrag);
+	glDeleteShader(cvert_2d);
+	glDeleteShader(cfrag_2d);
 
 	glGenVertexArrays(1, &s->axisVAO);
 	glGenVertexArrays(1, &s->graphVAO);
@@ -318,6 +322,7 @@ void setup(state* s, int w, int h) {
 	TTF_Init();
 	font = TTF_OpenFontRW(SDL_RWFromConstMem((const void*)DroidSans_ttf, DroidSans_ttf_len), 1, 24);
 
+	s->ui.start();
 	{
 		fxy_equation* eqw = new fxy_equation();
 		eqw->exp = s->g.eq_str;

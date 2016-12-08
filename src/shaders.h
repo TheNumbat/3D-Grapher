@@ -17,7 +17,7 @@ const GLchar* vtextured2D = {
 	"}\n"
 };
 
-const GLchar* ftextured2D{
+const GLchar* ftextured2D = {
 	"#version 330 core\n"
 
 	"in vec2 coord;\n"
@@ -26,6 +26,31 @@ const GLchar* ftextured2D{
 
 	"void main() {\n"
 	"	color = texture(tex, vec2(coord.x, 1.0f - coord.y));\n"
+	"}\n"
+};
+
+const GLchar* vcolor2D = {
+	"#version 330 core\n"
+
+	"layout (location = 0) in vec2 position;\n"
+
+	"uniform vec4 vcolor;\n"
+	"out vec4 fcolor;\n"
+
+	"void main() {\n"
+	"	gl_Position = vec4(position, 0.0f, 1.0f);\n"
+	"	fcolor = vcolor;\n"
+	"}\n"
+};
+
+const GLchar* fcolor2D = {
+	"#version 330 core\n"
+
+	"in vec4 fcolor;\n"
+	"out vec4 color;\n"
+
+	"void main() {\n"
+	"	color = fcolor;\n"
 	"}\n"
 };
 
