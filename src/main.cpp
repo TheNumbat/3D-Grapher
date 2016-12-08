@@ -3,7 +3,15 @@
 #include <fstream>
 #include <string>
 
-#include "main.h"
+const float UI_SCREEN_RATIO = 0.2f;
+
+#include "font.data"
+#include "glfuns.h"
+#include "types.h"
+#include "shaders.h"
+#include "graph.h"
+#include "cam.h"
+#include "ui.h"
 
 using namespace std;
 
@@ -38,61 +46,32 @@ using namespace std;
 	// Notes
 		// To encode binary file as data: xxd -i infile.bin outfile.h
 
-#define normw(x) (((float)x)/(s->w * 0.25f))
-#define normh(x) (((float)x)/(s->h))
-
 void loop(state* s);
 void setup(state* s, int w, int h);
 void kill(state* s);
-int addMultiLineText(state* s, string str, float x, float y, float woffset, float hoffset);
-void resetUI(state* s);
-void regengraph(state* s);
 
 int main(int argc, char** args) {
 
-	ifstream fin("SDL2.dll", ios::binary);
-	cout << "wew" << fin.good() << endl;
-
 	state st;
 
-<<<<<<< HEAD
 	st.g.xmin = -10;
 	st.g.xmax = 10;
 	st.g.ymin = -10;
 	st.g.ymax = 10;
-	st.g.xrez = 20;
-	st.g.yrez = 20;
-	st.g.eq_str = "0";
-	// sqrt( (x) + y ) -> rip
-=======
-	st.g.xmin = -25;
-	st.g.xmax = 25;
-	st.g.ymin = -25;
-	st.g.ymax = 25;
-	st.g.xrez = 250;
-	st.g.yrez = 250;
-	st.g.eq_str = "x-y-x";
->>>>>>> origin/master
+	st.g.xrez = 200;
+	st.g.yrez = 200;
+	st.g.eq_str = "5*(sin(x)*sin(y))^3";
 
 	setup(&st, 1280, 720);
-
-	in(st.g.eq_str, st.g.eq);
-	printeq(cout, st.g.eq);
-
-	Uint64 start = SDL_GetPerformanceCounter();
-	gengraph(&st);
-	Uint64 end = SDL_GetPerformanceCounter();
-	cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << endl;
-
+	regengraph(&st);
 	loop(&st);
-
 	kill(&st);
 
 	return 0;
 }
 
 void kill(state* s) {
-	TTF_CloseFont(s->font);
+	TTF_CloseFont(font);
 	glDeleteBuffers(1, &s->axisVBO);
 	glDeleteBuffers(1, &s->graphVBO);
 	glDeleteBuffers(1, &s->EBO);
@@ -105,33 +84,8 @@ void kill(state* s) {
 
 void loop(state* s) {
 
-	int mx = (s->w - 250) / 2, my = s->h / 2;
+	int mx = s->w / 2, my = s->h / 2;
 	const unsigned char* keys = SDL_GetKeyboardState(NULL);
-
-	glBindVertexArray(s->graphVAO);
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, s->graphVBO);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->EBO);
-
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * s->g.indicies.size(), s->g.indicies.size() ? &s->g.indicies[0] : NULL, GL_STATIC_DRAW);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->g.verticies.size(), s->g.verticies.size() ? &s->g.verticies[0] : NULL, GL_STATIC_DRAW);
-
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-		glEnableVertexAttribArray(0);
-	}
-
-	glBindVertexArray(s->axisVAO);
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, s->axisVBO);
-
-		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
-
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
-		glEnableVertexAttribArray(0);
-
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-		glEnableVertexAttribArray(1);
-	}
 
 	while (s->running) {
 		Uint64 start = SDL_GetPerformanceCounter();
@@ -180,30 +134,29 @@ void loop(state* s) {
 			glDrawArrays(GL_LINES, 0, 6);
 		}
 
-		glViewport(0, (int)(round(0.25f * s->w) - 3), 3, s->h);
-		glScissor((int)(round(0.25f * s->w) - 3), 0, 3, s->h);
-
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		
-		glScissor(0, 0, s->w, s->h);
-		glViewport(0, 0, (int)(round(0.25f * s->w) - 3), s->h);
-		s->ui.render(s->w, s->h);
-		glViewport((int)round(0.25f * s->w), 0, (int)round(0.75f * s->w), s->h);
+		s->ui.render(s->w, s->h, s->uiShader, s->rectShader);
 
 		SDL_Event ev;
 		while (SDL_PollEvent(&ev) != 0) {
+			s->ui.remove_dead_widgets();
+			bool intercepted = false;
+			for (widget* w : s->ui.widgets) {
+				intercepted = w->process(ev, s->w, s);
+				if (intercepted) break;
+			}
+			if (intercepted) continue;
 			switch (ev.type) {
 			case SDL_QUIT: {
 				s->running = false;
 				break;
 			}
 			case SDL_WINDOWEVENT: {
-				if (ev.window.event == SDL_WINDOWEVENT_RESIZED) {
+				if (ev.window.event == SDL_WINDOWEVENT_RESIZED ||
+					ev.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
 					s->w = ev.window.data1;
 					s->h = ev.window.data2;
-					resetUI(s);
 					glViewport(0, 0, s->w, s->h);
+					glScissor(0, 0, s->w, s->h);
 				}
 				break;
 			}
@@ -218,8 +171,8 @@ void loop(state* s) {
 					s->c.pitch -= dy;
 					if (s->c.yaw > 360.0f) s->c.yaw = 0.0f;
 					else if (s->c.yaw < 0.0f) s->c.yaw = 360.0f;
-					if (s->c.pitch > 89.9f) s->c.pitch = 89.9f;
-					else if (s->c.pitch < -89.9f) s->c.pitch = -89.9f;
+					if (s->c.pitch > 89.0f) s->c.pitch = 89.0f;
+					else if (s->c.pitch < -89.0f) s->c.pitch = -89.0f;
 					updoot(s->c);
 				}
 				break;
@@ -231,24 +184,15 @@ void loop(state* s) {
 				break;
 			}
 			case SDL_MOUSEBUTTONDOWN: {
-				if (s->instate == in_idle && ev.button.x > round(0.25f * s->w)) {
-					s->instate = in_cam;
-					SDL_CaptureMouse(SDL_TRUE);
-					SDL_SetRelativeMouseMode(SDL_TRUE);
-				}
-				int lastpx;
-				for (graphelement& g : s->ui.gelements) {
-					if (s->instate == in_idle && ev.button.x < round(0.25f * s->w) && ev.button.y > (g.pxoffset - 5) / 2 && ev.button.y < (g.pxoffset_bot + 5) / 2) {
-						s->ui.selected = &g;
-						s->instate = in_text;
-						SDL_StartTextInput();
+				if (s->instate == in_idle) {
+					if (ev.button.x > (int)round(s->w * UI_SCREEN_RATIO)) {
+						s->instate = in_cam;
+						SDL_CaptureMouse(SDL_TRUE);
+						SDL_SetRelativeMouseMode(SDL_TRUE);
 					}
-					lastpx = g.pxoffset_bot;
-				}
-				if (s->instate == in_idle && ev.button.x < round(0.25f * s->w) && ev.button.y >(lastpx - 5) / 2 && ev.button.y < s->h) {
-					addMultiLineText(s, " ", -1.0f, 1.0f, normw(10), normh(25 + lastpx));
-					s->ui.selected = &s->ui.gelements.back();
-					s->instate = in_text;
+					else {
+						s->ui.widgets.push_back(new fxy_equation(" ", true));
+					}
 				}
 				break;
 			}
@@ -257,45 +201,7 @@ void loop(state* s) {
 					s->instate = in_idle;
 					SDL_CaptureMouse(SDL_FALSE);
 					SDL_SetRelativeMouseMode(SDL_FALSE);
-					SDL_WarpMouseInWindow(s->window, (int)round(s->w * 0.625f), s->h / 2);
-				}
-				break;
-			}
-			case SDL_KEYDOWN: {
-				switch (ev.key.keysym.sym) {
-				case SDLK_ESCAPE:
-					if (s->instate == in_text)
-						s->instate = in_idle;
-					break;
-				case SDLK_BACKSPACE:
-					if (s->instate == in_text) {
-						if (s->ui.selected->str != " ") {
-							s->ui.selected->str.pop_back();
-							if (!s->ui.selected->str.size())
-								s->ui.selected->str = " ";
-							resetUI(s);
-						}
-						else {
-							s->ui.gelements.erase(remove(s->ui.gelements.begin(), s->ui.gelements.end(), *s->ui.selected), s->ui.gelements.end());
-							s->instate = in_idle;
-							resetUI(s);
-						}
-					}
-					break;
-				case SDLK_RETURN:
-					if (s->instate = in_text) {
-						s->g.eq_str = s->ui.selected->str;
-						regengraph(s);
-						s->instate = in_idle;
-					}
-					break;
-				}
-				break;
-			}
-			case SDL_TEXTINPUT: {
-				if (s->instate == in_text) {
-					s->ui.selected->str += ev.text.text;
-					resetUI(s);
+					SDL_WarpMouseInWindow(s->window, (int)round(s->w * ((1 - UI_SCREEN_RATIO) / 2 + UI_SCREEN_RATIO)), s->h / 2);
 				}
 				break;
 			}
@@ -325,45 +231,6 @@ void loop(state* s) {
 	}
 }
 
-void regengraph(state* s) {
-	s->g.indicies.clear();
-	s->g.verticies.clear();
-	s->g.eq.clear();
-
-	in(s->g.eq_str, s->g.eq);
-	printeq(cout, s->g.eq);
-
-	Uint64 start = SDL_GetPerformanceCounter();
-	gengraph(s);
-	Uint64 end = SDL_GetPerformanceCounter();
-	cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << endl;
-
-	glBindVertexArray(s->graphVAO);
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, s->graphVBO);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->EBO);
-
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * s->g.indicies.size(), s->g.indicies.size() ? &s->g.indicies[0] : NULL, GL_STATIC_DRAW);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->g.verticies.size(), s->g.verticies.size() ? &s->g.verticies[0] : NULL, GL_STATIC_DRAW);
-
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-		glEnableVertexAttribArray(0);
-	}
-
-	glBindVertexArray(s->axisVAO);
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, s->axisVBO);
-
-		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
-
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
-		glEnableVertexAttribArray(0);
-
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-		glEnableVertexAttribArray(1);
-	}
-}
-
 void setup(state* s, int w, int h) {
 
 	s->w = w;
@@ -384,32 +251,44 @@ void setup(state* s, int w, int h) {
 	s->context = SDL_GL_CreateContext(s->window);
 	assert(s->context);
 
+	SDL_GL_SetSwapInterval(1);
 	setupFuns();
 
 	glEnable(GL_POLYGON_OFFSET_FILL);
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_SCISSOR_TEST);
 	glDisable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glViewport(0, 0, w - 250, h);
+	glViewport(0, 0, s->w, s->h);
 
 	SDL_GL_SetSwapInterval(-1);
 
-	GLuint vert, frag, cvert, cfrag;
+	GLuint vert, frag, cvert, cfrag, tvert, tfrag, cvert_2d, cfrag_2d;
 	vert = glCreateShader(GL_VERTEX_SHADER);
 	cvert = glCreateShader(GL_VERTEX_SHADER);
+	tvert = glCreateShader(GL_VERTEX_SHADER);
+	cvert_2d = glCreateShader(GL_VERTEX_SHADER);
 	frag = glCreateShader(GL_FRAGMENT_SHADER);
 	cfrag = glCreateShader(GL_FRAGMENT_SHADER);
+	tfrag = glCreateShader(GL_FRAGMENT_SHADER);
+	cfrag_2d = glCreateShader(GL_FRAGMENT_SHADER);
 
 	glShaderSource(vert, 1, &vertex, NULL);
 	glShaderSource(cvert, 1, &colorvertex, NULL);
 	glShaderSource(frag, 1, &fragment, NULL);
 	glShaderSource(cfrag, 1, &colorfragment, NULL);
+	glShaderSource(tvert, 1, &vtextured2D, NULL);
+	glShaderSource(tfrag, 1, &ftextured2D, NULL);
+	glShaderSource(cvert_2d, 1, &vcolor2D, NULL);
+	glShaderSource(cfrag_2d, 1, &fcolor2D, NULL);
 
 	glCompileShader(vert);
 	glCompileShader(cvert);
+	glCompileShader(tvert);
 	glCompileShader(frag);
 	glCompileShader(cfrag);
+	glCompileShader(tfrag);
+	glCompileShader(cvert_2d);
+	glCompileShader(cfrag_2d);
 
 	s->graphShader = glCreateProgram();
 	glAttachShader(s->graphShader, vert);
@@ -421,10 +300,24 @@ void setup(state* s, int w, int h) {
 	glAttachShader(s->axisShader, cfrag);
 	glLinkProgram(s->axisShader);
 
+	s->uiShader = glCreateProgram();
+	glAttachShader(s->uiShader, tvert);
+	glAttachShader(s->uiShader, tfrag);
+	glLinkProgram(s->uiShader);
+
+	s->rectShader = glCreateProgram();
+	glAttachShader(s->rectShader, cvert_2d);
+	glAttachShader(s->rectShader, cfrag_2d);
+	glLinkProgram(s->rectShader);
+
 	glDeleteShader(vert);
 	glDeleteShader(cvert);
+	glDeleteShader(tvert);
 	glDeleteShader(frag);
 	glDeleteShader(cfrag);
+	glDeleteShader(tfrag);
+	glDeleteShader(cvert_2d);
+	glDeleteShader(cfrag_2d);
 
 	glGenVertexArrays(1, &s->axisVAO);
 	glGenVertexArrays(1, &s->graphVAO);
@@ -433,65 +326,15 @@ void setup(state* s, int w, int h) {
 	glGenBuffers(1, &s->EBO);
 
 	TTF_Init();
-	s->font = TTF_OpenFontRW(SDL_RWFromConstMem((const void*)DroidSans_ttf, DroidSans_ttf_len), 1, 48);
+	font = TTF_OpenFontRW(SDL_RWFromConstMem((const void*)DroidSans_ttf, DroidSans_ttf_len), 1, 24);
+
+	s->ui.start();
+	{
+		fxy_equation* eqw = new fxy_equation(s->g.eq_str);
+		s->ui.widgets.push_back(eqw);
+	}
 
 	s->c = defaultCam();
 	s->running = true;
 	s->instate = in_idle;
-
-	s->ui.init();
-	resetUI(s);
-
-	int offset = 0;
-	offset = addMultiLineText(s, "EQUATIONS", -1.0f, 1.0f, normw(10), normh(25 + offset));
-	offset = addMultiLineText(s, s->g.eq_str, -1.0f, 1.0f, normw(10), normh(25 + offset));
-}
-
-int addMultiLineText(state* s, string str, float x, float y, float woffset, float hoffset) {
-	graphelement ge;
-	ge.str = str;
-	ge.pxoffset = (int)round(hoffset * s->h);
-	int tw, th;
-	TTF_SizeText(s->font, str.c_str(), &tw, &th);
-	int stroffset = 0;
-	for (float i = normw(tw); i > 0 && stroffset != str.size(); i -= 1.0f)
-	{
-		int end = stroffset + 1;
-		if (str.size() > 1) {
-			tw = 0;
-			do {
-				if (end == str.size()) break;
-				TTF_SizeText(s->font, str.substr(stroffset, end - stroffset).c_str(), &tw, &th);
-				end++;
-			} while (tw < (1.0f - x) * round(0.23f * s->w));
-		}
-		float normW = normw(tw);
-		float normH = normh(th);
-
-		UItext* text = new UItext(s->font, str.substr(stroffset, end - stroffset));
-		stroffset = end;
-
-		text->points[0] = { x + woffset		   , y - hoffset		, 0.0f, 1.0f };
-		text->points[1] = { x + normW + woffset, y - hoffset		, 1.0f, 1.0f };
-		text->points[2] = { x + woffset		   , y - normH - hoffset, 0.0f, 0.0f };
-
-		text->points[3] = { x + normW + woffset, y - hoffset		, 1.0f, 1.0f };
-		text->points[4] = { x + woffset		   , y - normH - hoffset, 0.0f, 0.0f };
-		text->points[5] = { x + normW + woffset, y - normH - hoffset, 1.0f, 0.0f };
-
-		hoffset += normH;
-
-		s->ui.elements.push_back(text);
-		ge.UIelements.push_back((int)s->ui.elements.size() - 1);
-	}
-	ge.pxoffset_bot = (int)(hoffset * s->h);
-	s->ui.gelements.push_back(ge);
-	return (int)(hoffset * s->h);
-}
-
-void resetUI(state* s) {
-	vector<string> gstrs = s->ui.reset();
-	int offset = 0;
-	for(string& str : gstrs)
-		offset = addMultiLineText(s, str, -1.0f, 1.0f, normw(10), normh(25 + offset));
 }

@@ -379,7 +379,7 @@ bool in(string str, vector<op>& EQ) {
 						s.push(op_cot);
 					else if (str == "asec")
 						s.push(op_asec);
-					else if (str == "ascs")
+					else if (str == "acsc")
 						s.push(op_acsc);
 					else if (str == "acot")
 						s.push(op_acot);

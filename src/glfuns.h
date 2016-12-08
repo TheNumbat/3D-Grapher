@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <SDL_opengl.h>
+
 PFNGLBINDVERTEXARRAYPROC			glBindVertexArray;
 PFNGLDELETEBUFFERSPROC				glDeleteBuffers;
 PFNGLBINDBUFFERPROC					glBindBuffer;

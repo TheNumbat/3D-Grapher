@@ -152,7 +152,8 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="..\src\exp.h" />
     <ClInclude Include="..\src\glfuns.h" />
     <ClInclude Include="..\src\graph.h" />
-    <ClInclude Include="..\src\main.h" />
+    <ClInclude Include="..\src\shaders.h" />
+    <ClInclude Include="..\src\types.h" />
     <ClInclude Include="..\src\ui.h" />
   </ItemGroup>
   <ItemGroup>

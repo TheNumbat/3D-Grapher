@@ -1,54 +1,14 @@
 
 #pragma once
 
-#include <vector>
-
-#include <assert.h>
-#include <SDL.h>
-#include <SDL_opengl.h>
-
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
-
 #include "font.data"
+#include "types.h"
 
-#include "cam.h"
+#include "glfuns.h"
 #include "exp.h"
+#include "cam.h"
+#include "graph.h"
 #include "ui.h"
-
-using namespace glm;
-using namespace std;
-
-struct graph {
-	vector<op> eq;
-	string eq_str;
-	vector<GLfloat> verticies;
-	vector<GLuint> indicies;
-	float xmin, xmax, ymin, ymax;
-	unsigned int xrez, yrez;
-};
-
-enum inputstate {
-	in_idle,
-	in_cam,
-	in_text
-};
-
-struct state {
-	SDL_Window* window;
-	int w, h;
-	SDL_GLContext context;
-	GLuint axisShader, graphShader, axisVAO, graphVAO, axisVBO, graphVBO, EBO;
-	
-	UI ui;
-	TTF_Font* font;
-	graph g;
-	cam c;
-	inputstate instate;
-
-	bool running;
-};
 
 const GLchar* colorvertex = {
 	"#version 330 core\n"
@@ -118,7 +78,3 @@ GLfloat axes[] = {
 	 0.0f, 0.0f, 0.0f,  	0.0f, 0.0f, 1.0f,
 	 0.0f, 0.0f, 0.0f,  	0.0f, 0.0f, 1.0f
 };
-
-#include "graph.h"
-#include "glfuns.h"
-
