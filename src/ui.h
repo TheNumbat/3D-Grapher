@@ -5,10 +5,11 @@
 #include <SDL_opengl.h>
 #include <string>
 
-struct header : public widget {
-};
-
 struct fxy_equation : public widget {
+	fxy_equation(string str, bool a = false) {
+		exp = str;
+		active = a;
+	}
 	int render(int y_pos, int w, int total_w, int total_h, int xoffset, GLuint program) {
 		current_y = y_pos;
 		break_str(w - xoffset);
@@ -67,6 +68,7 @@ struct fxy_equation : public widget {
 				}
 				else if (ev.key.keysym.sym == SDLK_BACKSPACE) {
 					if (exp != " ") exp.pop_back();
+					else should_remove = true;
 					if (!exp.size()) exp = " ";
 				}
 			}

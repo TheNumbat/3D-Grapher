@@ -129,11 +129,16 @@ void gengraph(state* s) {
 }
 
 void regengraph(state* s) {
+	
+	vector<op> new_eq;
+
+	if (!in(s->g.eq_str, new_eq)) {
+		return;
+	}
 	s->g.indicies.clear();
 	s->g.verticies.clear();
-	s->g.eq.clear();
+	s->g.eq = new_eq;
 
-	in(s->g.eq_str, s->g.eq);
 	printeq(cout, s->g.eq);
 
 	Uint64 start = SDL_GetPerformanceCounter();

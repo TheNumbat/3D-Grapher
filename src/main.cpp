@@ -138,6 +138,7 @@ void loop(state* s) {
 
 		SDL_Event ev;
 		while (SDL_PollEvent(&ev) != 0) {
+			s->ui.remove_dead_widgets();
 			bool intercepted = false;
 			for (widget* w : s->ui.widgets) {
 				intercepted = w->process(ev, s->w, s);
@@ -183,10 +184,15 @@ void loop(state* s) {
 				break;
 			}
 			case SDL_MOUSEBUTTONDOWN: {
-				if (s->instate == in_idle && ev.button.x > (int)round(s->w * UI_SCREEN_RATIO)) {
-					s->instate = in_cam;
-					SDL_CaptureMouse(SDL_TRUE);
-					SDL_SetRelativeMouseMode(SDL_TRUE);
+				if (s->instate == in_idle) {
+					if (ev.button.x > (int)round(s->w * UI_SCREEN_RATIO)) {
+						s->instate = in_cam;
+						SDL_CaptureMouse(SDL_TRUE);
+						SDL_SetRelativeMouseMode(SDL_TRUE);
+					}
+					else {
+						s->ui.widgets.push_back(new fxy_equation(" ", true));
+					}
 				}
 				break;
 			}
@@ -221,7 +227,7 @@ void loop(state* s) {
 		SDL_GL_SwapWindow(s->window);
 
 		Uint64 end = SDL_GetPerformanceCounter();
-		cout << "frame: " << 1000.0f * (end - start) / (float)SDL_GetPerformanceFrequency() << "ms" << endl;
+		//cout << "frame: " << 1000.0f * (end - start) / (float)SDL_GetPerformanceFrequency() << "ms" << endl;
 	}
 }
 
@@ -324,8 +330,7 @@ void setup(state* s, int w, int h) {
 
 	s->ui.start();
 	{
-		fxy_equation* eqw = new fxy_equation();
-		eqw->exp = s->g.eq_str;
+		fxy_equation* eqw = new fxy_equation(s->g.eq_str);
 		s->ui.widgets.push_back(eqw);
 	}
 

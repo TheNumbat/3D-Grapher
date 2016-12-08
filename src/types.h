@@ -60,7 +60,7 @@ struct widget {
 		glGenBuffers(1, &VBO);
 		glGenTextures(1, &texture);
 		current_y = current_yh = 0;
-		active = false;
+		active = should_remove = false;
 	}
 	~widget() {
 		glDeleteVertexArrays(1, &VAO);
@@ -92,7 +92,7 @@ struct widget {
 	point pts[6];
 	GLuint VAO, VBO, texture;
 	int current_y, current_yh;
-	bool active;
+	bool active, should_remove;
 };
 
 struct UI {
@@ -107,6 +107,14 @@ struct UI {
 		widgets.clear();
 		glDeleteVertexArrays(1, &VAO);
 		glDeleteBuffers(1, &VBO);
+	}
+	void remove_dead_widgets() {
+		for (unsigned int i = 0; i < widgets.size(); i++) {
+			if (widgets[i]->should_remove) {
+				delete widgets[i];
+				widgets.erase(widgets.begin() + i);
+			}
+		}
 	}
 	void drawRect(GLuint shader, int x, int y, int w, int h, float r, float g, float b, float a, float screenw, float screenh) {
 		glBindVertexArray(VAO);
