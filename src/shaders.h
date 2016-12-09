@@ -3,7 +3,30 @@
 
 #include <SDL_opengl.h>
 
-const GLchar* vtextured2D = {
+const GLchar* graph_vertex = {
+	"#version 330 core\n"
+
+	"layout (location = 0) in vec3 position;\n"
+
+	"uniform mat4 model, view, proj;\n"
+
+	"void main() {\n"
+	"	gl_Position = proj * view * model * vec4(position, 1.0f);\n"
+	"}\n"
+};
+
+const GLchar* graph_fragment = {
+	"#version 330 core\n"
+
+	"uniform vec4 vcolor;\n"
+	"out vec4 color;\n"
+
+	"void main() {\n"
+	"	color = vcolor;\n"
+	"}\n"
+};
+
+const GLchar* ui_vertex = {
 	"#version 330 core\n"
 
 	"layout (location = 0) in vec2 position;\n"
@@ -17,7 +40,7 @@ const GLchar* vtextured2D = {
 	"}\n"
 };
 
-const GLchar* ftextured2D = {
+const GLchar* ui_fragment = {
 	"#version 330 core\n"
 
 	"in vec2 coord;\n"
@@ -29,7 +52,7 @@ const GLchar* ftextured2D = {
 	"}\n"
 };
 
-const GLchar* vcolor2D = {
+const GLchar* rect_vertex = {
 	"#version 330 core\n"
 
 	"layout (location = 0) in vec2 position;\n"
@@ -43,7 +66,7 @@ const GLchar* vcolor2D = {
 	"}\n"
 };
 
-const GLchar* fcolor2D = {
+const GLchar* rect_fragment = {
 	"#version 330 core\n"
 
 	"in vec4 fcolor;\n"
@@ -54,7 +77,7 @@ const GLchar* fcolor2D = {
 	"}\n"
 };
 
-const GLchar* colorvertex = {
+const GLchar* axis_vertex = {
 	"#version 330 core\n"
 
 	"layout (location = 0) in vec3 position;\n"
@@ -70,19 +93,7 @@ const GLchar* colorvertex = {
 	"}\n"
 };
 
-const GLchar* vertex = {
-	"#version 330 core\n"
-
-	"layout (location = 0) in vec3 position;\n"
-
-	"uniform mat4 model, view, proj;\n"
-
-	"void main() {\n"
-	"	gl_Position = proj * view * model * vec4(position, 1.0f);\n"
-	"}\n"
-};
-
-const GLchar* colorfragment = {
+const GLchar* axis_fragment = {
 	"#version 330 core\n"
 
 	"in vec3 vcolor;\n"
@@ -90,16 +101,5 @@ const GLchar* colorfragment = {
 
 	"void main() {\n"
 	"	color = vec4(vcolor, 1.0f);\n"
-	"}\n"
-};
-
-const GLchar* fragment = {
-	"#version 330 core\n"
-
-	"uniform vec4 vcolor;\n"
-	"out vec4 color;\n"
-
-	"void main() {\n"
-	"	color = vcolor;\n"
 	"}\n"
 };

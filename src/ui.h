@@ -10,7 +10,7 @@ struct fxy_equation : public widget {
 		exp = str;
 		active = a;
 	}
-	int render(int y_pos, int w, int total_w, int total_h, int xoffset, GLuint program) {
+	int render(int y_pos, int w, int total_w, int total_h, int xoffset, shader& program) {
 		current_y = y_pos;
 		break_str(w - xoffset);
 		for (string l : lines) {

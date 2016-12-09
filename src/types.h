@@ -16,6 +16,8 @@ enum inputstate {
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 
+#include "gl.h"
+
 using namespace glm;
 using namespace std;
 
@@ -73,9 +75,10 @@ struct widget {
 		glBufferData(GL_ARRAY_BUFFER, sizeof(pts), pts, GL_STATIC_DRAW);
 		glBindVertexArray(0);
 	}
-	void gl_render(GLuint program) {
+	void gl_render(shader& program) {
+		glDisable(GL_BLEND);
 		glBindVertexArray(VAO);
-		glUseProgram(program);
+		program.use();
 
 		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)0);
 		glEnableVertexAttribArray(0);
@@ -85,9 +88,11 @@ struct widget {
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
 		glBindVertexArray(0);
 	}
-	virtual int render(int y_pos, int w, int total_w, int h, int xoffset, GLuint program) = 0;
+	virtual int render(int y_pos, int w, int total_w, int h, int xoffset, shader& program) = 0;
 	virtual bool process(SDL_Event ev, int w, state* s) = 0;
 	point pts[6];
 	GLuint VAO, VBO, texture;
@@ -117,9 +122,10 @@ struct UI {
 			}
 		}
 	}
-	void drawRect(GLuint shader, int x, int y, int w, int h, float r, float g, float b, float a, float screenw, float screenh) {
+	void drawRect(shader& shader, int x, int y, int w, int h, float r, float g, float b, float a, float screenw, float screenh) {
+		glEnable(GL_BLEND);
 		glBindVertexArray(VAO);
-		glUseProgram(shader);
+		shader.use();
 		GLfloat pts[12] = { -1.0f + 2.0f * (x / screenw)      ,  1.0f - 2.0f * (y / screenh),
 			                -1.0f + 2.0f * ((x + w) / screenw),  1.0f - 2.0f * (y / screenh),
 			                -1.0f + 2.0f * ((x + w) / screenw),  1.0f - 2.0f * ((y + h) / screenh),
@@ -131,29 +137,30 @@ struct UI {
 		glBufferData(GL_ARRAY_BUFFER, sizeof(pts), pts, GL_STATIC_DRAW);
 		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid*)0);
 		glEnableVertexAttribArray(0);
-		glUniform4f(glGetUniformLocation(shader, "vcolor"), r, g, b, a);
+		glUniform4f(shader.getUniform("vcolor"), r, g, b, a);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glDisableVertexAttribArray(0);
 		glBindVertexArray(0);
 	}
-	void render(int w, int h, GLuint program, GLuint color_prog) {
+	void render(int w, int h, shader& ui_s, shader& rect_s) {
 		float fw = (float)w, fh = (float)h;
 		if (active) {
 			int ui_w = (int)round(w * UI_SCREEN_RATIO);
-			drawRect(color_prog, 0, 0, ui_w, h, 1.0f, 1.0f, 1.0f, 1.0f, fw, fh);
-			drawRect(color_prog, ui_w, 0, 3, h, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh);
+			drawRect(rect_s, 0, 0, ui_w, h, 1.0f, 1.0f, 1.0f, 1.0f, fw, fh);
+			drawRect(rect_s, ui_w, 0, 3, h, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh);
 			int cur_y = 0;
 			unsigned int windex = 0;
 			while (cur_y < h && windex < widgets.size()) {
-				drawRect(color_prog, 0, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh);
+				drawRect(rect_s, 0, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh);
 				cur_y += 3;
-				cur_y = widgets[windex++]->render(cur_y, ui_w, w, h, 5, program);
+				cur_y = widgets[windex++]->render(cur_y, ui_w, w, h, 5, ui_s);
 				cur_y += 3;
 			}
-			drawRect(color_prog, 0, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh);
-			drawRect(color_prog, ui_w, 0, 25, 25, 0.0f, 0.0f, 0.0f, 0.5f, fw, fh);
+			drawRect(rect_s, 0, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh);
+			drawRect(rect_s, ui_w, 0, 25, 25, 0.0f, 0.0f, 0.0f, 0.5f, fw, fh);
 		}
 		else {
-			drawRect(color_prog, 0, 0, 25, 25, 0.0f, 0.0f, 0.0f, 0.5f, fw, fh);
+			drawRect(rect_s, 0, 0, 25, 25, 0.0f, 0.0f, 0.0f, 0.5f, fw, fh);
 		}
 	}
 	vector<widget*> widgets;
@@ -165,7 +172,8 @@ struct state {
 	SDL_Window* window;
 	int w, h;
 	SDL_GLContext context;
-	GLuint axisShader, graphShader, uiShader, axisVAO, graphVAO, axisVBO, graphVBO, EBO, rectShader;
+	GLuint axisVAO, graphVAO, axisVBO, graphVBO, EBO;
+	shader graph_s, axis_s, UI_s, rect_s;
 
 	graph g;
 	cam c;

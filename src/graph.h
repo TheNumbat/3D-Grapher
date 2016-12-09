@@ -13,7 +13,7 @@ const int z_min = 26;
 const int z_max = 32;
 
 GLfloat axes[] = {
-	0.0f, 0.0f, 0.0f,		1.0f, 0.0f, 0.0f,
+	0.0f, 0.0f, 0.0f,	1.0f, 0.0f, 0.0f,
 	0.0f, 0.0f, 0.0f,  	1.0f, 0.0f, 0.0f,
 
 	0.0f, 0.0f, 0.0f,  	0.0f, 1.0f, 0.0f,
@@ -153,9 +153,6 @@ void regengraph(state* s) {
 
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * s->g.indicies.size(), s->g.indicies.size() ? &s->g.indicies[0] : NULL, GL_STATIC_DRAW);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->g.verticies.size(), s->g.verticies.size() ? &s->g.verticies[0] : NULL, GL_STATIC_DRAW);
-
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-		glEnableVertexAttribArray(0);
 	}
 
 	glBindVertexArray(s->axisVAO);
@@ -163,11 +160,5 @@ void regengraph(state* s) {
 		glBindBuffer(GL_ARRAY_BUFFER, s->axisVBO);
 
 		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
-
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
-		glEnableVertexAttribArray(0);
-
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-		glEnableVertexAttribArray(1);
 	}
 }
