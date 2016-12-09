@@ -86,9 +86,11 @@ struct fxy_equation : public widget {
 			do {
 				end++;
 				TTF_SizeText(font, exp.substr(e_pos, end - e_pos).c_str(), &newtw, NULL);
-				if (end == exp.size()) end++;
 			} while (end < exp.size() && newtw < w);
-			end--;
+			if (newtw > w) {
+				end--;
+				TTF_SizeText(font, exp.substr(e_pos, end - e_pos).c_str(), &newtw, NULL);
+			}
 			lines.push_back(exp.substr(e_pos, end - e_pos));
 			e_pos = end;
 			tw -= newtw;

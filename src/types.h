@@ -100,6 +100,7 @@ struct UI {
 	void start() {
 		glGenVertexArrays(1, &VAO);
 		glGenBuffers(1, &VBO);
+		active = false;
 	}
 	~UI() {
 		for (widget* w : widgets)
@@ -135,22 +136,29 @@ struct UI {
 		glBindVertexArray(0);
 	}
 	void render(int w, int h, GLuint program, GLuint color_prog) {
-		int ui_w = (int)round(w * UI_SCREEN_RATIO);
 		float fw = (float)w, fh = (float)h;
-		drawRect(color_prog, 0, 0, ui_w, h, 1.0f, 1.0f, 1.0f, 1.0f, fw, fh);
-		drawRect(color_prog, ui_w, 0, 3, h, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh);
-		int cur_y = 0;
-		unsigned int windex = 0;
-		while (cur_y < h && windex < widgets.size()) {
+		if (active) {
+			int ui_w = (int)round(w * UI_SCREEN_RATIO);
+			drawRect(color_prog, 0, 0, ui_w, h, 1.0f, 1.0f, 1.0f, 1.0f, fw, fh);
+			drawRect(color_prog, ui_w, 0, 3, h, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh);
+			int cur_y = 0;
+			unsigned int windex = 0;
+			while (cur_y < h && windex < widgets.size()) {
+				drawRect(color_prog, 0, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh);
+				cur_y += 3;
+				cur_y = widgets[windex++]->render(cur_y, ui_w, w, h, 5, program);
+				cur_y += 3;
+			}
 			drawRect(color_prog, 0, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh);
-			cur_y += 3;
-			cur_y = widgets[windex++]->render(cur_y, ui_w, w, h, 5, program);
-			cur_y += 3;
+			drawRect(color_prog, ui_w, 0, 25, 25, 0.0f, 0.0f, 0.0f, 0.5f, fw, fh);
 		}
-		drawRect(color_prog, 0, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh);
+		else {
+			drawRect(color_prog, 0, 0, 25, 25, 0.0f, 0.0f, 0.0f, 0.5f, fw, fh);
+		}
 	}
 	vector<widget*> widgets;
 	GLuint VAO, VBO;
+	bool active;
 };
 
 struct state {

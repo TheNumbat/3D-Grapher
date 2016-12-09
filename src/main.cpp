@@ -19,8 +19,9 @@ using namespace std;
 	// UI
 		// Better desmos-style UI
 		// Axis scales
-		// Actual input system
+		// Legit UI system? Or just do janky stuff?
 	// Rendering
+		// Rect/textured-rect/opengl-wrapper classes?
 		// Transparency, blending, maybe sorting
 		// Lighting
 		// Multiple graphs
@@ -140,9 +141,11 @@ void loop(state* s) {
 		while (SDL_PollEvent(&ev) != 0) {
 			s->ui.remove_dead_widgets();
 			bool intercepted = false;
-			for (widget* w : s->ui.widgets) {
-				intercepted = w->process(ev, s->w, s);
-				if (intercepted) break;
+			if (s->ui.active) {
+				for (widget* w : s->ui.widgets) {
+					intercepted = w->process(ev, (int)round(s->w * UI_SCREEN_RATIO), s);
+					if (intercepted) break;
+				}
 			}
 			if (intercepted) continue;
 			switch (ev.type) {
@@ -185,13 +188,27 @@ void loop(state* s) {
 			}
 			case SDL_MOUSEBUTTONDOWN: {
 				if (s->instate == in_idle) {
-					if (ev.button.x > (int)round(s->w * UI_SCREEN_RATIO)) {
+					if (s->ui.active) {
+						if (ev.button.x < (int)round(s->w * UI_SCREEN_RATIO)) {
+							s->ui.widgets.push_back(new fxy_equation(" ", true));
+						}
+						else if (ev.button.x > (int)round(s->w * UI_SCREEN_RATIO) && ev.button.x < (int)round(s->w * UI_SCREEN_RATIO) + 25 &&
+								 ev.button.y < 25) {
+							s->ui.active = false;
+						}
+						else {
+							s->instate = in_cam;
+							SDL_CaptureMouse(SDL_TRUE);
+							SDL_SetRelativeMouseMode(SDL_TRUE);
+						}
+					}
+					else if (ev.button.x < 25 && ev.button.y < 25) {
+						s->ui.active = true;
+					}
+					else {
 						s->instate = in_cam;
 						SDL_CaptureMouse(SDL_TRUE);
 						SDL_SetRelativeMouseMode(SDL_TRUE);
-					}
-					else {
-						s->ui.widgets.push_back(new fxy_equation(" ", true));
 					}
 				}
 				break;
