@@ -61,9 +61,10 @@ struct fxy_equation : public widget {
 					active = false;
 					SDL_StopTextInput();
 				}
-				else if (ev.key.keysym.sym == SDLK_RETURN ||
+				else if (exp != " " && (
+					     ev.key.keysym.sym == SDLK_RETURN ||
 						 ev.key.keysym.sym == SDLK_RETURN2 ||
-						 ev.key.keysym.sym == SDLK_KP_ENTER) {
+						 ev.key.keysym.sym == SDLK_KP_ENTER)) {
 					active = false;
 					s->g.eq_str = exp; 
 					regengraph(s);
