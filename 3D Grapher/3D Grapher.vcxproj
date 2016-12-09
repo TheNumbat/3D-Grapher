@@ -150,7 +150,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   <ItemGroup>
     <ClInclude Include="..\src\cam.h" />
     <ClInclude Include="..\src\exp.h" />
-    <ClInclude Include="..\src\glfuns.h" />
+    <ClInclude Include="..\src\gl.h" />
     <ClInclude Include="..\src\graph.h" />
     <ClInclude Include="..\src\shaders.h" />
     <ClInclude Include="..\src\types.h" />

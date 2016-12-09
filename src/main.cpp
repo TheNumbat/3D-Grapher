@@ -6,7 +6,7 @@
 const float UI_SCREEN_RATIO = 0.2f;
 
 #include "font.data"
-#include "glfuns.h"
+#include "gl.h"
 #include "types.h"
 #include "shaders.h"
 #include "graph.h"
