@@ -149,16 +149,15 @@ void regengraph(state* s) {
 	glBindVertexArray(s->graphVAO);
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, s->graphVBO);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->EBO);
-
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * s->g.indicies.size(), s->g.indicies.size() ? &s->g.indicies[0] : NULL, GL_STATIC_DRAW);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * s->g.verticies.size(), s->g.verticies.size() ? &s->g.verticies[0] : NULL, GL_STATIC_DRAW);
+		
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * s->g.indicies.size(), s->g.indicies.size() ? &s->g.indicies[0] : NULL, GL_STATIC_DRAW);
 	}
 
 	glBindVertexArray(s->axisVAO);
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, s->axisVBO);
-
 		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
 	}
 }

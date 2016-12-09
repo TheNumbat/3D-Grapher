@@ -97,7 +97,7 @@ void loop(state* s) {
 		view = getView(s->c);
 		proj = perspective(radians(s->c.fov), (GLfloat)s->w / (GLfloat)s->h, 0.1f, 1000.0f);
 
-		glBindVertexArray(s->graphVAO);
+		/*glBindVertexArray(s->graphVAO);
 		{
 			s->graph_s.use();
 
@@ -124,11 +124,12 @@ void loop(state* s) {
 			glDrawElements(GL_TRIANGLES, (int)s->g.indicies.size(), GL_UNSIGNED_INT, (void*)0);
 
 			glDisableVertexAttribArray(0);
-		}
+		}*/
 
 		glBindVertexArray(s->axisVAO);
 		{
 			s->axis_s.use();
+
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
 			glEnableVertexAttribArray(0);
 
@@ -237,7 +238,7 @@ void loop(state* s) {
 					s->instate = in_idle;
 					SDL_CaptureMouse(SDL_FALSE);
 					SDL_SetRelativeMouseMode(SDL_FALSE);
-					SDL_WarpMouseInWindow(s->window, (int)round(s->w * ((1 - UI_SCREEN_RATIO) / 2 + UI_SCREEN_RATIO)), s->h / 2);
+					SDL_WarpMouseInWindow(s->window, s->ui.active ? (int)round(s->w * ((1 - UI_SCREEN_RATIO) / 2 + UI_SCREEN_RATIO)) : s->w / 2, s->h / 2);
 				}
 				break;
 			}
