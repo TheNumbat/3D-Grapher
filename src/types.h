@@ -19,6 +19,7 @@ enum inputstate {
 #include "gl.h"
 #include "tex_in.data"
 #include "tex_out.data"
+#include "tex_gear.data"
 
 using namespace glm;
 using namespace std;
@@ -69,6 +70,7 @@ struct UI {
 		active = false;
 		in.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(in_bmp, in_bmp_len), 1));
 		out.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(out_bmp, out_bmp_len), 1));
+		gear.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(gear_bmp, gear_bmp_len), 1));
 	}
 	~UI() {
 		for (widget* w : widgets)
@@ -110,8 +112,10 @@ struct UI {
 		int xoff, ui_w = (int)round(w * UI_SCREEN_RATIO);
 		if (active) {
 			xoff = 0;
-			in.set(ui_w + 5, xoff, 32, 32);
+			in.set(ui_w + 5, 0, 32, 32);
 			in.render(w, h, ui_s);
+			gear.set(ui_w + 5, 35, 32, 32);
+			gear.render(w, h, ui_s);
 		}
 		else {
 			xoff = -ui_w + 5;
@@ -132,7 +136,7 @@ struct UI {
 	}
 	vector<widget*> widgets;
 	GLuint VAO, VBO;
-	textured_rect in, out;
+	textured_rect in, out, gear;
 	bool active;
 };
 

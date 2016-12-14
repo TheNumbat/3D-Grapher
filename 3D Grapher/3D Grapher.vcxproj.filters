@@ -52,5 +52,8 @@
     <None Include="..\src\tex_out.data">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\src\tex_gear.data">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

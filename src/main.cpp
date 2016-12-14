@@ -20,11 +20,9 @@ using namespace std;
 		// Axis scales
 		// Legit UI system? Or just do janky stuff?
 	// Rendering
-		// Rect/textured-rect/opengl-wrapper classes?
 		// Transparency, blending, maybe sorting
 		// Lighting
 		// Multiple graphs
-		// Semitransparent UI
 		// Antialiasing
 		// Axis normalization
 	// Math Features
