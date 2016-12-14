@@ -158,6 +158,8 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\font.data" />
+    <None Include="..\src\tex_in.data" />
+    <None Include="..\src\tex_out.data" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

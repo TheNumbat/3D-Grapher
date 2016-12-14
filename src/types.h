@@ -17,6 +17,8 @@ enum inputstate {
 #include <gtc/type_ptr.hpp>
 
 #include "gl.h"
+#include "tex_in.data"
+#include "tex_out.data"
 
 using namespace glm;
 using namespace std;
@@ -24,10 +26,6 @@ using namespace std;
 typedef int op;
 
 TTF_Font* font;
-
-struct point {
-	float x, y, tx, ty;
-};
 
 struct cam {
 	vec3 pos, front, up, right, globalUp;
@@ -57,55 +55,20 @@ struct gendata {
 };
 
 struct widget {
-	widget() {
-		glGenVertexArrays(1, &VAO);
-		glGenBuffers(1, &VBO);
-		glGenTextures(1, &texture);
-		current_y = current_yh = 0;
-		active = should_remove = false;
-	}
-	~widget() {
-		glDeleteVertexArrays(1, &VAO);
-		glDeleteBuffers(1, &VBO);
-		glDeleteTextures(1, &texture);
-	}
-	void send() {
-		glBindVertexArray(VAO);
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(pts), pts, GL_STATIC_DRAW);
-		glBindVertexArray(0);
-	}
-	void gl_render(shader& program) {
-		glDisable(GL_BLEND);
-		glBindVertexArray(VAO);
-		program.use();
-
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)0);
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)(2 * sizeof(GLfloat)));
-		glEnableVertexAttribArray(1);
-
-		glBindTexture(GL_TEXTURE_2D, texture);
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-		glDisableVertexAttribArray(0);
-		glDisableVertexAttribArray(1);
-		glBindVertexArray(0);
-	}
-	virtual int render(int y_pos, int w, int total_w, int h, int xoffset, shader& program) = 0;
+	virtual int render(int w, int h, int ui_w, int x, int y, shader& program) = 0;
 	virtual bool process(SDL_Event ev, int w, state* s) = 0;
 	point pts[6];
-	GLuint VAO, VBO, texture;
 	int current_y, current_yh;
 	bool active, should_remove;
 };
 
 struct UI {
-	UI() {}
-	void start() {
+	UI() {
 		glGenVertexArrays(1, &VAO);
 		glGenBuffers(1, &VBO);
 		active = false;
+		in.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(in_bmp, in_bmp_len), 1));
+		out.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(out_bmp, out_bmp_len), 1));
 	}
 	~UI() {
 		for (widget* w : widgets)
@@ -144,27 +107,32 @@ struct UI {
 	}
 	void render(int w, int h, shader& ui_s, shader& rect_s) {
 		float fw = (float)w, fh = (float)h;
+		int xoff, ui_w = (int)round(w * UI_SCREEN_RATIO);
 		if (active) {
-			int ui_w = (int)round(w * UI_SCREEN_RATIO);
-			drawRect(rect_s, 0, 0, ui_w, h, 1.0f, 1.0f, 1.0f, 1.0f, fw, fh);
-			drawRect(rect_s, ui_w, 0, 3, h, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh);
-			int cur_y = 0;
-			unsigned int windex = 0;
-			while (cur_y < h && windex < widgets.size()) {
-				drawRect(rect_s, 0, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh);
-				cur_y += 3;
-				cur_y = widgets[windex++]->render(cur_y, ui_w, w, h, 5, ui_s);
-				cur_y += 3;
-			}
-			drawRect(rect_s, 0, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh);
-			drawRect(rect_s, ui_w, 0, 25, 25, 0.0f, 0.0f, 0.0f, 0.5f, fw, fh);
+			xoff = 0;
+			in.set(ui_w + 5, xoff, 32, 32);
+			in.render(w, h, ui_s);
 		}
 		else {
-			drawRect(rect_s, 0, 0, 25, 25, 0.0f, 0.0f, 0.0f, 0.5f, fw, fh);
+			xoff = -ui_w + 5;
+			out.set(11, 0, 32, 32);
+			out.render(w, h, ui_s);
 		}
+		drawRect(rect_s, xoff, 0, ui_w, h, 1.0f, 1.0f, 1.0f, 1.0f, fw, fh); // white background
+		drawRect(rect_s, xoff + ui_w, 0, 3, h, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // right black strip
+		int cur_y = 0;
+		unsigned int windex = 0;
+		while (cur_y < h && windex < widgets.size()) {
+			drawRect(rect_s, xoff, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // top/bottom black strip
+			cur_y += 3;
+			cur_y = widgets[windex++]->render(w, h, ui_w, 5 + xoff, cur_y, ui_s); // widget
+			cur_y += 3;
+		}
+		drawRect(rect_s, xoff, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // bottom black strip
 	}
 	vector<widget*> widgets;
 	GLuint VAO, VBO;
+	textured_rect in, out;
 	bool active;
 };
 
@@ -177,7 +145,7 @@ struct state {
 
 	graph g;
 	cam c;
-	UI ui;
+	UI* ui;
 	inputstate instate;
 
 	bool running;

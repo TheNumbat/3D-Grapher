@@ -71,6 +71,7 @@ int main(int argc, char** args) {
 }
 
 void kill(state* s) {
+	delete s->ui;
 	TTF_CloseFont(font);
 	glDeleteBuffers(1, &s->axisVBO);
 	glDeleteBuffers(1, &s->graphVBO);
@@ -128,7 +129,8 @@ void loop(state* s) {
 
 			glDisableVertexAttribArray(0);
 		}
-
+		glBindVertexArray(0);
+			
 		glBindVertexArray(s->axisVAO);
 		{
 			s->axis_s.use();
@@ -154,24 +156,25 @@ void loop(state* s) {
 			glDisableVertexAttribArray(0);
 			glDisableVertexAttribArray(1);
 		}
+		glBindVertexArray(0);
 
 		{
 			glDisable(GL_DEPTH_TEST);
 			glEnable(GL_BLEND);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			s->ui.render(s->w, s->h, s->UI_s, s->rect_s);
+			s->ui->render(s->w, s->h, s->UI_s, s->rect_s);
 		}
 
 		SDL_Event ev;
 		while (SDL_PollEvent(&ev) != 0) {
 			bool intercepted = false;
-			if (s->ui.active) {
-				for (widget* w : s->ui.widgets) {
+			if (s->ui->active) {
+				for (widget* w : s->ui->widgets) {
 					intercepted = w->process(ev, (int)round(s->w * UI_SCREEN_RATIO), s);
 					if (intercepted) break;
 				}
 			}
-			s->ui.remove_dead_widgets();
+			s->ui->remove_dead_widgets();
 			if (intercepted) continue;
 			switch (ev.type) {
 			case SDL_QUIT: {
@@ -213,13 +216,13 @@ void loop(state* s) {
 			}
 			case SDL_MOUSEBUTTONDOWN: {
 				if (s->instate == in_idle) {
-					if (s->ui.active) {
+					if (s->ui->active) {
 						if (ev.button.x < (int)round(s->w * UI_SCREEN_RATIO)) {
-							s->ui.widgets.push_back(new fxy_equation(" ", true));
+							s->ui->widgets.push_back(new fxy_equation(" ", true));
 						}
-						else if (ev.button.x > (int)round(s->w * UI_SCREEN_RATIO) && ev.button.x < (int)round(s->w * UI_SCREEN_RATIO) + 25 &&
-								 ev.button.y < 25) {
-							s->ui.active = false;
+						else if (ev.button.x > (int)round(s->w * UI_SCREEN_RATIO) && ev.button.x <= (int)round(s->w * UI_SCREEN_RATIO) + 37 &&
+								 ev.button.y <= 32) {
+							s->ui->active = false;
 						}
 						else {
 							s->instate = in_cam;
@@ -227,8 +230,8 @@ void loop(state* s) {
 							SDL_SetRelativeMouseMode(SDL_TRUE);
 						}
 					}
-					else if (ev.button.x < 25 && ev.button.y < 25) {
-						s->ui.active = true;
+					else if (ev.button.x <= 43 && ev.button.y <= 32) {
+						s->ui->active = true;
 					}
 					else {
 						s->instate = in_cam;
@@ -243,7 +246,7 @@ void loop(state* s) {
 					s->instate = in_idle;
 					SDL_CaptureMouse(SDL_FALSE);
 					SDL_SetRelativeMouseMode(SDL_FALSE);
-					SDL_WarpMouseInWindow(s->window, s->ui.active ? (int)round(s->w * ((1 - UI_SCREEN_RATIO) / 2 + UI_SCREEN_RATIO)) : s->w / 2, s->h / 2);
+					SDL_WarpMouseInWindow(s->window, s->ui->active ? (int)round(s->w * ((1 - UI_SCREEN_RATIO) / 2 + UI_SCREEN_RATIO)) : s->w / 2, s->h / 2);
 				}
 				break;
 			}
@@ -315,10 +318,10 @@ void setup(state* s, int w, int h) {
 	TTF_Init();
 	font = TTF_OpenFontRW(SDL_RWFromConstMem((const void*)DroidSans_ttf, DroidSans_ttf_len), 1, 24);
 
-	s->ui.start();
+	s->ui= new UI();
 	{
 		fxy_equation* eqw = new fxy_equation(s->g.eq_str);
-		s->ui.widgets.push_back(eqw);
+		s->ui->widgets.push_back(eqw);
 	}
 
 	s->c = defaultCam();

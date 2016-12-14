@@ -9,41 +9,30 @@ struct fxy_equation : public widget {
 	fxy_equation(string str, bool a = false) {
 		exp = str;
 		active = a;
+		should_remove = false;
+		try_break = true;
 	}
-	int render(int y_pos, int w, int total_w, int total_h, int xoffset, shader& program) {
-		current_y = y_pos;
-		break_str(w - xoffset);
+	int render(int w, int h, int ui_w, int x, int y, shader& program) {
+		current_y = y;
+		if(try_break)
+			break_str(ui_w - x);
 		for (string l : lines) {
-			SDL_Surface* temp = TTF_RenderText_Shaded(font, l.c_str(), { 0, 0, 0 }, { 255, 255, 255 });
-			SDL_Surface* text = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_RGB888, 0);
-			pts[0] = { -1.0f + (float)xoffset / total_w                                  , 1.0f - 2.0f * (float)y_pos / total_h            , 0.0f, 1.0f };
-			pts[1] = { -1.0f + (float)xoffset / total_w                                  , 1.0f - 2.0f * ((float)y_pos + text->h) / total_h, 0.0f, 0.0f };
-			pts[2] = { -1.0f + (float)xoffset / total_w + 2.0f * (float)text->w / total_w, 1.0f - 2.0f * (float)y_pos / total_h            , 1.0f, 1.0f };
-
-			pts[3] = { -1.0f + (float)xoffset / total_w                                  , 1.0f - 2.0f * ((float)y_pos + text->h) / total_h, 0.0f, 0.0f };
-			pts[4] = { -1.0f + (float)xoffset / total_w + 2.0f * (float)text->w / total_w, 1.0f - 2.0f *  (float)y_pos / total_h           , 1.0f, 1.0f };
-			pts[5] = { -1.0f + (float)xoffset / total_w + 2.0f * (float)text->w / total_w, 1.0f - 2.0f * ((float)y_pos + text->h) / total_h, 1.0f, 0.0f };
-			y_pos += text->h;
-			send();
-			glBindVertexArray(VAO);
-			glBindTexture(GL_TEXTURE_2D, texture);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, text->w, text->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, text->pixels);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glBindVertexArray(0);
-			gl_render(program);
-			SDL_FreeSurface(temp);
+			SDL_Surface* text = TTF_RenderText_Shaded(font, l.c_str(), { 0, 0, 0 }, { 255, 255, 255 });
+			r.tex.load(text);
+			r.set(x, y, text->w, text->h);
 			SDL_FreeSurface(text);
+			r.render(w, h, program);
+			y += text->h;
 		}
-		current_yh = y_pos;
-		return y_pos;
+		current_yh = y;
+		return y;
 	}
 	bool process(SDL_Event ev, int w, state* s) {
 		switch (ev.type) {
 		case SDL_QUIT:
 			return false;
 		case SDL_MOUSEBUTTONDOWN:
-			if (ev.button.x < w && ev.button.y > current_y && ev.button.y < current_yh) {
+			if (ev.button.x < w && ev.button.y >= current_y && ev.button.y <= current_yh) {
 				active = true;
 				SDL_StartTextInput();
 				return true;
@@ -53,6 +42,7 @@ struct fxy_equation : public widget {
 			if (active) {
 				if (exp == " ") exp.clear();
 				exp.append(ev.text.text);
+				try_break = true;
 			}
 			break;
 		case SDL_KEYDOWN:
@@ -98,7 +88,10 @@ struct fxy_equation : public widget {
 			e_pos = end;
 			tw -= newtw;
 		} while (tw > 0);
+		try_break = false;
 	}
+	bool try_break;
 	string exp;
 	vector<string> lines;
+	textured_rect r;
 };

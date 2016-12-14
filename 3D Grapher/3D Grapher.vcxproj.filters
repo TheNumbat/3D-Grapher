@@ -46,5 +46,11 @@
     <None Include="..\src\font.data">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\src\tex_in.data">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\src\tex_out.data">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
