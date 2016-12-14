@@ -112,9 +112,9 @@ struct UI {
 		int xoff, ui_w = (int)round(w * UI_SCREEN_RATIO);
 		if (active) {
 			xoff = 0;
-			in.set(ui_w + 5, 0, 32, 32);
+			in.set(ui_w + 5.0f, 0, 32, 32);
 			in.render(w, h, ui_s);
-			gear.set(ui_w + 5, 35, 32, 32);
+			gear.set(ui_w + 5.0f, 35, 32, 32);
 			gear.render(w, h, ui_s);
 		}
 		else {

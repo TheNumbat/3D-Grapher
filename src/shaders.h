@@ -8,10 +8,10 @@ const GLchar* graph_vertex = {
 
 	"layout (location = 0) in vec3 position;\n"
 
-	"uniform mat4 model, view, proj;\n"
+	"uniform mat4 modelviewproj;\n"
 
 	"void main() {\n"
-	"	gl_Position = proj * view * model * vec4(position, 1.0f);\n"
+	"	gl_Position = modelviewproj * vec4(position, 1.0f);\n"
 	"}\n"
 };
 
@@ -85,10 +85,10 @@ const GLchar* axis_vertex = {
 
 	"out vec3 vcolor;\n"
 
-	"uniform mat4 model, view, proj;\n"
+	"uniform mat4 modelviewproj;\n"
 
 	"void main() {\n"
-	"	gl_Position = proj * view * model * vec4(position, 1.0f);\n"
+	"	gl_Position = modelviewproj * vec4(position, 1.0f);\n"
 	"	vcolor = color;\n"
 	"}\n"
 };

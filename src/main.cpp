@@ -92,9 +92,10 @@ void loop(state* s) {
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		mat4 model, view, proj;
+		mat4 model, view, proj, modelviewproj;
 		view = getView(s->c);
 		proj = perspective(radians(s->c.fov), (GLfloat)s->w / (GLfloat)s->h, 0.1f, 1000.0f);
+		modelviewproj = proj * view * model;
 
 		glBindVertexArray(s->graphVAO);
 		{
@@ -106,9 +107,7 @@ void loop(state* s) {
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 			glEnableVertexAttribArray(0);
 
-			glUniformMatrix4fv(s->graph_s.getUniform("model"), 1, GL_FALSE, value_ptr(model));
-			glUniformMatrix4fv(s->graph_s.getUniform("view"),  1, GL_FALSE, value_ptr(view));
-			glUniformMatrix4fv(s->graph_s.getUniform("proj"),  1, GL_FALSE, value_ptr(proj));
+			glUniformMatrix4fv(s->graph_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
 
 			glEnable(GL_DEPTH_TEST);
 			glDisable(GL_BLEND);
@@ -141,9 +140,7 @@ void loop(state* s) {
 			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
 			glEnableVertexAttribArray(1);
 
-			glUniformMatrix4fv(s->axis_s.getUniform("model"), 1, GL_FALSE, value_ptr(model));
-			glUniformMatrix4fv(s->axis_s.getUniform("view"), 1, GL_FALSE, value_ptr(view));
-			glUniformMatrix4fv(s->axis_s.getUniform("proj"), 1, GL_FALSE, value_ptr(proj));
+			glUniformMatrix4fv(s->axis_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
 
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			glDisable(GL_DEPTH_TEST);

@@ -10,16 +10,14 @@ struct fxy_equation : public widget {
 		exp = str;
 		active = a;
 		should_remove = false;
-		try_break = true;
 	}
 	int render(int w, int h, int ui_w, int x, int y, shader& program) {
 		current_y = y;
-		if(try_break)
-			break_str(ui_w - x);
+		break_str(ui_w - x);
 		for (string l : lines) {
 			SDL_Surface* text = TTF_RenderText_Shaded(font, l.c_str(), { 0, 0, 0 }, { 255, 255, 255 });
 			r.tex.load(text);
-			r.set(x, y, text->w, text->h);
+			r.set((float)x, (float)y, (float)text->w, (float)text->h);
 			SDL_FreeSurface(text);
 			r.render(w, h, program);
 			y += text->h;
@@ -42,7 +40,6 @@ struct fxy_equation : public widget {
 			if (active) {
 				if (exp == " ") exp.clear();
 				exp.append(ev.text.text);
-				try_break = true;
 			}
 			break;
 		case SDL_KEYDOWN:
@@ -88,9 +85,7 @@ struct fxy_equation : public widget {
 			e_pos = end;
 			tw -= newtw;
 		} while (tw > 0);
-		try_break = false;
 	}
-	bool try_break;
 	string exp;
 	vector<string> lines;
 	textured_rect r;
