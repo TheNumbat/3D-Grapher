@@ -97,9 +97,12 @@ void loop(state* s) {
 		view = getView(s->c);
 		proj = perspective(radians(s->c.fov), (GLfloat)s->w / (GLfloat)s->h, 0.1f, 1000.0f);
 
-		/*glBindVertexArray(s->graphVAO);
+		glBindVertexArray(s->graphVAO);
 		{
 			s->graph_s.use();
+
+			glBindBuffer(GL_ARRAY_BUFFER, s->graphVBO);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->EBO);
 
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 			glEnableVertexAttribArray(0);
@@ -124,11 +127,13 @@ void loop(state* s) {
 			glDrawElements(GL_TRIANGLES, (int)s->g.indicies.size(), GL_UNSIGNED_INT, (void*)0);
 
 			glDisableVertexAttribArray(0);
-		}*/
+		}
 
 		glBindVertexArray(s->axisVAO);
 		{
 			s->axis_s.use();
+
+			glBindBuffer(GL_ARRAY_BUFFER, s->axisVBO);
 
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
 			glEnableVertexAttribArray(0);
