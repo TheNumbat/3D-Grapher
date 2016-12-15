@@ -151,6 +151,4 @@ void regengraph(state* s, int index) {
 		glBindBuffer(GL_ARRAY_BUFFER, s->axisVBO);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
 	}
-
-	glBindVertexArray(0);
 }

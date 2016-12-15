@@ -88,6 +88,9 @@ void loop(state* s) {
 			glBindVertexArray(g.VAO);
 			{
 				s->graph_s.use();
+
+				glBindBuffer(GL_ARRAY_BUFFER, g.VBO);
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g.EBO);
 				
 				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 				glEnableVertexAttribArray(0);
@@ -117,6 +120,8 @@ void loop(state* s) {
 		glBindVertexArray(s->axisVAO);
 		{
 			s->axis_s.use();
+
+			glBindBuffer(GL_ARRAY_BUFFER, s->axisVBO);
 
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
 			glEnableVertexAttribArray(0);

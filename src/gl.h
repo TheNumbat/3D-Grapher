@@ -90,8 +90,7 @@ struct shader {
 struct textured_rect {
 	textured_rect() {
 		x = y = w = h = 0;
-		glGenVertexArrays(1, &VAO);
-		glGenBuffers(1, &VBO);
+		gen();
 	}
 	~textured_rect() {
 		glDeleteVertexArrays(1, &VAO);
@@ -99,9 +98,12 @@ struct textured_rect {
 	}
 	textured_rect(float _x, float _y, float _w, float _h) {
 		x = _x; y = _y; w = _w; h = _h;
+		needsupdate = true;
+		gen();
+	}
+	void gen() {
 		glGenVertexArrays(1, &VAO);
 		glGenBuffers(1, &VBO);
-		needsupdate = true;
 	}
 	void set(float _x, float _y, float _w, float _h) {
 		x = _x; y = _y; w = _w; h = _h;
@@ -117,8 +119,10 @@ struct textured_rect {
 		gl_points[5] = { -1.0f + 2.0f * x / wW + 2.0f * w / wW, 1.0f - 2.0f * (y + h) / wH, 1.0f, 0.0f };
 		
 		glBindVertexArray(VAO);
+
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(gl_points), gl_points, GL_STATIC_DRAW);
+		// TODO: wtf
+		//glBufferData(GL_ARRAY_BUFFER, sizeof(gl_points), gl_points, GL_STATIC_DRAW);
 		glBindVertexArray(0);
 
 		needsupdate = false;
