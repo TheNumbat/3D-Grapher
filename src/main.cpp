@@ -6,11 +6,9 @@
 const float UI_SCREEN_RATIO = 0.2f;
 
 #include "font.data"
-#include "gl.h"
 #include "types.h"
 #include "graph.h"
 #include "cam.h"
-#include "ui.h"
 
 using namespace std;
 
