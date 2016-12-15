@@ -30,10 +30,34 @@ struct cam {
 };
 
 struct graph {
+	graph(string s, float xmi, float xma, float ymi, float yma, float xr, float yr) : eq_str(s) {
+		xmin = xmi; xmax = xma; ymin = ymi; ymax = yma;
+		xrez = xr; yrez = yr;
+		glGenVertexArrays(1, &VAO);
+		glGenBuffers(1, &VBO);
+		glGenBuffers(1, &EBO);
+	}
+	~graph() {
+		glDeleteVertexArrays(1, &VAO);
+		glDeleteBuffers(1, &VBO);
+		glDeleteBuffers(1, &EBO);
+	}
+	void send() {
+		glBindVertexArray(VAO);
+		
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * verticies.size(), verticies.size() ? &verticies[0] : NULL, GL_STATIC_DRAW);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * indicies.size(), indicies.size() ? &indicies[0] : NULL, GL_STATIC_DRAW);
+
+		glBindVertexArray(0);
+	}
 	vector<op> eq;
 	string eq_str;
 	vector<GLfloat> verticies;
 	vector<GLuint> indicies;
+	GLuint VAO, VBO, EBO;
 	float xmin, xmax, ymin, ymax;
 	unsigned int xrez, yrez;
 };
@@ -63,10 +87,10 @@ struct state {
 	SDL_Window* window;
 	int w, h;
 	SDL_GLContext context;
-	GLuint axisVAO, graphVAO, axisVBO, graphVBO, EBO;
+	GLuint axisVAO, axisVBO;
 	shader graph_s, axis_s, UI_s, rect_s;
 
-	graph g;
+	vector<graph> graphs;
 	cam c;
 	UI* ui;
 	inputstate instate;

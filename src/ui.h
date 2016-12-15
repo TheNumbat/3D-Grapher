@@ -138,8 +138,8 @@ struct fxy_equation : public widget {
 						 ev.key.keysym.sym == SDLK_RETURN2 ||
 						 ev.key.keysym.sym == SDLK_KP_ENTER)) {
 					active = false;
-					s->g.eq_str = exp; 
-					regengraph(s);
+					s->graphs[0].eq_str = exp; 
+					regengraph(s, 0);
 				}
 				else if (ev.key.keysym.sym == SDLK_BACKSPACE) {
 					if (exp != " ") exp.pop_back();

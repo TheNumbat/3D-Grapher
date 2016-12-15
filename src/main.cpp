@@ -50,16 +50,8 @@ int main(int argc, char** args) {
 
 	state st;
 
-	st.g.xmin = -10;
-	st.g.xmax = 10;
-	st.g.ymin = -10;
-	st.g.ymax = 10;
-	st.g.xrez = 200;
-	st.g.yrez = 200;
-	st.g.eq_str = "5*(sin(x)*sin(y))^3";
-
 	setup(&st, 1280, 720);
-	regengraph(&st);
+	regengraph(&st, 0);
 	loop(&st);
 	kill(&st);
 
@@ -70,10 +62,7 @@ void kill(state* s) {
 	delete s->ui;
 	TTF_CloseFont(font);
 	glDeleteBuffers(1, &s->axisVBO);
-	glDeleteBuffers(1, &s->graphVBO);
-	glDeleteBuffers(1, &s->EBO);
 	glDeleteVertexArrays(1, &s->axisVAO);
-	glDeleteVertexArrays(1, &s->graphVAO);
 	SDL_GL_DeleteContext(s->context);
 	SDL_DestroyWindow(s->window);
 	SDL_Quit();
@@ -86,7 +75,7 @@ void loop(state* s) {
 
 	while (s->running) {
 		Uint64 start = SDL_GetPerformanceCounter();
-		
+
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -95,42 +84,39 @@ void loop(state* s) {
 		proj = perspective(radians(s->c.fov), (GLfloat)s->w / (GLfloat)s->h, 0.1f, 1000.0f);
 		modelviewproj = proj * view * model;
 
-		glBindVertexArray(s->graphVAO);
-		{
-			s->graph_s.use();
+		for (graph& g : s->graphs) {
+			glBindVertexArray(g.VAO);
+			{
+				s->graph_s.use();
+				
+				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+				glEnableVertexAttribArray(0);
 
-			glBindBuffer(GL_ARRAY_BUFFER, s->graphVBO);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, s->EBO);
+				glUniformMatrix4fv(s->graph_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
 
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-			glEnableVertexAttribArray(0);
+				glEnable(GL_DEPTH_TEST);
+				glDisable(GL_BLEND);
 
-			glUniformMatrix4fv(s->graph_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				glPolygonOffset(1.0f, 0.0f);
 
-			glEnable(GL_DEPTH_TEST);
-			glDisable(GL_BLEND);
+				glUniform4f(s->graph_s.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, 1.0f);
+				glDrawElements(GL_TRIANGLES, (int)g.indicies.size(), GL_UNSIGNED_INT, (void*)0);
 
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			glPolygonOffset(1.0f, 0.0f);
-			
-			glUniform4f(s->graph_s.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, 1.0f);
-			glDrawElements(GL_TRIANGLES, (int)s->g.indicies.size(), GL_UNSIGNED_INT, (void*)0);
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				glPolygonOffset(0.0f, 0.0f);
 
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			glPolygonOffset(0.0f, 0.0f);
-			
-			glUniform4f(s->graph_s.getUniform("vcolor"), 0.2f, 0.2f, 0.2f, 1.0f);
-			glDrawElements(GL_TRIANGLES, (int)s->g.indicies.size(), GL_UNSIGNED_INT, (void*)0);
+				glUniform4f(s->graph_s.getUniform("vcolor"), 0.2f, 0.2f, 0.2f, 1.0f);
+				glDrawElements(GL_TRIANGLES, (int)g.indicies.size(), GL_UNSIGNED_INT, (void*)0);
 
-			glDisableVertexAttribArray(0);
+				glDisableVertexAttribArray(0);
+			}
+			glBindVertexArray(0);
 		}
-		glBindVertexArray(0);
 			
 		glBindVertexArray(s->axisVAO);
 		{
 			s->axis_s.use();
-
-			glBindBuffer(GL_ARRAY_BUFFER, s->axisVBO);
 
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
 			glEnableVertexAttribArray(0);
@@ -298,10 +284,7 @@ void setup(state* s, int w, int h) {
 	glViewport(0, 0, s->w, s->h);
 
 	glGenVertexArrays(1, &s->axisVAO);
-	glGenVertexArrays(1, &s->graphVAO);
 	glGenBuffers(1, &s->axisVBO);
-	glGenBuffers(1, &s->graphVBO);
-	glGenBuffers(1, &s->EBO);
 
 	s->graph_s.load(graph_vertex, graph_fragment);
 	s->axis_s.load(axis_vertex, axis_fragment);
@@ -311,9 +294,10 @@ void setup(state* s, int w, int h) {
 	TTF_Init();
 	font = TTF_OpenFontRW(SDL_RWFromConstMem((const void*)DroidSans_ttf, DroidSans_ttf_len), 1, 24);
 
-	s->ui= new UI();
+	s->graphs.push_back(graph("5*(sin(x)*sin(y))^3", -10, 10, -10, 10, 200, 200));
+	s->ui = new UI();
 	{
-		fxy_equation* eqw = new fxy_equation(s->g.eq_str);
+		fxy_equation* eqw = new fxy_equation(s->graphs[0].eq_str);
 		s->ui->widgets.push_back(eqw);
 	}
 
