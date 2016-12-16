@@ -18,6 +18,9 @@ struct UI {
 		glGenVertexArrays(1, &VAO);
 		glGenBuffers(1, &VBO);
 		active = false;
+		in.gen();
+		out.gen();
+		gear.gen();
 		in.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(in_bmp, in_bmp_len), 1));
 		out.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(out_bmp, out_bmp_len), 1));
 		gear.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(gear_bmp, gear_bmp_len), 1));
@@ -60,18 +63,10 @@ struct UI {
 	void render(int w, int h, shader& ui_s, shader& rect_s) {
 		float fw = (float)w, fh = (float)h;
 		int xoff, ui_w = (int)round(w * UI_SCREEN_RATIO);
-		if (active) {
+		if (active)
 			xoff = 0;
-			in.set(ui_w + 5.0f, 0, 32, 32);
-			in.render(w, h, ui_s);
-			gear.set(ui_w + 5.0f, 35, 32, 32);
-			gear.render(w, h, ui_s);
-		}
-		else {
+		else
 			xoff = -ui_w + 5;
-			out.set(11, 0, 32, 32);
-			out.render(w, h, ui_s);
-		}
 		drawRect(rect_s, xoff, 0, ui_w, h, 1.0f, 1.0f, 1.0f, 1.0f, fw, fh); // white background
 		drawRect(rect_s, xoff + ui_w, 0, 3, h, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // right black strip
 		int cur_y = 0;
@@ -83,6 +78,16 @@ struct UI {
 			cur_y += 3;
 		}
 		drawRect(rect_s, xoff, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // bottom black strip
+		if (active) {
+			in.set(ui_w + 5.0f, 0, 32, 32);
+			in.render(w, h, ui_s);
+			gear.set(ui_w + 5.0f, 35, 32, 32);
+			gear.render(w, h, ui_s);
+		}
+		else {
+			out.set(11, 0, 32, 32);
+			out.render(w, h, ui_s);
+		}
 	}
 	vector<widget*> widgets;
 	GLuint VAO, VBO;
@@ -91,14 +96,16 @@ struct UI {
 };
 
 struct fxy_equation : public widget {
-	fxy_equation(string str, bool a = false) {
+	fxy_equation(string str, int graph_id, bool a = false) {
+		r.gen();
+		g_id = graph_id;
 		exp = str;
 		active = a;
 		should_remove = false;
 	}
 	int render(int w, int h, int ui_w, int x, int y, shader& program) {
 		current_y = y;
-		break_str(ui_w - x);
+		break_str(ui_w - x - 3);
 		for (string l : lines) {
 			SDL_Surface* text = TTF_RenderText_Shaded(font, l.c_str(), { 0, 0, 0 }, { 255, 255, 255 });
 			r.tex.load(text);
@@ -129,6 +136,7 @@ struct fxy_equation : public widget {
 			break;
 		case SDL_KEYDOWN:
 			if (active) {
+				int g_ind = getIndex(s, g_id);
 				if (ev.key.keysym.sym == SDLK_ESCAPE) {
 					active = false;
 					SDL_StopTextInput();
@@ -138,12 +146,17 @@ struct fxy_equation : public widget {
 						 ev.key.keysym.sym == SDLK_RETURN2 ||
 						 ev.key.keysym.sym == SDLK_KP_ENTER)) {
 					active = false;
-					s->g.eq_str = exp; 
-					regengraph(s);
+					s->graphs[g_ind]->eq_str = exp; 
+					regengraph(s, g_ind);
 				}
 				else if (ev.key.keysym.sym == SDLK_BACKSPACE) {
 					if (exp != " ") exp.pop_back();
-					else should_remove = true;
+					else {
+						delete s->graphs[g_ind];
+						s->graphs.erase(s->graphs.begin() + g_ind);
+						should_remove = true;
+						active = false;
+					}
 					if (!exp.size()) exp = " ";
 				}
 			}
@@ -171,6 +184,7 @@ struct fxy_equation : public widget {
 			tw -= newtw;
 		} while (tw > 0);
 	}
+	int g_id;
 	string exp;
 	vector<string> lines;
 	textured_rect r;
