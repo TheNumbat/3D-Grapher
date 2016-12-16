@@ -300,6 +300,7 @@ void setup(state* s, int w, int h) {
 	font = TTF_OpenFontRW(SDL_RWFromConstMem((const void*)DroidSans_ttf, DroidSans_ttf_len), 1, 24);
 
 	s->graphs.push_back(graph("5*(sin(x)*sin(y))^3", -10, 10, -10, 10, 200, 200));
+	s->graphs[0].gen();
 	s->ui = new UI();
 	{
 		fxy_equation* eqw = new fxy_equation(s->graphs[0].eq_str);

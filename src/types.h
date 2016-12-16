@@ -33,6 +33,8 @@ struct graph {
 	graph(string s, float xmi, float xma, float ymi, float yma, float xr, float yr) : eq_str(s) {
 		xmin = xmi; xmax = xma; ymin = ymi; ymax = yma;
 		xrez = xr; yrez = yr;
+	}
+	void gen() {
 		glGenVertexArrays(1, &VAO);
 		glGenBuffers(1, &VBO);
 		glGenBuffers(1, &EBO);

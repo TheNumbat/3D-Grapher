@@ -18,6 +18,9 @@ struct UI {
 		glGenVertexArrays(1, &VAO);
 		glGenBuffers(1, &VBO);
 		active = false;
+		in.gen();
+		out.gen();
+		gear.gen();
 		in.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(in_bmp, in_bmp_len), 1));
 		out.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(out_bmp, out_bmp_len), 1));
 		gear.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(gear_bmp, gear_bmp_len), 1));
@@ -94,6 +97,7 @@ struct UI {
 
 struct fxy_equation : public widget {
 	fxy_equation(string str, bool a = false) {
+		r.gen();
 		exp = str;
 		active = a;
 		should_remove = false;
