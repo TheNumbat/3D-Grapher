@@ -61,7 +61,7 @@ struct graph {
 	vector<GLfloat> verticies;
 	vector<GLuint> indicies;
 	GLuint VAO, VBO, EBO;
-	float xmin, xmax, ymin, ymax;
+	float xmin, xmax, ymin, ymax, zmin, zmax;
 	unsigned int xrez, yrez;
 	int ID;
 };

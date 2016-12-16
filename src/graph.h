@@ -13,17 +13,50 @@ const int z_min = 26;
 const int z_max = 32;
 
 GLfloat axes[] = {
-   -10.0f, 0.0f, 0.0f,		1.0f, 0.0f, 0.0f,
-	10.0f, 0.0f, 0.0f,		1.0f, 0.0f, 0.0f,
+   -10.0f,  0.0f ,  0.0f ,		1.0f, 0.0f, 0.0f,
+	10.0f,  0.0f ,  0.0f ,		1.0f, 0.0f, 0.0f,
 
-	0.0f, -10.0f, 0.0f,  	0.0f, 1.0f, 0.0f,
-	0.0f,  10.0f, 0.0f,  	0.0f, 1.0f, 0.0f,
+	0.0f , -10.0f,  0.0f ,		0.0f, 1.0f, 0.0f,
+	0.0f ,  10.0f,  0.0f ,		0.0f, 1.0f, 0.0f,
 
-	0.0f, 0.0f, -10.0f,  	0.0f, 0.0f, 1.0f,
-	0.0f, 0.0f,  10.0f,  	0.0f, 0.0f, 1.0f
+	0.0f ,  0.0f , -10.0f,		0.0f, 0.0f, 1.0f,
+	0.0f ,  0.0f ,  10.0f,		0.0f, 0.0f, 1.0f
 };
 
 void sendAxes(state* s) {
+	float xmin = FLT_MAX, xmax = -FLT_MAX;
+	float ymin = FLT_MAX, ymax = -FLT_MAX;
+	float zmin = FLT_MAX, zmax = -FLT_MAX;
+	
+	if (s->graphs.size()) {
+		for (graph* g : s->graphs) {
+			if (g->xmin < xmin) xmin = g->xmin;
+			if (g->xmax > xmax) xmax = g->xmax;
+			if (g->ymin < ymin) ymin = g->ymin;
+			if (g->ymax > ymax) ymax = g->ymax;
+			if (g->zmin < zmin) zmin = g->zmin;
+			if (g->zmax > zmax) zmax = g->zmax;
+		}
+
+		if (xmin > 0) xmin = 0;
+		if (xmax < 0) xmax = 0;
+		if (ymin > 0) ymin = 0;
+		if (ymax < 0) ymax = 0;
+		if (zmin > 0) zmin = 0;
+		if (zmax < 0) zmax = 0;
+	}
+	else {
+		xmin = ymin = zmin = -10;
+		xmax = ymax = zmax = 10;
+	}
+
+	axes[x_min] = xmin;
+	axes[y_min] = ymin;
+	axes[z_min] = zmin;
+	axes[x_max] = xmax;
+	axes[y_max] = ymax;
+	axes[z_max] = zmax;
+
 	glBindVertexArray(s->axisVAO);
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, s->axisVBO);
@@ -115,20 +148,13 @@ void gengraph(state* s, int index) {
 		}
 	}
 
-	axes[x_min] = s->graphs[index]->xmin;
-	axes[x_max] = s->graphs[index]->xmax;
-	axes[y_min] = s->graphs[index]->ymin;
-	axes[y_max] = s->graphs[index]->ymax;
-
 	float zmin = FLT_MAX, zmax = -FLT_MAX;
 	for (unsigned int i = 0; i < threads.size(); i++) {
 		if (data[i]->zmin < zmin) zmin = data[i]->zmin;
 		if (data[i]->zmax > zmax) zmax = data[i]->zmax;
 	}
-	if (zmin > 0) zmin = 0;
-	if (zmax < 0) zmax = 0;
-	axes[z_min] = zmin;
-	axes[z_max] = zmax;
+	s->graphs[index]->zmin = zmin;
+	s->graphs[index]->zmax = zmax;
 
 	for (gendata* g : data)
 		delete g;

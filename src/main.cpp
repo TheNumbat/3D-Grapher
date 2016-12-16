@@ -21,7 +21,6 @@ using namespace std;
 	// Rendering
 		// Transparency, blending, maybe sorting
 		// Lighting
-		// Multiple graphs
 		// Antialiasing
 		// Axis normalization
 	// Math Features

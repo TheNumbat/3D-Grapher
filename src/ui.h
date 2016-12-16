@@ -105,7 +105,7 @@ struct fxy_equation : public widget {
 	}
 	int render(int w, int h, int ui_w, int x, int y, shader& program) {
 		current_y = y;
-		break_str(ui_w - x);
+		break_str(ui_w - x - 3);
 		for (string l : lines) {
 			SDL_Surface* text = TTF_RenderText_Shaded(font, l.c_str(), { 0, 0, 0 }, { 255, 255, 255 });
 			r.tex.load(text);
