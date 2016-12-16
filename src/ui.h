@@ -60,18 +60,10 @@ struct UI {
 	void render(int w, int h, shader& ui_s, shader& rect_s) {
 		float fw = (float)w, fh = (float)h;
 		int xoff, ui_w = (int)round(w * UI_SCREEN_RATIO);
-		if (active) {
+		if (active)
 			xoff = 0;
-			in.set(ui_w + 5.0f, 0, 32, 32);
-			in.render(w, h, ui_s);
-			gear.set(ui_w + 5.0f, 35, 32, 32);
-			gear.render(w, h, ui_s);
-		}
-		else {
+		else
 			xoff = -ui_w + 5;
-			out.set(11, 0, 32, 32);
-			out.render(w, h, ui_s);
-		}
 		drawRect(rect_s, xoff, 0, ui_w, h, 1.0f, 1.0f, 1.0f, 1.0f, fw, fh); // white background
 		drawRect(rect_s, xoff + ui_w, 0, 3, h, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // right black strip
 		int cur_y = 0;
@@ -83,6 +75,16 @@ struct UI {
 			cur_y += 3;
 		}
 		drawRect(rect_s, xoff, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // bottom black strip
+		if (active) {
+			in.set(ui_w + 5.0f, 0, 32, 32);
+			in.render(w, h, ui_s);
+			gear.set(ui_w + 5.0f, 35, 32, 32);
+			gear.render(w, h, ui_s);
+		}
+		else {
+			out.set(11, 0, 32, 32);
+			out.render(w, h, ui_s);
+		}
 	}
 	vector<widget*> widgets;
 	GLuint VAO, VBO;
