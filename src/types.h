@@ -30,7 +30,8 @@ struct cam {
 };
 
 struct graph {
-	graph(string s, float xmi, float xma, float ymi, float yma, float xr, float yr) : eq_str(s) {
+	graph(int id, string s, float xmi, float xma, float ymi, float yma, float xr, float yr) : eq_str(s) {
+		ID = id;
 		xmin = xmi; xmax = xma; ymin = ymi; ymax = yma;
 		xrez = xr; yrez = yr;
 	}
@@ -46,7 +47,7 @@ struct graph {
 	}
 	void send() {
 		glBindVertexArray(VAO);
-		
+
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * verticies.size(), verticies.size() ? &verticies[0] : NULL, GL_STATIC_DRAW);
 
@@ -62,6 +63,7 @@ struct graph {
 	GLuint VAO, VBO, EBO;
 	float xmin, xmax, ymin, ymax;
 	unsigned int xrez, yrez;
+	int ID;
 };
 
 struct state;

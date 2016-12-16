@@ -152,3 +152,11 @@ void regengraph(state* s, int index) {
 		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
 	}
 }
+
+int getIndex(state* s, int ID) {
+	auto entry = find_if(s->graphs.begin(), s->graphs.end(), [ID](graph& g) -> bool {return g.ID == ID;});
+	if (entry == s->graphs.end()) {
+		return -1;
+	}
+	else return entry - s->graphs.begin();
+}

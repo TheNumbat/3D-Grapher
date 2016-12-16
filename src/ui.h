@@ -96,8 +96,9 @@ struct UI {
 };
 
 struct fxy_equation : public widget {
-	fxy_equation(string str, bool a = false) {
+	fxy_equation(string str, int graph_id, bool a = false) {
 		r.gen();
+		g_id = graph_id;
 		exp = str;
 		active = a;
 		should_remove = false;
@@ -144,12 +145,15 @@ struct fxy_equation : public widget {
 						 ev.key.keysym.sym == SDLK_RETURN2 ||
 						 ev.key.keysym.sym == SDLK_KP_ENTER)) {
 					active = false;
-					s->graphs[0].eq_str = exp; 
-					regengraph(s, 0);
+					s->graphs[getIndex(s, g_id)].eq_str = exp; 
+					regengraph(s, getIndex(s, g_id));
 				}
 				else if (ev.key.keysym.sym == SDLK_BACKSPACE) {
 					if (exp != " ") exp.pop_back();
-					else should_remove = true;
+					else {
+						s->graphs.erase(s->graphs.begin() + getIndex(s, g_id));
+						should_remove = true;
+					}
 					if (!exp.size()) exp = " ";
 				}
 			}
@@ -177,6 +181,7 @@ struct fxy_equation : public widget {
 			tw -= newtw;
 		} while (tw > 0);
 	}
+	int g_id;
 	string exp;
 	vector<string> lines;
 	textured_rect r;

@@ -4,6 +4,7 @@
 #include <string>
 
 const float UI_SCREEN_RATIO = 0.2f;
+int next_graph_id = 0;
 
 #include "font.data"
 #include "types.h"
@@ -51,7 +52,6 @@ int main(int argc, char** args) {
 	state st;
 
 	setup(&st, 1280, 720);
-	regengraph(&st, 0);
 	loop(&st);
 	kill(&st);
 
@@ -202,7 +202,9 @@ void loop(state* s) {
 				if (s->instate == in_idle) {
 					if (s->ui->active) {
 						if (ev.button.x < (int)round(s->w * UI_SCREEN_RATIO)) {
-							s->ui->widgets.push_back(new fxy_equation(" ", true));
+							s->ui->widgets.push_back(new fxy_equation(" ", next_graph_id, true));
+							s->graphs.push_back(graph(next_graph_id, " ", -10, 10, -10, 10, 200, 200));
+							next_graph_id++;
 						}
 						else if (ev.button.x > (int)round(s->w * UI_SCREEN_RATIO) && ev.button.x <= (int)round(s->w * UI_SCREEN_RATIO) + 37 &&
 								 ev.button.y <= 32) {
@@ -299,13 +301,15 @@ void setup(state* s, int w, int h) {
 	TTF_Init();
 	font = TTF_OpenFontRW(SDL_RWFromConstMem((const void*)DroidSans_ttf, DroidSans_ttf_len), 1, 24);
 
-	s->graphs.push_back(graph("5*(sin(x)*sin(y))^3", -10, 10, -10, 10, 200, 200));
+	s->graphs.push_back(graph(next_graph_id, "0", -10, 10, -10, 10, 200, 200));
 	s->graphs[0].gen();
+	regengraph(s, next_graph_id);
 	s->ui = new UI();
 	{
-		fxy_equation* eqw = new fxy_equation(s->graphs[0].eq_str);
+		fxy_equation* eqw = new fxy_equation(s->graphs[0].eq_str, next_graph_id);
 		s->ui->widgets.push_back(eqw);
 	}
+	next_graph_id++;
 
 	s->c = defaultCam();
 	s->running = true;
