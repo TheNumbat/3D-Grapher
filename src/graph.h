@@ -13,15 +13,23 @@ const int z_min = 26;
 const int z_max = 32;
 
 GLfloat axes[] = {
-	0.0f, 0.0f, 0.0f,	1.0f, 0.0f, 0.0f,
-	0.0f, 0.0f, 0.0f,  	1.0f, 0.0f, 0.0f,
+   -10.0f, 0.0f, 0.0f,		1.0f, 0.0f, 0.0f,
+	10.0f, 0.0f, 0.0f,		1.0f, 0.0f, 0.0f,
 
-	0.0f, 0.0f, 0.0f,  	0.0f, 1.0f, 0.0f,
-	0.0f, 0.0f, 0.0f,  	0.0f, 1.0f, 0.0f,
+	0.0f, -10.0f, 0.0f,  	0.0f, 1.0f, 0.0f,
+	0.0f,  10.0f, 0.0f,  	0.0f, 1.0f, 0.0f,
 
-	0.0f, 0.0f, 0.0f,  	0.0f, 0.0f, 1.0f,
-	0.0f, 0.0f, 0.0f,  	0.0f, 0.0f, 1.0f
+	0.0f, 0.0f, -10.0f,  	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f,  10.0f,  	0.0f, 0.0f, 1.0f
 };
+
+void sendAxes(state* s) {
+	glBindVertexArray(s->axisVAO);
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, s->axisVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
+	}
+}
 
 float clamp(float one, float two) {
 	if (one > 0)
@@ -35,9 +43,9 @@ float clamp(float one, float two) {
 void genthread(gendata* g, int index) {
 	float x = g->xmin;
 	for (unsigned int tx = 0; tx < g->txrez; tx++, x += g->dx) {
-		float y = g->s->graphs[index].ymin;
-		for (unsigned int ty = 0; ty <= g->s->graphs[index].yrez; ty++, y += g->dy) {
-			float z = eval(g->s->graphs[index].eq, x, y);
+		float y = g->s->graphs[index]->ymin;
+		for (unsigned int ty = 0; ty <= g->s->graphs[index]->yrez; ty++, y += g->dy) {
+			float z = eval(g->s->graphs[index]->eq, x, y);
 
 			if (z < g->zmin) g->zmin = z;
 			else if (z > g->zmax) g->zmax = z;
@@ -56,11 +64,11 @@ void gengraph(state* s, int index) {
 	bool HT = (cpuinfo[3] & (1 << 28)) > 0;
 	if (HT) numthreads /= 2;
 
-	float dx = (s->graphs[index].xmax - s->graphs[index].xmin) / s->graphs[index].xrez;
-	float dy = (s->graphs[index].ymax - s->graphs[index].ymin) / s->graphs[index].yrez;
-	float xmin = s->graphs[index].xmin;
-	unsigned int txDelta = s->graphs[index].xrez / numthreads;
-	unsigned int txLast = s->graphs[index].xrez - (numthreads - 1) * txDelta + 1;
+	float dx = (s->graphs[index]->xmax - s->graphs[index]->xmin) / s->graphs[index]->xrez;
+	float dy = (s->graphs[index]->ymax - s->graphs[index]->ymin) / s->graphs[index]->yrez;
+	float xmin = s->graphs[index]->xmin;
+	unsigned int txDelta = s->graphs[index]->xrez / numthreads;
+	unsigned int txLast = s->graphs[index]->xrez - (numthreads - 1) * txDelta + 1;
 
 	vector<thread> threads;
 	vector<gendata*> data;
@@ -86,31 +94,31 @@ void gengraph(state* s, int index) {
 	}
 	for (unsigned int i = 0; i < threads.size(); i++) {
 		threads[i].join();
-		s->graphs[index].verticies.insert(s->graphs[index].verticies.end(), data[i]->ret.begin(), data[i]->ret.end());
+		s->graphs[index]->verticies.insert(s->graphs[index]->verticies.end(), data[i]->ret.begin(), data[i]->ret.end());
 		data[i]->ret.clear();
 	}
 
-	for (unsigned int x = 0; x < s->graphs[index].xrez; x++) {
-		for (unsigned int y = 0; y < s->graphs[index].yrez; y++) {
-			GLuint i_index = x * (s->graphs[index].yrez + 1) + y;
+	for (unsigned int x = 0; x < s->graphs[index]->xrez; x++) {
+		for (unsigned int y = 0; y < s->graphs[index]->yrez; y++) {
+			GLuint i_index = x * (s->graphs[index]->yrez + 1) + y;
 
-			if (!isnan(s->graphs[index].verticies[i_index * 3 + 2]) &&
-				!isinf(s->graphs[index].verticies[i_index * 3 + 2])) {
-				s->graphs[index].indicies.push_back(i_index);
-				s->graphs[index].indicies.push_back(i_index + 1);
-				s->graphs[index].indicies.push_back(i_index + s->graphs[index].yrez + 1);
+			if (!isnan(s->graphs[index]->verticies[i_index * 3 + 2]) &&
+				!isinf(s->graphs[index]->verticies[i_index * 3 + 2])) {
+				s->graphs[index]->indicies.push_back(i_index);
+				s->graphs[index]->indicies.push_back(i_index + 1);
+				s->graphs[index]->indicies.push_back(i_index + s->graphs[index]->yrez + 1);
 
-				s->graphs[index].indicies.push_back(i_index + 1);
-				s->graphs[index].indicies.push_back(i_index + s->graphs[index].yrez + 1);
-				s->graphs[index].indicies.push_back(i_index + s->graphs[index].yrez + 2);
+				s->graphs[index]->indicies.push_back(i_index + 1);
+				s->graphs[index]->indicies.push_back(i_index + s->graphs[index]->yrez + 1);
+				s->graphs[index]->indicies.push_back(i_index + s->graphs[index]->yrez + 2);
 			}
 		}
 	}
 
-	axes[x_min] = s->graphs[index].xmin;
-	axes[x_max] = s->graphs[index].xmax;
-	axes[y_min] = s->graphs[index].ymin;
-	axes[y_max] = s->graphs[index].ymax;
+	axes[x_min] = s->graphs[index]->xmin;
+	axes[x_max] = s->graphs[index]->xmax;
+	axes[y_min] = s->graphs[index]->ymin;
+	axes[y_max] = s->graphs[index]->ymax;
 
 	float zmin = FLT_MAX, zmax = -FLT_MAX;
 	for (unsigned int i = 0; i < threads.size(); i++) {
@@ -130,33 +138,31 @@ void regengraph(state* s, int index) {
 	
 	vector<op> new_eq;
 
-	if (!in(s->graphs[index].eq_str, new_eq)) {
+	if (!in(s->graphs[index]->eq_str, new_eq)) {
 		return;
 	}
-	s->graphs[index].indicies.clear();
-	s->graphs[index].verticies.clear();
-	s->graphs[index].eq = new_eq;
+	s->graphs[index]->indicies.clear();
+	s->graphs[index]->verticies.clear();
+	s->graphs[index]->eq = new_eq;
 
-	printeq(cout, s->graphs[index].eq);
+	printeq(cout, s->graphs[index]->eq);
 
 	Uint64 start = SDL_GetPerformanceCounter();
 	gengraph(s, index);
 	Uint64 end = SDL_GetPerformanceCounter();
 	cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << endl;
 
-	s->graphs[index].send();
-
-	glBindVertexArray(s->axisVAO);
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, s->axisVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
-	}
+	sendAxes(s);
+	s->graphs[index]->send();
 }
 
 int getIndex(state* s, int ID) {
-	auto entry = find_if(s->graphs.begin(), s->graphs.end(), [ID](graph& g) -> bool {return g.ID == ID;});
+	auto entry = find_if(s->graphs.begin(), s->graphs.end(), [ID](graph* g) -> bool {return g->ID == ID;});
 	if (entry == s->graphs.end()) {
 		return -1;
 	}
-	else return entry - s->graphs.begin();
+	else {
+		int pos = entry - s->graphs.begin();
+		return pos;
+	}
 }

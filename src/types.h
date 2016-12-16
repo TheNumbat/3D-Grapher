@@ -94,7 +94,7 @@ struct state {
 	GLuint axisVAO, axisVBO;
 	shader graph_s, axis_s, UI_s, rect_s;
 
-	vector<graph> graphs;
+	vector<graph*> graphs;
 	cam c;
 	UI* ui;
 	inputstate instate;

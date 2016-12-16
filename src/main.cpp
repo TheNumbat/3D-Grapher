@@ -84,37 +84,39 @@ void loop(state* s) {
 		proj = perspective(radians(s->c.fov), (GLfloat)s->w / (GLfloat)s->h, 0.1f, 1000.0f);
 		modelviewproj = proj * view * model;
 
-		for (graph& g : s->graphs) {
-			glBindVertexArray(g.VAO);
-			{
-				s->graph_s.use();
+		for (graph* g : s->graphs) {
+			if (g->indicies.size()) {
+				glBindVertexArray(g->VAO);
+				{
+					s->graph_s.use();
 
-				glBindBuffer(GL_ARRAY_BUFFER, g.VBO);
-				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g.EBO);
-				
-				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-				glEnableVertexAttribArray(0);
+					glBindBuffer(GL_ARRAY_BUFFER, g->VBO);
+					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g->EBO);
 
-				glUniformMatrix4fv(s->graph_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
+					glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+					glEnableVertexAttribArray(0);
 
-				glEnable(GL_DEPTH_TEST);
-				glDisable(GL_BLEND);
+					glUniformMatrix4fv(s->graph_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
 
-				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-				glPolygonOffset(1.0f, 0.0f);
+					glEnable(GL_DEPTH_TEST);
+					glDisable(GL_BLEND);
 
-				glUniform4f(s->graph_s.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, 1.0f);
-				glDrawElements(GL_TRIANGLES, (int)g.indicies.size(), GL_UNSIGNED_INT, (void*)0);
+					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+					glPolygonOffset(1.0f, 0.0f);
 
-				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-				glPolygonOffset(0.0f, 0.0f);
+					glUniform4f(s->graph_s.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, 1.0f);
+					glDrawElements(GL_TRIANGLES, (int)g->indicies.size(), GL_UNSIGNED_INT, (void*)0);
 
-				glUniform4f(s->graph_s.getUniform("vcolor"), 0.2f, 0.2f, 0.2f, 1.0f);
-				glDrawElements(GL_TRIANGLES, (int)g.indicies.size(), GL_UNSIGNED_INT, (void*)0);
+					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+					glPolygonOffset(0.0f, 0.0f);
 
-				glDisableVertexAttribArray(0);
+					glUniform4f(s->graph_s.getUniform("vcolor"), 0.2f, 0.2f, 0.2f, 1.0f);
+					glDrawElements(GL_TRIANGLES, (int)g->indicies.size(), GL_UNSIGNED_INT, (void*)0);
+
+					glDisableVertexAttribArray(0);
+				}
+				glBindVertexArray(0);
 			}
-			glBindVertexArray(0);
 		}
 			
 		glBindVertexArray(s->axisVAO);
@@ -202,8 +204,9 @@ void loop(state* s) {
 				if (s->instate == in_idle) {
 					if (s->ui->active) {
 						if (ev.button.x < (int)round(s->w * UI_SCREEN_RATIO)) {
+							s->graphs.push_back(new graph(next_graph_id, "", -10, 10, -10, 10, 200, 200));
+							s->graphs.back()->gen();
 							s->ui->widgets.push_back(new fxy_equation(" ", next_graph_id, true));
-							s->graphs.push_back(graph(next_graph_id, " ", -10, 10, -10, 10, 200, 200));
 							next_graph_id++;
 						}
 						else if (ev.button.x > (int)round(s->w * UI_SCREEN_RATIO) && ev.button.x <= (int)round(s->w * UI_SCREEN_RATIO) + 37 &&
@@ -301,16 +304,8 @@ void setup(state* s, int w, int h) {
 	TTF_Init();
 	font = TTF_OpenFontRW(SDL_RWFromConstMem((const void*)DroidSans_ttf, DroidSans_ttf_len), 1, 24);
 
-	s->graphs.push_back(graph(next_graph_id, "0", -10, 10, -10, 10, 200, 200));
-	s->graphs[0].gen();
-	regengraph(s, next_graph_id);
 	s->ui = new UI();
-	{
-		fxy_equation* eqw = new fxy_equation(s->graphs[0].eq_str, next_graph_id);
-		s->ui->widgets.push_back(eqw);
-	}
-	next_graph_id++;
-
+	sendAxes(s);
 	s->c = defaultCam();
 	s->running = true;
 	s->instate = in_idle;

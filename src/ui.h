@@ -136,6 +136,7 @@ struct fxy_equation : public widget {
 			break;
 		case SDL_KEYDOWN:
 			if (active) {
+				int g_ind = getIndex(s, g_id);
 				if (ev.key.keysym.sym == SDLK_ESCAPE) {
 					active = false;
 					SDL_StopTextInput();
@@ -145,14 +146,16 @@ struct fxy_equation : public widget {
 						 ev.key.keysym.sym == SDLK_RETURN2 ||
 						 ev.key.keysym.sym == SDLK_KP_ENTER)) {
 					active = false;
-					s->graphs[getIndex(s, g_id)].eq_str = exp; 
-					regengraph(s, getIndex(s, g_id));
+					s->graphs[g_ind]->eq_str = exp; 
+					regengraph(s, g_ind);
 				}
 				else if (ev.key.keysym.sym == SDLK_BACKSPACE) {
 					if (exp != " ") exp.pop_back();
 					else {
-						s->graphs.erase(s->graphs.begin() + getIndex(s, g_id));
+						delete s->graphs[g_ind];
+						s->graphs.erase(s->graphs.begin() + g_ind);
 						should_remove = true;
+						active = false;
 					}
 					if (!exp.size()) exp = " ";
 				}
