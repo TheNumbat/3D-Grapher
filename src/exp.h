@@ -12,7 +12,6 @@ const float val_pi = 3.141592653589793238462643383279f;
 
 typedef int op;
 
-void welcome(ostream& out);
 float eval(const vector<op>& EQ, float x, float y, float z = 0.0f);
 bool in(string str, vector<op>& EQ);
 void printeq(ostream& out, vector<op> eq);
@@ -67,23 +66,6 @@ enum operators : op {
 #include <string>
 #include <stack>
 #include <queue>
-
-void welcome(ostream& out) {
-	out << endl
-		<< "   Expression Eval" << endl
-		<< "   ===============" << endl
-		<< endl
-		<< "   Variables: x, y" << endl
-		<< "   Operators: +, -, %, *, /, ^, (, )" << endl
-		<< "   Constants: E = 2.71... P = 3.14..." << endl
-		<< "   Functions: sqrt, sin, cos, tan, asin, acos, atan, abs, exp, exptwo, ceil, floor, ln, log, log2" << endl
-		<< endl
-		<< "   Format: x y <exp>" << endl
-		<< "   Example: 3 4 x / y * (e ^ x - y)" << endl
-		<< "   Will try to evaluate unbalanced parenthesis" << endl
-		<< "   Type \"exit\" to quit" << endl
-		<< endl;
-}
 
 #define get2() two = s.top(); \
 			   s.pop(); \

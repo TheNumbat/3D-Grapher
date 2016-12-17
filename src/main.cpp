@@ -15,16 +15,16 @@ using namespace std;
 
 // TODO:
 	// UI
-		// Better desmos-style UI
+		// Improve UI
+		// Settings
 		// Axis scales
-		// Legit UI system? Or just do janky stuff?
+		// Better Events System (registry?)
 	// Rendering
 		// Transparency, blending, maybe sorting
 		// Lighting
 		// Antialiasing
-		// Axis normalization
 	// Math Features
-		// Parametric Eqs
+		// Axis normalization
 		// Highlight curve along a set x/y
 		// Partials
 		// Level Curves
@@ -36,11 +36,10 @@ using namespace std;
 		// More functions (sec, csc, cot, max, min)
 		// Negatives & remove asterisks
 		// Maxs & mins (abs and rel)
-	// Code
-		// Speed up evaluation - NVM release build is way fast enough
-		// Clean up postfix alg
+		// Parametric Lines & Surfaces
+		// Line/Surface/Flux integrals
 	// Notes
-		// To encode binary file as data: xxd -i infile.bin outfile.h
+		// To encode binary file as data array: xxd -i infile.bin outfile.h
 
 void loop(state* s);
 void setup(state* s, int w, int h);
