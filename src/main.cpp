@@ -4,7 +4,9 @@
 #include <string>
 
 const float UI_SCREEN_RATIO = 0.2f;
+const int w = 1280, h = 720;
 int next_graph_id = 0;
+int mx = w / 2, my = h / 2;
 
 #include "font.data"
 #include "types.h"
@@ -27,6 +29,7 @@ using namespace std;
 		// Axis normalization
 		// Highlight curve along a set x/y
 		// Partials
+		// Graph intersections
 		// Level Curves
 		// Vector feilds
 		// 2D and 4D graphs
@@ -42,14 +45,14 @@ using namespace std;
 		// To encode binary file as data array: xxd -i infile.bin outfile.h
 
 void loop(state* s);
-void setup(state* s, int w, int h);
+void setup(state* s);
 void kill(state* s);
 
 int main(int argc, char** args) {
 
 	state st;
 
-	setup(&st, 1280, 720);
+	setup(&st);
 	loop(&st);
 	kill(&st);
 
@@ -58,6 +61,7 @@ int main(int argc, char** args) {
 
 void kill(state* s) {
 	delete s->ui;
+	delete s->ev;
 	TTF_CloseFont(font);
 	glDeleteBuffers(1, &s->axisVBO);
 	glDeleteVertexArrays(1, &s->axisVAO);
@@ -68,7 +72,6 @@ void kill(state* s) {
 
 void loop(state* s) {
 
-	int mx = s->w / 2, my = s->h / 2;
 	const unsigned char* keys = SDL_GetKeyboardState(NULL);
 
 	while (s->running) {
@@ -149,112 +152,7 @@ void loop(state* s) {
 			s->ui->render(s->w, s->h, s->UI_s, s->rect_s);
 		}
 
-		SDL_Event ev;
-		while (SDL_PollEvent(&ev) != 0) {
-			bool intercepted = false;
-			if (s->ui->active) {
-				for (widget* w : s->ui->widgets) {
-					intercepted = w->process(ev, (int)round(s->w * UI_SCREEN_RATIO), s);
-					if (intercepted) break;
-				}
-			}
-			s->ui->remove_dead_widgets();
-			if (intercepted) continue;
-			switch (ev.type) {
-			case SDL_QUIT: {
-				s->running = false;
-				break;
-			}
-			case SDL_WINDOWEVENT: {
-				if (ev.window.event == SDL_WINDOWEVENT_RESIZED ||
-					ev.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-					s->w = ev.window.data1;
-					s->h = ev.window.data2;
-					glViewport(0, 0, s->w, s->h);
-					glScissor(0, 0, s->w, s->h);
-				}
-				break;
-			}
-			case SDL_MOUSEMOTION: {
-				float sens = 0.1f;
-				float dx = (ev.motion.x - mx) * sens;
-				float dy = (ev.motion.y - my) * sens;
-				mx = ev.motion.x;
-				my = ev.motion.y;
-				if (s->instate == in_cam) {					
-					s->c.yaw += dx;
-					s->c.pitch -= dy;
-					if (s->c.yaw > 360.0f) s->c.yaw = 0.0f;
-					else if (s->c.yaw < 0.0f) s->c.yaw = 360.0f;
-					if (s->c.pitch > 89.0f) s->c.pitch = 89.0f;
-					else if (s->c.pitch < -89.0f) s->c.pitch = -89.0f;
-					updoot(s->c);
-				}
-				break;
-			}
-			case SDL_MOUSEWHEEL: {
-				s->c.fov -= ev.wheel.y;
-				if (s->c.fov > 179.0f) s->c.fov = 179.0f;
-				else if (s->c.fov < 1.0f) s->c.fov = 1.0f;
-				break;
-			}
-			case SDL_MOUSEBUTTONDOWN: {
-				if (s->instate == in_idle) {
-					if (s->ui->active) {
-						if (ev.button.x < (int)round(s->w * UI_SCREEN_RATIO)) {
-							s->graphs.push_back(new graph(next_graph_id, "", -10, 10, -10, 10, 200, 200));
-							s->graphs.back()->gen();
-							s->ui->widgets.push_back(new fxy_equation(" ", next_graph_id, true));
-							next_graph_id++;
-						}
-						else if (ev.button.x > (int)round(s->w * UI_SCREEN_RATIO) && ev.button.x <= (int)round(s->w * UI_SCREEN_RATIO) + 37 &&
-								 ev.button.y <= 32) {
-							s->ui->active = false;
-						}
-						else {
-							s->instate = in_cam;
-							SDL_CaptureMouse(SDL_TRUE);
-							SDL_SetRelativeMouseMode(SDL_TRUE);
-						}
-					}
-					else if (ev.button.x <= 43 && ev.button.y <= 32) {
-						s->ui->active = true;
-					}
-					else {
-						s->instate = in_cam;
-						SDL_CaptureMouse(SDL_TRUE);
-						SDL_SetRelativeMouseMode(SDL_TRUE);
-					}
-				}
-				break;
-			}
-			case SDL_MOUSEBUTTONUP: {
-				if (s->instate == in_cam) {
-					s->instate = in_idle;
-					SDL_CaptureMouse(SDL_FALSE);
-					SDL_SetRelativeMouseMode(SDL_FALSE);
-					SDL_WarpMouseInWindow(s->window, s->ui->active ? (int)round(s->w * ((1 - UI_SCREEN_RATIO) / 2 + UI_SCREEN_RATIO)) : s->w / 2, s->h / 2);
-				}
-				break;
-			}
-			}
-		}
-		float dT = (SDL_GetTicks() - s->c.lastUpdate) / 1000.0f;
-		s->c.lastUpdate = SDL_GetTicks();
-		if (s->instate == in_cam) {
-			if (keys[SDL_SCANCODE_W]) {
-				s->c.pos += s->c.front * s->c.speed * dT;
-			}
-			if (keys[SDL_SCANCODE_S]) {
-				s->c.pos -= s->c.front * s->c.speed * dT;
-			}
-			if (keys[SDL_SCANCODE_A]) {
-				s->c.pos -= s->c.right * s->c.speed * dT;
-			}
-			if (keys[SDL_SCANCODE_D]) {
-				s->c.pos += s->c.right * s->c.speed * dT;
-			}
-		}
+		s->ev->run(s);
 
 		SDL_GL_SwapWindow(s->window);
 
@@ -263,7 +161,7 @@ void loop(state* s) {
 	}
 }
 
-void setup(state* s, int w, int h) {
+void setup(state* s) {
 	s->w = w;
 	s->h = h;
 
@@ -302,9 +200,103 @@ void setup(state* s, int w, int h) {
 	TTF_Init();
 	font = TTF_OpenFontRW(SDL_RWFromConstMem((const void*)DroidSans_ttf, DroidSans_ttf_len), 1, 24);
 
+	s->ev = new evts();
 	s->ui = new UI();
+
+	s->ev->mouse.push_back(callback([](state* s, SDL_Event* ev) -> bool {
+		if (ev->type == SDL_MOUSEMOTION) {
+			float sens = 0.1f;
+			float dx = (ev->motion.x - mx) * sens;
+			float dy = (ev->motion.y - my) * sens;
+			mx = ev->motion.x;
+			my = ev->motion.y;
+			if (s->ev->current == in_cam) {
+				s->c.yaw += dx;
+				s->c.pitch -= dy;
+				if (s->c.yaw > 360.0f) s->c.yaw = 0.0f;
+				else if (s->c.yaw < 0.0f) s->c.yaw = 360.0f;
+				if (s->c.pitch > 89.0f) s->c.pitch = 89.0f;
+				else if (s->c.pitch < -89.0f) s->c.pitch = -89.0f;
+				updoot(s->c);
+			}
+			return true;
+		}
+		return false;
+	}, in_cam));
+
+	s->ev->mouse.push_back(callback([](state* s, SDL_Event* ev) -> bool {
+		if (ev->type == SDL_MOUSEWHEEL) {
+			s->c.fov -= ev->wheel.y;
+			if (s->c.fov > 179.0f) s->c.fov = 179.0f;
+			else if (s->c.fov < 1.0f) s->c.fov = 1.0f;
+			return true;
+		}
+		return false;
+	}, in_cam));
+
+	s->ev->mouse.push_back(callback([](state* s, SDL_Event* ev) -> bool {
+		if (ev->type == SDL_MOUSEBUTTONDOWN) {
+			if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO) && ev->button.y > (s->ui->widgets.size() ? s->ui->widgets.back()->current_yh : 0)) {
+				s->graphs.push_back(new graph(next_graph_id, "", -10, 10, -10, 10, 200, 200));
+				s->graphs.back()->gen();
+				s->ui->widgets.push_back(new fxy_equation(" ", next_graph_id, true));
+				next_graph_id++;
+			}
+			else if (ev->button.x > (int)round(s->w * UI_SCREEN_RATIO) && ev->button.x <= (int)round(s->w * UI_SCREEN_RATIO) + 37 &&
+				ev->button.y <= 32) {
+				s->ui->active = false;
+				s->ev->current = in_idle;
+			}
+			else if (ev->button.x > (int)round(s->w * UI_SCREEN_RATIO)) {
+				s->ev->current = in_cam;
+				SDL_CaptureMouse(SDL_TRUE);
+				SDL_SetRelativeMouseMode(SDL_TRUE);
+				mx = s->w / 2;
+				my = s->h / 2;
+			}
+			else {
+				return false;
+			}
+			return true;
+		}
+		return false;
+	}, in_ui));
+
+	s->ev->mouse.push_back(callback([](state* s, SDL_Event* ev) -> bool {
+		if (ev->type == SDL_MOUSEBUTTONDOWN) {
+			if (ev->button.x <= 43 && ev->button.y <= 32) {
+				s->ui->active = true;
+				s->ev->current = in_ui;
+			}
+			else {
+				s->ev->current = in_cam;
+				SDL_CaptureMouse(SDL_TRUE);
+				SDL_SetRelativeMouseMode(SDL_TRUE);
+				mx = s->w / 2;
+				my = s->h / 2;
+			}
+			return true;
+		}
+		return false;
+	}, in_idle));
+
+	s->ev->mouse.push_back(callback([](state* s, SDL_Event* ev) -> bool {
+		if (ev->type == SDL_MOUSEBUTTONUP) {
+			if (s->ui->active)
+				s->ev->current = in_ui;
+			else
+				s->ev->current = in_idle;
+			SDL_CaptureMouse(SDL_FALSE);
+			SDL_SetRelativeMouseMode(SDL_FALSE);
+			SDL_WarpMouseInWindow(s->window, s->ui->active ? (int)round(s->w * ((1 - UI_SCREEN_RATIO) / 2 + UI_SCREEN_RATIO)) : s->w / 2, s->h / 2);
+			return true;
+		}
+		mx = s->w / 2;
+		my = s->h / 2;
+		return false;
+	}, in_cam));
+
 	sendAxes(s);
 	s->c = defaultCam();
 	s->running = true;
-	s->instate = in_idle;
 }

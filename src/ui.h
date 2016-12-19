@@ -117,53 +117,6 @@ struct fxy_equation : public widget {
 		current_yh = y;
 		return y;
 	}
-	bool process(SDL_Event ev, int w, state* s) {
-		switch (ev.type) {
-		case SDL_QUIT:
-			return false;
-		case SDL_MOUSEBUTTONDOWN:
-			if (ev.button.x < w && ev.button.y >= current_y && ev.button.y <= current_yh) {
-				active = true;
-				SDL_StartTextInput();
-				return true;
-			}
-			break;
-		case SDL_TEXTINPUT:
-			if (active) {
-				if (exp == " ") exp.clear();
-				exp.append(ev.text.text);
-			}
-			break;
-		case SDL_KEYDOWN:
-			if (active) {
-				int g_ind = getIndex(s, g_id);
-				if (ev.key.keysym.sym == SDLK_ESCAPE) {
-					active = false;
-					SDL_StopTextInput();
-				}
-				else if (exp != " " && (
-					     ev.key.keysym.sym == SDLK_RETURN ||
-						 ev.key.keysym.sym == SDLK_RETURN2 ||
-						 ev.key.keysym.sym == SDLK_KP_ENTER)) {
-					active = false;
-					s->graphs[g_ind]->eq_str = exp; 
-					regengraph(s, g_ind);
-				}
-				else if (ev.key.keysym.sym == SDLK_BACKSPACE) {
-					if (exp != " ") exp.pop_back();
-					else {
-						delete s->graphs[g_ind];
-						s->graphs.erase(s->graphs.begin() + g_ind);
-						should_remove = true;
-						active = false;
-					}
-					if (!exp.size()) exp = " ";
-				}
-			}
-			break;
-		}
-		return active;
-	}
 	void break_str(int w) {
 		lines.clear();
 		int e_pos = 0, tw;

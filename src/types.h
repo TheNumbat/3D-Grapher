@@ -1,14 +1,7 @@
 
 #pragma once
 
-enum inputstate {
-	in_idle,
-	in_cam,
-	in_text
-};
-
 #include <vector>
-#include <functional>
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <SDL_opengl.h>
@@ -30,7 +23,7 @@ struct cam {
 };
 
 struct graph {
-	graph(int id, string s, float xmi, float xma, float ymi, float yma, float xr, float yr) : eq_str(s) {
+	graph(int id, string s, float xmi, float xma, float ymi, float yma, unsigned int xr, unsigned int yr) : eq_str(s) {
 		ID = id;
 		xmin = xmi; xmax = xma; ymin = ymi; ymax = yma;
 		xrez = xr; yrez = yr;
@@ -80,12 +73,12 @@ struct gendata {
 
 struct widget {
 	virtual int render(int w, int h, int ui_w, int x, int y, shader& program) = 0;
-	virtual bool process(SDL_Event ev, int w, state* s) = 0;
 	point pts[6];
 	int current_y, current_yh;
 	bool active, should_remove;
 };
 
+struct evts;
 struct UI;
 struct state {
 	SDL_Window* window;
@@ -97,9 +90,10 @@ struct state {
 	vector<graph*> graphs;
 	cam c;
 	UI* ui;
-	inputstate instate;
+	evts* ev;
 
 	bool running;
 };
 
 #include "ui.h"
+#include "evts.h"
