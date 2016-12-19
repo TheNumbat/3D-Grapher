@@ -5,22 +5,12 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <SDL_opengl.h>
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
 
 #include "gl.h"
 
-using namespace glm;
 using namespace std;
 
 typedef int op;
-
-struct cam {
-	vec3 pos, front, up, right, globalUp;
-	float pitch, yaw, speed, fov;
-	Uint32 lastUpdate;
-};
 
 struct graph {
 	graph(int id, string s, float xmi, float xma, float ymi, float yma, unsigned int xr, unsigned int yr) : eq_str(s) {
@@ -80,6 +70,7 @@ struct widget {
 
 struct evts;
 struct UI;
+struct cam;
 struct state {
 	SDL_Window* window;
 	int w, h;
@@ -88,7 +79,7 @@ struct state {
 	shader graph_s, axis_s, UI_s, rect_s;
 
 	vector<graph*> graphs;
-	cam c;
+	cam* c;
 	UI* ui;
 	evts* ev;
 
@@ -97,3 +88,4 @@ struct state {
 
 #include "ui.h"
 #include "evts.h"
+#include "cam.h"
