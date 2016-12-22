@@ -145,7 +145,10 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\main.cpp" />
+    <None Include="..\src\font.data" />
+    <None Include="..\src\tex_gear.data" />
+    <None Include="..\src\tex_in.data" />
+    <None Include="..\src\tex_out.data" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\cam.h" />
@@ -153,15 +156,17 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="..\src\exp.h" />
     <ClInclude Include="..\src\gl.h" />
     <ClInclude Include="..\src\graph.h" />
-    <ClInclude Include="..\src\shaders.h" />
-    <ClInclude Include="..\src\types.h" />
+    <ClInclude Include="..\src\state.h" />
     <ClInclude Include="..\src\ui.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\src\font.data" />
-    <None Include="..\src\tex_gear.data" />
-    <None Include="..\src\tex_in.data" />
-    <None Include="..\src\tex_out.data" />
+    <ClCompile Include="..\src\evts.cpp" />
+    <ClCompile Include="..\src\exp.cpp" />
+    <ClCompile Include="..\src\gl.cpp" />
+    <ClCompile Include="..\src\graph.cpp" />
+    <ClCompile Include="..\src\main.cpp" />
+    <ClCompile Include="..\src\state.cpp" />
+    <ClCompile Include="..\src\ui.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

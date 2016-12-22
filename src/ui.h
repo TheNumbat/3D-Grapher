@@ -1,94 +1,29 @@
 
 #pragma once
 
-#include <SDL_ttf.h>
-#include <SDL_opengl.h>
-#include <string>
-
-TTF_Font* font;
-
 #include "gl.h"
-#include "graph.h"
-#include "tex_in.data"
-#include "tex_out.data"
-#include "tex_gear.data"
+#include <string>
+#include <vector>
+
+using namespace std;
+
+struct state;
+
+struct widget {
+	virtual ~widget() {};
+	virtual int render(state* s, int w, int h, int ui_w, int x, int y, shader& program) = 0;
+	virtual bool update(state* s, SDL_Event* ev) = 0;
+	point pts[6];
+	int current_y, current_yh;
+	bool active, should_remove;
+};
 
 struct UI {
-	UI() {
-		glGenVertexArrays(1, &VAO);
-		glGenBuffers(1, &VBO);
-		active = false;
-		in.gen();
-		out.gen();
-		gear.gen();
-		in.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(in_bmp, in_bmp_len), 1));
-		out.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(out_bmp, out_bmp_len), 1));
-		gear.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(gear_bmp, gear_bmp_len), 1));
-	}
-	~UI() {
-		for (widget* w : widgets)
-			delete w;
-		widgets.clear();
-		glDeleteVertexArrays(1, &VAO);
-		glDeleteBuffers(1, &VBO);
-	}
-	void remove_dead_widgets() {
-		for (unsigned int i = 0; i < widgets.size(); i++) {
-			if (widgets[i]->should_remove) {
-				delete widgets[i];
-				widgets.erase(widgets.begin() + i);
-			}
-		}
-	}
-	void drawRect(shader& shader, int x, int y, int w, int h, float r, float g, float b, float a, float screenw, float screenh) {
-		glEnable(GL_BLEND);
-		glBindVertexArray(VAO);
-		shader.use();
-		GLfloat pts[12] = { -1.0f + 2.0f * (x / screenw)      ,  1.0f - 2.0f * (y / screenh),
-			-1.0f + 2.0f * ((x + w) / screenw),  1.0f - 2.0f * (y / screenh),
-			-1.0f + 2.0f * ((x + w) / screenw),  1.0f - 2.0f * ((y + h) / screenh),
-
-			-1.0f + 2.0f * ((x + w) / screenw),  1.0f - 2.0f * ((y + h) / screenh),
-			-1.0f + 2.0f * (x / screenw)      ,  1.0f - 2.0f * ((y + h) / screenh),
-			-1.0f + 2.0f * (x / screenw)      ,  1.0f - 2.0f * (y / screenh) };
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(pts), pts, GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid*)0);
-		glEnableVertexAttribArray(0);
-		glUniform4f(shader.getUniform("vcolor"), r, g, b, a);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-		glDisableVertexAttribArray(0);
-		glBindVertexArray(0);
-	}
-	void render(int w, int h, shader& ui_s, shader& rect_s) {
-		float fw = (float)w, fh = (float)h;
-		int xoff, ui_w = (int)round(w * UI_SCREEN_RATIO);
-		if (active)
-			xoff = 0;
-		else
-			xoff = -ui_w + 5;
-		drawRect(rect_s, xoff, 0, ui_w, h, 1.0f, 1.0f, 1.0f, 1.0f, fw, fh); // white background
-		drawRect(rect_s, xoff + ui_w, 0, 3, h, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // right black strip
-		int cur_y = 0;
-		unsigned int windex = 0;
-		while (cur_y < h && windex < widgets.size()) {
-			drawRect(rect_s, xoff, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // top/bottom black strip
-			cur_y += 3;
-			cur_y = widgets[windex++]->render(w, h, ui_w, 5 + xoff, cur_y, ui_s); // widget
-			cur_y += 3;
-		}
-		drawRect(rect_s, xoff, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // bottom black strip
-		if (active) {
-			in.set(ui_w + 5.0f, 0, 32, 32);
-			in.render(w, h, ui_s);
-			gear.set(ui_w + 5.0f, 35, 32, 32);
-			gear.render(w, h, ui_s);
-		}
-		else {
-			out.set(11, 0, 32, 32);
-			out.render(w, h, ui_s);
-		}
-	}
+	UI();
+	~UI();
+	void remove_dead_widgets();
+	void drawRect(shader& shader, int x, int y, int w, int h, float r, float g, float b, float a, float screenw, float screenh);
+	void render(state* s, int w, int h, shader& ui_s, shader& rect_s);
 	vector<widget*> widgets;
 	GLuint VAO, VBO;
 	textured_rect in, out, gear;
@@ -96,47 +31,11 @@ struct UI {
 };
 
 struct fxy_equation : public widget {
-	fxy_equation(string str, int graph_id, bool a = false) {
-		r.gen();
-		g_id = graph_id;
-		exp = str;
-		active = a;
-		should_remove = false;
-	}
-	int render(int w, int h, int ui_w, int x, int y, shader& program) {
-		current_y = y;
-		break_str(ui_w - x - 3);
-		for (string l : lines) {
-			SDL_Surface* text = TTF_RenderText_Shaded(font, l.c_str(), { 0, 0, 0 }, { 255, 255, 255 });
-			r.tex.load(text);
-			r.set((float)x, (float)y, (float)text->w, (float)text->h);
-			SDL_FreeSurface(text);
-			r.render(w, h, program);
-			y += text->h;
-		}
-		current_yh = y;
-		return y;
-	}
-	void break_str(int w) {
-		lines.clear();
-		int e_pos = 0, tw;
-		TTF_SizeText(font, exp.c_str(), &tw, NULL);
-		do {
-			unsigned int end = e_pos;
-			int newtw;
-			do {
-				end++;
-				TTF_SizeText(font, exp.substr(e_pos, end - e_pos).c_str(), &newtw, NULL);
-			} while (end < exp.size() && newtw < w);
-			if (newtw > w) {
-				end--;
-				TTF_SizeText(font, exp.substr(e_pos, end - e_pos).c_str(), &newtw, NULL);
-			}
-			lines.push_back(exp.substr(e_pos, end - e_pos));
-			e_pos = end;
-			tw -= newtw;
-		} while (tw > 0);
-	}
+	fxy_equation(int graph_id, bool a = false);
+	~fxy_equation() {}
+	int render(state* s, int w, int h, int ui_w, int x, int y, shader& program);
+	bool update(state* s, SDL_Event* ev);
+	void break_str(state* s, int w);
 	int g_id;
 	string exp;
 	vector<string> lines;
