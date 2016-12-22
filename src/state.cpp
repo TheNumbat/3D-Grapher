@@ -1,6 +1,6 @@
 
 #include "state.h"
-#include "font.data"
+#include "data/font.data"
 
 int next_graph_id = 0;
 int mx = screen_w / 2, my = screen_h / 2;

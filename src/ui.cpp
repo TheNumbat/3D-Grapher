@@ -5,9 +5,9 @@
 #include <SDL_ttf.h>
 #include <SDL.h>
 #include <algorithm>
-#include "tex_gear.data"
-#include "tex_in.data"
-#include "tex_out.data"
+#include "data\tex_gear.data"
+#include "data\tex_in.data"
+#include "data\tex_out.data"
 
 UI::UI() {
 	glGenVertexArrays(1, &VAO);
