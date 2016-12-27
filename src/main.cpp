@@ -6,6 +6,7 @@
 		// Improve UI
 		// Settings
 		// Axis scales
+		// Scroll bar
 	// Rendering
 		// Transparency, blending, maybe sorting
 		// Lighting
