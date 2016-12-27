@@ -1,11 +1,5 @@
 ﻿
-#include <iostream>
-#include <fstream>
-#include <string>
-
 #include "state.h"
-
-using namespace std;
 
 // TODO:
 	// UI
@@ -27,7 +21,7 @@ using namespace std;
 		// E Regions
 		// Tangent Planes
 		// Polar & Spherical Graphs
-		// More functions (sec, csc, cot, max, min)
+		// More than urnary functions (e.g. max, min)
 		// Negatives & remove asterisks
 		// Maxs & mins (abs and rel)
 		// Parametric Lines & Surfaces

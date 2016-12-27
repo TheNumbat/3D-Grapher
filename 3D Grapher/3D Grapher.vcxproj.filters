@@ -27,6 +27,9 @@
     <None Include="..\src\tex_gear.data">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\src\data\f.data">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\cam.h">

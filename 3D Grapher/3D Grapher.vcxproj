@@ -145,6 +145,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="..\src\data\f.data" />
     <None Include="..\src\font.data" />
     <None Include="..\src\tex_gear.data" />
     <None Include="..\src\tex_in.data" />

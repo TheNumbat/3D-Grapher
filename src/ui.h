@@ -7,6 +7,11 @@
 
 using namespace std;
 
+enum ui_state {
+	ui_funcs,
+	ui_settings
+};
+
 struct state;
 
 struct widget {
@@ -26,7 +31,8 @@ struct UI {
 	void render(state* s, int w, int h, shader& ui_s, shader& rect_s);
 	vector<widget*> widgets;
 	GLuint VAO, VBO;
-	textured_rect in, out, gear;
+	textured_rect in, out, gear, f;
+	ui_state uistate;
 	bool active;
 };
 

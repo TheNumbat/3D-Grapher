@@ -8,6 +8,7 @@
 #include "data\tex_gear.data"
 #include "data\tex_in.data"
 #include "data\tex_out.data"
+#include "data\f.data"
 
 UI::UI() {
 	glGenVertexArrays(1, &VAO);
@@ -16,9 +17,11 @@ UI::UI() {
 	in.gen();
 	out.gen();
 	gear.gen();
+	f.gen();
 	in.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(in_bmp, in_bmp_len), 1));
 	out.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(out_bmp, out_bmp_len), 1));
 	gear.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(gear_bmp, gear_bmp_len), 1));
+	f.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(f_bmp, f_bmp_len), 1));
 }
 
 UI::~UI() {
@@ -68,19 +71,24 @@ void UI::render(state* s, int w, int h, shader& ui_s, shader& rect_s) {
 		xoff = -ui_w + 5;
 	drawRect(rect_s, xoff, 0, ui_w, h, 1.0f, 1.0f, 1.0f, 1.0f, fw, fh); // white background
 	drawRect(rect_s, xoff + ui_w, 0, 3, h, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // right black strip
-	int cur_y = 0;
-	unsigned int windex = 0;
-	while (cur_y < h && windex < widgets.size()) {
-		drawRect(rect_s, xoff, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // top/bottom black strip
-		cur_y += 3;
-		cur_y = widgets[windex++]->render(s, w, h, ui_w, 5 + xoff, cur_y, ui_s); // widget
-		cur_y += 3;
+	drawRect(rect_s, xoff, 0, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // top black strip
+	drawRect(rect_s, xoff, h - 3, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // bottom black strip
+	if (uistate == ui_funcs) {
+		int cur_y = 0;
+		unsigned int windex = 0;
+		while (cur_y < h && windex < widgets.size()) {
+			cur_y += 3;
+			cur_y = widgets[windex++]->render(s, w, h, ui_w, 5 + xoff, cur_y, ui_s); // widget
+			cur_y += 3;
+			drawRect(rect_s, xoff, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // top/bottom black strip
+		}
 	}
-	drawRect(rect_s, xoff, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // bottom black strip
 	if (active) {
 		in.set(ui_w + 5.0f, 0, 32, 32);
 		in.render(w, h, ui_s);
-		gear.set(ui_w + 5.0f, 35, 32, 32);
+		f.set(ui_w + 5.0f, 35, 32, 32);
+		f.render(w, h, ui_s);
+		gear.set(ui_w + 5.0f, 70, 32, 32);
 		gear.render(w, h, ui_s);
 	}
 	else {
