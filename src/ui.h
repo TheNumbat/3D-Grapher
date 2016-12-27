@@ -19,6 +19,7 @@ struct widget {
 	virtual int render(state* s, int w, int h, int ui_w, int x, int y, shader& program) = 0;
 	virtual bool update(state* s, SDL_Event* ev) = 0;
 	point pts[6];
+	int cursor_pos, cursor_x, cursor_y; // updated by update()
 	int current_y, current_yh;
 	bool active, should_remove;
 };
@@ -42,6 +43,9 @@ struct fxy_equation : public widget {
 	int render(state* s, int w, int h, int ui_w, int x, int y, shader& program);
 	bool update(state* s, SDL_Event* ev);
 	void break_str(state* s, int w);
+	void update_cursor(state* s);
+	int currentLine();
+	int currentPos();
 	int g_id;
 	string exp;
 	vector<string> lines;
