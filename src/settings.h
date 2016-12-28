@@ -10,6 +10,7 @@ struct settings {
 	bool axisnormalization;
 	float graphopacity;
 	int antialiasing;
+	int xmin, xmax, ymin, ymax, xrez, yrez;
 	dimension display;
 	cam_type camtype;
 };
