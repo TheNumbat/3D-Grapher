@@ -225,6 +225,20 @@ void gengraph(state* s, int index) {
 	s->graphs[index]->zmin = zmin;
 	s->graphs[index]->zmax = zmax;
 
+	if (s->set.axisnormalization) {
+		for (unsigned int i = 0; i < s->graphs[index]->verticies.size(); i += 3) {
+			s->graphs[index]->verticies[i] /= (s->graphs[index]->xmax - s->graphs[index]->xmin) / 20;
+			s->graphs[index]->verticies[i + 1] /= (s->graphs[index]->ymax - s->graphs[index]->ymin) / 20;
+			s->graphs[index]->verticies[i + 2] /= (s->graphs[index]->zmax - s->graphs[index]->zmin) / 20;
+		}
+		s->graphs[index]->xmin = -10;
+		s->graphs[index]->xmax = 10;
+		s->graphs[index]->ymin = -10;
+		s->graphs[index]->ymax = 10;
+		s->graphs[index]->zmin = -10;
+		s->graphs[index]->zmax = 10;
+	}
+
 	for (gendata* g : data)
 		delete g;
 }
@@ -251,7 +265,6 @@ void regengraph(state* s, int index) {
 	s->graphs[index]->send();
 }
 
-
 int getIndex(state* s, int ID) {
 	auto entry = find_if(s->graphs.begin(), s->graphs.end(), [ID](graph* g) -> bool {return g->ID == ID;});
 	if (entry == s->graphs.end()) {
@@ -261,4 +274,10 @@ int getIndex(state* s, int ID) {
 		int pos = entry - s->graphs.begin();
 		return pos;
 	}
+}
+
+void regenall(state* s) {
+	for (int i = 0; i < (int)s->graphs.size(); i++)
+		if(s->graphs[i]->verticies.size())
+			regengraph(s, i);
 }

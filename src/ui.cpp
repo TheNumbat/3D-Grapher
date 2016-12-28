@@ -12,11 +12,32 @@
 
 // the code in this file is p bad and disorganized, good luck
 
-UI::UI() {
+UI::UI(state* s) {
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 	active = false;
 	uistate = ui_funcs;
+
+	settings.push_back(new toggle_text("Wirefame", true, [](state* s) -> void {s->set.wireframe = !s->set.wireframe;}));
+	settings.push_back(new toggle_text("Lighting", false, [](state* s) -> void {s->set.lighting = !s->set.lighting; }));
+	settings.push_back(new toggle_text("Axis Normalization", false, [](state* s) -> void {s->set.axisnormalization = !s->set.axisnormalization; regenall(s); }));
+	
+	auto settingsCallback = [](state* s, SDL_Event* ev) -> bool {
+		if (ev->type == SDL_MOUSEBUTTONDOWN) {
+			if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO)) {
+				for (widget* w : s->ui->settings) {
+					if (ev->button.y > w->current_y - 3 && ev->button.y <= w->current_yh + 3) {
+						w->update(s, ev);
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	};
+	s->ev.callbacks.push_back(callback(settingsCallback, in_settings, SDL_MOUSEBUTTONDOWN));
+	s->ev.callbacks.push_back(callback(settingsCallback, in_settings, SDL_MOUSEMOTION));
+
 	in.gen();
 	out.gen();
 	gear.gen();
@@ -99,16 +120,31 @@ void UI::render(state* s, int w, int h) {
 			windex++;
 		}
 	}
+	else if(uistate == ui_settings) {
+		int cur_y = 3;
+		unsigned int windex = 0;
+		while (cur_y < h && windex < settings.size()) {
+			if (toggle_text* t = dynamic_cast<toggle_text*>(settings[windex])) {
+				if (t->on) {
+					drawRect(s->rect_s, xoff, cur_y, ui_w, 32, 0.0f, 0.0f, 0.0f, 0.25f, fw, fh);
+				}
+			}
+			cur_y = settings[windex]->render(s, w, h, ui_w, 5 + xoff, cur_y) + 3;
+			drawRect(s->rect_s, xoff, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // top/bottom black strip
+			cur_y += 3;
+			windex++;
+		}
+	}
 	render_sidebar(s);
 }
 
 void UI::render_sidebar(state* s) {
 	if (active) {
 		if (uistate == ui_funcs) {
-			drawRect(s->rect_s, (int)round(s->w * UI_SCREEN_RATIO) + 3, 33, 36, 36, 0.0f, 0.0f, 0.0f, 0.25f, (float)s->w, (float)s->h);
+			drawRect(s->rect_s, (int)round(s->w * UI_SCREEN_RATIO) + 3, 33, 36, 36, 0.0f, 0.0f, 0.0f, 0.251f, (float)s->w, (float)s->h);
 		}
 		else if (uistate == ui_settings) {
-			drawRect(s->rect_s, (int)round(s->w * UI_SCREEN_RATIO) + 3, 68, 36, 36, 0.0f, 0.0f, 0.0f, 0.25f, (float)s->w, (float)s->h);
+			drawRect(s->rect_s, (int)round(s->w * UI_SCREEN_RATIO) + 3, 68, 36, 36, 0.0f, 0.0f, 0.0f, 0.251f, (float)s->w, (float)s->h);
 		}
 		in.set((int)round(s->w * UI_SCREEN_RATIO) + 5.0f, 0, 32, 32);
 		in.render(s->w, s->h, s->UI_s);
@@ -198,6 +234,7 @@ bool fxy_equation::update(state* s, SDL_Event* ev) {
 				active = false;
 				SDL_StopTextInput();
 				s->ev.current = in_ui;
+				SDL_ShowCursor(1);
 				return true;
 			case SDLK_RETURN:
 			case SDLK_RETURN2:
@@ -207,6 +244,7 @@ bool fxy_equation::update(state* s, SDL_Event* ev) {
 					s->graphs[g_ind]->eq_str = exp;
 					regengraph(s, g_ind);
 					s->ev.current = in_ui;
+					SDL_ShowCursor(1);
 				}
 				return true;
 			}
@@ -225,8 +263,6 @@ void fxy_equation::remove(state* s) {
 	s->ui->remove_dead_widgets(); // basically 'delete this' ... quesitonable practice
 	s->ev.current = in_ui;
 	SDL_ShowCursor(1);
-	SDL_SetRelativeMouseMode(SDL_FALSE);
-	SDL_CaptureMouse(SDL_FALSE);
 }
 
 int fxy_equation::render(state* s, int w, int h, int ui_w, int x, int y) {
@@ -281,18 +317,32 @@ void fxy_equation::break_str(state* s, int w) {
 	cursor_y = currentLine() * 29;
 }
 
-toggle_text::toggle_text() {
-
-}
-
-toggle_text::~toggle_text() {
-
+toggle_text::toggle_text(string t, bool o, function<void(state*)> c) {
+	text = t;
+	on = o;
+	toggleCallback = c;
+	r.gen();
 }
 
 int toggle_text::render(state* s, int w, int h, int ui_w, int x, int y) {
-	return 0;
+	current_y = y;
+	SDL_Color background;
+	if (on)
+		background = { 191, 191, 191 };
+	else
+		background = { 255, 255, 255 };
+	SDL_Surface* surf = TTF_RenderText_Shaded(s->font, text.c_str(), { 0, 0, 0 }, background);
+	r.tex.load(surf);
+	r.set((float)x, (float)y, (float)surf->w, (float)surf->h);
+	r.render(w, h, s->UI_s);
+	y += surf->h;
+	SDL_FreeSurface(surf);
+	current_yh = y;
+	return y;
 }
 
 bool toggle_text::update(state* s, SDL_Event* ev) {
+	on = !on;
+	toggleCallback(s);
 	return false;
 }

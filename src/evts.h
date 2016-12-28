@@ -13,7 +13,8 @@ enum inputstate {
 	in_idle,
 	in_cam,
 	in_ui,
-	in_widget
+	in_widget,
+	in_settings
 };
 
 struct callback {

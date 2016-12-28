@@ -2,7 +2,6 @@
 #include "state.h"
 #include "data/font.data"
 
-
 state::state() {
 	w = screen_w;
 	h = screen_h;
@@ -12,7 +11,7 @@ state::state() {
 	last_mx = last_my = 0;
 
 	set.wireframe = true;
-	set.lighting = true;
+	set.lighting = false;
 	set.axisnormalization = false;
 	set.graphopacity = 1.0f;
 	set.antialiasing = 0;
@@ -54,10 +53,10 @@ state::state() {
 	TTF_Init();
 	font = TTF_OpenFontRW(SDL_RWFromConstMem((const void*)DroidSans_ttf, DroidSans_ttf_len), 1, 24);
 	
-	ui = new UI();
-
 	add_default_callbacks(this);
 	sendAxes(this);
+
+	ui = new UI(this);
 
 	c.default();
 	running = true;

@@ -64,4 +64,5 @@ struct graph {
 
 void sendAxes(state* s);
 void regengraph(state* s, int index);
+void regenall(state* s);
 int getIndex(state* s, int ID);

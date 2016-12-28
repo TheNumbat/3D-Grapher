@@ -1,14 +1,12 @@
 
 #include "exp.h"
-
-
 #include <string>
 #include <stack>
 #include <queue>
 
 bool isop(char c) {
 	return c == open_p || c == add || c == subtract || c == op_neg ||
-		c == multiply || c == modulo || c == divide || c == power;
+		   c == multiply || c == modulo || c == divide || c == power;
 }
 
 #define get2() two = s.top(); \
@@ -213,7 +211,7 @@ int precedence(char c) {
 }
 
 bool in(string str, vector<op>& EQ) {
-	for (int ind = 0; ind < str.size(); ind++) {
+	for (int ind = 0; ind < (int)str.size(); ind++) {
 		if (str[ind] == '-' && (ind == 0 || isop(str[ind - 1]))) str[ind] = op_neg;
 	}
 

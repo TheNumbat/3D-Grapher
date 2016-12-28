@@ -4,6 +4,7 @@
 #include "gl.h"
 #include <string>
 #include <vector>
+#include <functional>
 
 using namespace std;
 
@@ -25,7 +26,7 @@ struct widget {
 };
 
 struct UI {
-	UI();
+	UI(state* s);
 	~UI();
 	void remove_dead_widgets();
 	void drawRect(shader& shader, int x, int y, int w, int h, float r, float g, float b, float a, float screenw, float screenh);
@@ -56,10 +57,11 @@ struct fxy_equation : public widget {
 };
 
 struct toggle_text : public widget {
-	toggle_text();
-	~toggle_text();
+	toggle_text(string t, bool o, function<void(state*)> c);
+	~toggle_text() {}
 	int render(state* s, int w, int h, int ui_w, int x, int y);
 	bool update(state* s, SDL_Event* ev);
+	function<void(state*)> toggleCallback;
 	bool on;
 	string text;
 	textured_rect r;
