@@ -2,12 +2,34 @@
 #pragma once
 
 #include <vector>
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
 #include "gl.h"
 #include "exp.h"
 
 using namespace std;
+using namespace glm;
 
 struct state;
+
+enum dimension {
+	dim_2d,
+	dim_3d,
+	dim_4d
+};
+
+enum graph_type {
+	graph_func,
+	graph_cylindrical,
+	graph_spherical,
+	graph_partial,
+	graph_integral,
+	graph_surface,
+	graph_para_curve,
+	graph_para_surface,
+	graph_vec_feild
+};
 
 const int x_min = 0;
 const int x_max = 6;
@@ -23,14 +45,21 @@ struct graph {
 	~graph();
 	void gen();
 	void send();
+	void draw(state* s, mat4& modelveiwproj);
+	
 	vector<op> eq;
 	string eq_str;
+
 	vector<GLfloat> verticies;
 	vector<GLuint> indicies;
 	GLuint VAO, VBO, EBO;
+
 	float xmin, xmax, ymin, ymax, zmin, zmax;
 	unsigned int xrez, yrez;
 	int ID;
+
+	dimension dim;
+	graph_type type;
 };
 
 void sendAxes(state* s);

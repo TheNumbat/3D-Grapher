@@ -11,6 +11,14 @@ state::state() {
 	next_graph_id = 0;
 	last_mx = last_my = 0;
 
+	set.wireframe = true;
+	set.lighting = true;
+	set.axisnormalization = false;
+	set.graphopacity = 1.0f;
+	set.antialiasing = 0;
+	set.display = dim_3d;
+	set.camtype = cam_3d;
+
 	assert(SDL_Init(SDL_INIT_EVERYTHING) == 0);
 
 	window = SDL_CreateWindow("3D Grapher", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -80,38 +88,7 @@ void state::run() {
 		modelviewproj = proj * view * model;
 
 		for (graph* g : graphs) {
-			if (g->indicies.size()) {
-				glBindVertexArray(g->VAO);
-				{
-					graph_s.use();
-
-					glBindBuffer(GL_ARRAY_BUFFER, g->VBO);
-					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g->EBO);
-
-					glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-					glEnableVertexAttribArray(0);
-
-					glUniformMatrix4fv(graph_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
-
-					glEnable(GL_DEPTH_TEST);
-					glDisable(GL_BLEND);
-
-					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-					glPolygonOffset(1.0f, 0.0f);
-
-					glUniform4f(graph_s.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, 1.0f);
-					glDrawElements(GL_TRIANGLES, (int)g->indicies.size(), GL_UNSIGNED_INT, (void*)0);
-
-					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-					glPolygonOffset(0.0f, 0.0f);
-
-					glUniform4f(graph_s.getUniform("vcolor"), 0.2f, 0.2f, 0.2f, 1.0f);
-					glDrawElements(GL_TRIANGLES, (int)g->indicies.size(), GL_UNSIGNED_INT, (void*)0);
-
-					glDisableVertexAttribArray(0);
-				}
-				glBindVertexArray(0);
-			}
+			g->draw(this, modelviewproj);
 		}
 
 		glBindVertexArray(axisVAO);
@@ -143,7 +120,7 @@ void state::run() {
 			glDisable(GL_DEPTH_TEST);
 			glEnable(GL_BLEND);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			ui->render(this, w, h, UI_s, rect_s);
+			ui->render(this, w, h);
 		}
 
 		ev.run(this);

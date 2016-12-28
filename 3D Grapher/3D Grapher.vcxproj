@@ -157,6 +157,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <ClInclude Include="..\src\exp.h" />
     <ClInclude Include="..\src\gl.h" />
     <ClInclude Include="..\src\graph.h" />
+    <ClInclude Include="..\src\settings.h" />
     <ClInclude Include="..\src\state.h" />
     <ClInclude Include="..\src\ui.h" />
   </ItemGroup>

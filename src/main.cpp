@@ -2,18 +2,24 @@
 #include "state.h"
 
 // TODO:
-	// Events
-		// Fix mouse jump problem again
+	// Bugs
+		// Rects have to be set every frame
+	// Implement
+		// Cameras
+		// Settings
+			// button
+			// lighting
+			// axis
+			// antialiasing
+			// display
+			// camera types
+		// Dimensions
+		// Graph types
 	// UI
 		// Settings
 		// Axis scales
 		// Scroll bar
 		// Error messages
-	// Rendering
-		// Graph transparency
-		// Lighting
-		// Antialiasing
-		// Why do rects have to get set every frame
 	// Math Features
 		// Axis normalization
 		// Highlight curve along a set x/y

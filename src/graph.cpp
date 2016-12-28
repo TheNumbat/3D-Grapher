@@ -36,6 +36,8 @@ graph::graph(int id, string s, float xmi, float xma, float ymi, float yma, unsig
 	ID = id;
 	xmin = xmi; xmax = xma; ymin = ymi; ymax = yma;
 	xrez = xr; yrez = yr;
+	dim = dim_3d;
+	type = graph_func;
 }
 
 graph::~graph() {
@@ -60,6 +62,43 @@ void graph::send() {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * indicies.size(), indicies.size() ? &indicies[0] : NULL, GL_STATIC_DRAW);
 
 	glBindVertexArray(0);
+}
+
+void graph::draw(state* s, mat4& modelviewproj) {
+	if (dim == s->set.display) {
+		glBindVertexArray(VAO);
+		{
+			s->graph_s.use();
+
+			glBindBuffer(GL_ARRAY_BUFFER, VBO);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+			glEnableVertexAttribArray(0);
+
+			glUniformMatrix4fv(s->graph_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
+
+			glEnable(GL_DEPTH_TEST);
+			glDisable(GL_BLEND);
+
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glPolygonOffset(1.0f, 0.0f);
+
+			glUniform4f(s->graph_s.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, s->set.graphopacity);
+			glDrawElements(GL_TRIANGLES, (int)indicies.size(), GL_UNSIGNED_INT, (void*)0);
+
+			if (s->set.wireframe) {
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				glPolygonOffset(0.0f, 0.0f);
+
+				glUniform4f(s->graph_s.getUniform("vcolor"), 0.2f, 0.2f, 0.2f, s->set.graphopacity);
+				glDrawElements(GL_TRIANGLES, (int)indicies.size(), GL_UNSIGNED_INT, (void*)0);
+			}
+
+			glDisableVertexAttribArray(0);
+		}
+		glBindVertexArray(0);
+	}
 }
 
 void sendAxes(state* s) {
