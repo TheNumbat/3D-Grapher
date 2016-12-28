@@ -21,6 +21,22 @@ UI::UI(state* s) {
 	settings.push_back(new toggle_text("Wirefame", true, [](state* s) -> void {s->set.wireframe = !s->set.wireframe;}));
 	settings.push_back(new toggle_text("Lighting", false, [](state* s) -> void {s->set.lighting = !s->set.lighting; }));
 	settings.push_back(new toggle_text("Axis Normalization", false, [](state* s) -> void {s->set.axisnormalization = !s->set.axisnormalization; regenall(s); }));
+
+	vector<string> cameras = { "Camera: 2D", "Camera: Static 2D", "Camera: 3D", "Camera: Static 3D" };
+	settings.push_back(new multi_text(cameras, 2, [](state* s, string str) -> void {
+		if (str == "Camera: 2D") {
+			s->set.camtype = cam_2d;
+		}
+		else if (str == "Camera: Static 2D") {
+			s->set.camtype = cam_2d_static;
+		}
+		else if (str == "Camera: 3D") {
+			s->set.camtype = cam_3d;
+		}
+		else if (str == "Camera: Static 3D") {
+			s->set.camtype = cam_3d_static;
+		}
+	}));
 	
 	auto settingsCallback = [](state* s, SDL_Event* ev) -> bool {
 		if (ev->type == SDL_MOUSEBUTTONDOWN) {
@@ -128,6 +144,9 @@ void UI::render(state* s, int w, int h) {
 				if (t->on) {
 					drawRect(s->rect_s, xoff, cur_y, ui_w, 32, 0.0f, 0.0f, 0.0f, 0.25f, fw, fh);
 				}
+			}
+			else {
+				drawRect(s->rect_s, xoff, cur_y, ui_w, 32, 0.0f, 0.0f, 0.0f, 0.25f, fw, fh);
 			}
 			cur_y = settings[windex]->render(s, w, h, ui_w, 5 + xoff, cur_y) + 3;
 			drawRect(s->rect_s, xoff, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // top/bottom black strip
@@ -344,5 +363,30 @@ int toggle_text::render(state* s, int w, int h, int ui_w, int x, int y) {
 bool toggle_text::update(state* s, SDL_Event* ev) {
 	on = !on;
 	toggleCallback(s);
-	return false;
+	return true;
+}
+
+multi_text::multi_text(vector<string> strs, int p, function<void(state*, string)> c) {
+	text = strs;
+	toggleCallback = c;
+	pos = p;
+	r.gen();
+}
+
+int multi_text::render(state* s, int w, int h, int ui_w, int x, int y) {
+	current_y = y;
+	SDL_Surface* surf = TTF_RenderText_Shaded(s->font, text[pos].c_str(), { 0, 0, 0 }, { 191, 191, 191 });
+	r.tex.load(surf);
+	r.set((float)x, (float)y, (float)surf->w, (float)surf->h);
+	r.render(w, h, s->UI_s);
+	y += surf->h;
+	SDL_FreeSurface(surf);
+	current_yh = y;
+	return y;
+}
+
+bool multi_text::update(state* s, SDL_Event* ev) {
+	++pos %= text.size();
+	toggleCallback(s, text[pos]);
+	return true;
 }

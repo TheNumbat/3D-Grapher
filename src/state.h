@@ -27,7 +27,8 @@ struct state {
 	shader graph_s, axis_s, UI_s, rect_s;
 	
 	vector<graph*> graphs;
-	cam c;
+	_cam_3d c_3d;
+	_cam_3d_static c_3d_static;
 	UI* ui;
 	evts ev;
 	settings set;

@@ -58,7 +58,8 @@ state::state() {
 
 	ui = new UI(this);
 
-	c.default();
+	c_3d.default();
+	c_3d_static.default();
 	running = true;
 }
 
@@ -82,8 +83,14 @@ void state::run() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		mat4 model, view, proj, modelviewproj;
-		view = c.getView();
-		proj = perspective(radians(c.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
+		if (set.camtype == cam_3d) {
+			view = c_3d.getView();
+			proj = perspective(radians(c_3d.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
+		}
+		else if (set.camtype == cam_3d_static) {
+			view = c_3d_static.getView();
+			proj = perspective(radians(c_3d_static.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
+		}
 		modelviewproj = proj * view * model;
 
 		for (graph* g : graphs) {

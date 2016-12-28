@@ -66,3 +66,14 @@ struct toggle_text : public widget {
 	string text;
 	textured_rect r;
 };
+
+struct multi_text : public widget {
+	multi_text(vector<string> strs, int p, function<void(state*, string)> c);
+	~multi_text() {}
+	int render(state* s, int w, int h, int ui_w, int x, int y);
+	bool update(state* s, SDL_Event* ev);
+	function<void(state*, string)> toggleCallback;
+	int pos;
+	vector<string> text;
+	textured_rect r;
+};

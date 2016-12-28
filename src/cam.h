@@ -11,11 +11,10 @@ enum cam_type {
 	cam_2d,
 	cam_3d,
 	cam_2d_static,
-	cam_3d_static,
-	cam_3d_sphere
+	cam_3d_static
 };
 
-struct cam {
+struct _cam_3d {
 	vec3 pos, front, up, right, globalUp;
 	float pitch, yaw, speed, fov;
 	Uint32 lastUpdate;
@@ -45,4 +44,24 @@ struct cam {
 		lastUpdate = SDL_GetTicks();
 		updateFront();
 	}
+
+	void move(int dx, int dy) {
+		const float sens = 0.1f;
+		yaw += dx * sens;
+		pitch -= dy * sens;
+		if (yaw > 360.0f) yaw = 0.0f;
+		else if (yaw < 0.0f) yaw = 360.0f;
+		if (pitch > 89.0f) pitch = 89.0f;
+		else if (pitch < -89.0f) pitch = -89.0f;
+		updateFront();
+	}
 };
+
+struct _cam_3d_static : _cam_3d {
+	mat4 getView() {
+		mat4 ret = lookAt(15.0f * front, vec3(0, 0, 0), globalUp);
+		ret = rotate(ret, radians(-90.0f), vec3(1, 0, 0));
+		return ret;
+	}
+};
+

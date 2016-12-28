@@ -5,14 +5,12 @@
 	// Bugs
 		// Rects have to be set every frame
 	// Implement
-		// Cameras
+		// Static 3D cam on axis edge
+		// 2D Cameras
 		// Settings
-			// button
 			// lighting
-			// axis
 			// antialiasing
 			// display
-			// camera types
 		// Dimensions
 		// Graph types
 	// UI

@@ -41,47 +41,50 @@ void evts::run(state* s) {
 			break;
 		}
 	}
-	float dT = (SDL_GetTicks() - s->c.lastUpdate) / 1000.0f;
-	s->c.lastUpdate = SDL_GetTicks();
-	if (current == in_cam) {
+	float dT = (SDL_GetTicks() - s->c_3d.lastUpdate) / 1000.0f;
+	s->c_3d.lastUpdate = SDL_GetTicks();
+	if (s->set.camtype == cam_3d && current == in_cam) {
 		if (keys[SDL_SCANCODE_W]) {
-			s->c.pos += s->c.front * s->c.speed * dT;
+			s->c_3d.pos += s->c_3d.front * s->c_3d.speed * dT;
 		}
 		if (keys[SDL_SCANCODE_S]) {
-			s->c.pos -= s->c.front * s->c.speed * dT;
+			s->c_3d.pos -= s->c_3d.front * s->c_3d.speed * dT;
 		}
 		if (keys[SDL_SCANCODE_A]) {
-			s->c.pos -= s->c.right * s->c.speed * dT;
+			s->c_3d.pos -= s->c_3d.right * s->c_3d.speed * dT;
 		}
 		if (keys[SDL_SCANCODE_D]) {
-			s->c.pos += s->c.right * s->c.speed * dT;
+			s->c_3d.pos += s->c_3d.right * s->c_3d.speed * dT;
 		}
 	}
 }
 
 void add_default_callbacks(state* s) {
 	s->ev.callbacks.push_back(callback([](state* s, SDL_Event* ev) -> bool {
-		float sens = 0.1f;
-		float dx = (ev->motion.x - s->mx) * sens;
-		float dy = (ev->motion.y - s->my) * sens;
+		int dx = (ev->motion.x - s->mx);
+		int dy = (ev->motion.y - s->my);
 		s->mx = ev->motion.x;
 		s->my = ev->motion.y;
-		if (s->ev.current == in_cam) {
-			s->c.yaw += dx;
-			s->c.pitch -= dy;
-			if (s->c.yaw > 360.0f) s->c.yaw = 0.0f;
-			else if (s->c.yaw < 0.0f) s->c.yaw = 360.0f;
-			if (s->c.pitch > 89.0f) s->c.pitch = 89.0f;
-			else if (s->c.pitch < -89.0f) s->c.pitch = -89.0f;
-			s->c.updateFront();
+		if (s->set.camtype == cam_3d) {
+			s->c_3d.move(dx, dy);
+		}
+		else if (s->set.camtype == cam_3d_static) {
+			s->c_3d_static.move(dx, dy);
 		}
 		return true;
 	}, in_cam, SDL_MOUSEMOTION));
 
 	s->ev.callbacks.push_back(callback([](state* s, SDL_Event* ev) -> bool {
-		s->c.fov -= ev->wheel.y;
-		if (s->c.fov > 179.0f) s->c.fov = 179.0f;
-		else if (s->c.fov < 1.0f) s->c.fov = 1.0f;
+		if (s->set.camtype == cam_3d) {
+			s->c_3d.fov -= ev->wheel.y;
+			if (s->c_3d.fov > 179.0f) s->c_3d.fov = 179.0f;
+			else if (s->c_3d.fov < 1.0f) s->c_3d.fov = 1.0f;
+		}
+		else if (s->set.camtype == cam_3d_static) {
+			s->c_3d_static.fov -= ev->wheel.y;
+			if (s->c_3d_static.fov > 179.0f) s->c_3d_static.fov = 179.0f;
+			else if (s->c_3d_static.fov < 1.0f) s->c_3d_static.fov = 1.0f;
+		}
 		return true;
 	}, in_cam, SDL_MOUSEWHEEL));
 
