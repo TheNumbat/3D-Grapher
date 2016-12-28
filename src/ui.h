@@ -30,6 +30,7 @@ struct UI {
 	void remove_dead_widgets();
 	void drawRect(shader& shader, int x, int y, int w, int h, float r, float g, float b, float a, float screenw, float screenh);
 	void render(state* s, int w, int h, shader& ui_s, shader& rect_s);
+	void UI::render_sidebar(state* s, shader& ui_s, shader& rect_s);
 	vector<widget*> widgets;
 	GLuint VAO, VBO;
 	textured_rect in, out, gear, f;

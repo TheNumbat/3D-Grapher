@@ -10,6 +10,8 @@
 #include "data\tex_out.data"
 #include "data\tex_f.data"
 
+// the code in this file is p bad and disorganized, good luck
+
 UI::UI() {
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
@@ -87,17 +89,27 @@ void UI::render(state* s, int w, int h, shader& ui_s, shader& rect_s) {
 			windex++;
 		}
 	}
+	render_sidebar(s, ui_s, rect_s);
+}
+
+void UI::render_sidebar(state* s, shader& ui_s, shader& rect_s) {
 	if (active) {
-		in.set(ui_w + 5.0f, 0, 32, 32);
-		in.render(w, h, ui_s);
-		f.set(ui_w + 5.0f, 35, 32, 32);
-		f.render(w, h, ui_s);
-		gear.set(ui_w + 5.0f, 70, 32, 32);
-		gear.render(w, h, ui_s);
+		if (uistate == ui_funcs) {
+			drawRect(rect_s, (int)round(s->w * UI_SCREEN_RATIO) + 3, 33, 36, 36, 0.0f, 0.0f, 0.0f, 0.25f, (float)s->w, (float)s->h);
+		}
+		else if (uistate == ui_settings) {
+			drawRect(rect_s, (int)round(s->w * UI_SCREEN_RATIO) + 3, 68, 36, 36, 0.0f, 0.0f, 0.0f, 0.25f, (float)s->w, (float)s->h);
+		}
+		in.set((int)round(s->w * UI_SCREEN_RATIO) + 5.0f, 0, 32, 32);
+		in.render(s->w, s->h, ui_s);
+		f.set((int)round(s->w * UI_SCREEN_RATIO) + 5.0f, 35, 32, 32);
+		f.render(s->w, s->h, ui_s);
+		gear.set((int)round(s->w * UI_SCREEN_RATIO) + 5.0f, 70, 32, 32);
+		gear.render(s->w, s->h, ui_s);
 	}
 	else {
 		out.set(11, 0, 32, 32);
-		out.render(w, h, ui_s);
+		out.render(s->w, s->h, ui_s);
 	}
 }
 
@@ -139,7 +151,7 @@ bool fxy_equation::update(state* s, SDL_Event* ev) {
 				return true;
 			case SDLK_DOWN:
 				cursor_pos += lines[currentLine()].size();
-				if (cursor_pos > exp.size()) cursor_pos = exp.size();
+				if (cursor_pos > (int)exp.size()) cursor_pos = exp.size();
 				update_cursor(s);
 				return true;
 			case SDLK_UP:
@@ -156,6 +168,7 @@ bool fxy_equation::update(state* s, SDL_Event* ev) {
 				if (exp != " ") {
 					exp.pop_back();
 					cursor_pos--;
+					if (!exp.size()) exp = " ";
 					update_cursor(s);
 				}
 				else {
@@ -169,17 +182,12 @@ bool fxy_equation::update(state* s, SDL_Event* ev) {
 					SDL_ShowCursor(1);
 					SDL_SetRelativeMouseMode(SDL_FALSE);
 					SDL_CaptureMouse(SDL_FALSE);
-					return true;
 				}
-				if (!exp.size()) exp = " ";
 				return true;
 			case SDLK_ESCAPE:
 				active = false;
 				SDL_StopTextInput();
 				s->ev.current = in_ui;
-				SDL_ShowCursor(1);
-				SDL_SetRelativeMouseMode(SDL_FALSE);
-				SDL_CaptureMouse(SDL_FALSE);
 				return true;
 			case SDLK_RETURN:
 			case SDLK_RETURN2:
@@ -189,9 +197,6 @@ bool fxy_equation::update(state* s, SDL_Event* ev) {
 					s->graphs[g_ind]->eq_str = exp;
 					regengraph(s, g_ind);
 					s->ev.current = in_ui;
-					SDL_ShowCursor(1);
-					SDL_SetRelativeMouseMode(SDL_FALSE);
-					SDL_CaptureMouse(SDL_FALSE);
 				}
 				return true;
 			}
@@ -224,7 +229,7 @@ int fxy_equation::currentPos() {
 
 int fxy_equation::currentLine() {
 	int line = 0, cpos = cursor_pos;
-	while (cpos > 0 && line < lines.size()) {
+	while (cpos >= 0 && line < (int)lines.size()) {
 		cpos -= lines[line++].size();
 	}
 	return line - 1;

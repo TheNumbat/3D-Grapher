@@ -2,15 +2,18 @@
 #include "state.h"
 
 // TODO:
+	// Events
+		// Fix mouse jump problem again
 	// UI
-		// Improve UI
 		// Settings
 		// Axis scales
 		// Scroll bar
+		// Error messages
 	// Rendering
-		// Transparency, blending, maybe sorting
+		// Graph transparency
 		// Lighting
 		// Antialiasing
+		// Why do rects have to get set every frame
 	// Math Features
 		// Axis normalization
 		// Highlight curve along a set x/y
@@ -27,8 +30,7 @@
 		// Maxs & mins (abs and rel)
 		// Parametric Lines & Surfaces
 		// Line/Surface/Flux integrals
-	// Notes
-		// To encode binary file as data array: xxd -i infile.bin outfile.h
+
 
 int main(int argc, char** args) {
 
