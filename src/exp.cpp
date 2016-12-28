@@ -6,6 +6,11 @@
 #include <stack>
 #include <queue>
 
+bool isop(char c) {
+	return c == open_p || c == add || c == subtract || c == op_neg ||
+		c == multiply || c == modulo || c == divide || c == power;
+}
+
 #define get2() two = s.top(); \
 			   s.pop(); \
 			   one = s.top(); \
@@ -154,6 +159,11 @@ float eval(const vector<op>& EQ, float x, float y, float z) {
 			result = atan(1.0f / one);
 			s.push(result);
 			break;
+		case op_neg:
+			get1();
+			result = -one;
+			s.push(result);
+			break;
 		case var_x:
 			s.push(x);
 			break;
@@ -191,6 +201,7 @@ bool num(char c) {
 int precedence(char c) {
 	switch (c) {
 	case open_p: return -1;
+	case op_neg:
 	case add:
 	case subtract: return 0;
 	case multiply:
@@ -202,6 +213,10 @@ int precedence(char c) {
 }
 
 bool in(string str, vector<op>& EQ) {
+	for (int ind = 0; ind < str.size(); ind++) {
+		if (str[ind] == '-' && (ind == 0 || isop(str[ind - 1]))) str[ind] = op_neg;
+	}
+
 	char buf = 0;
 	stack<op> s;
 	queue<op> q;
@@ -233,15 +248,19 @@ bool in(string str, vector<op>& EQ) {
 		case multiply:
 		case divide:
 		case add:
-		case subtract:
 		case modulo:
 		case power:
+		case subtract:
 			ins = true;
 			while (s.size() && precedence(s.top()) >= precedence(buf)) {
 				EQ.push_back(s.top());
 				s.pop();
 				added = true;
 			}
+			s.push(buf);
+			break;
+		case op_neg:
+			ins = true;
 			s.push(buf);
 			break;
 		case var_x:
@@ -380,6 +399,8 @@ void printeq(ostream& out, vector<op> eq) {
 			out << "acsc";
 		else if (c == op_acot)
 			out << "acot";
+		else if (c == op_neg)
+			out << "neg";
 		else
 			out << (char)c;
 		out << " ";

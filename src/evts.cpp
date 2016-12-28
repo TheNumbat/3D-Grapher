@@ -98,6 +98,7 @@ void add_default_callbacks(state* s) {
 				s->ev.callbacks.push_back(callback(func, in_widget, SDL_KEYDOWN, s->next_graph_id));
 				s->ev.current = in_widget;
 				s->next_graph_id++;
+				SDL_StartTextInput();
 				return true;
 			}
 			else {

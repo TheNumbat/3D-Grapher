@@ -16,12 +16,10 @@
 		// Dimensions
 		// Graph types
 	// UI
-		// Settings
-		// Axis scales
 		// Scroll bar
 		// Error messages
 	// Math Features
-		// Axis normalization
+		// Multiply without *
 		// Highlight curve along a set x/y
 		// Partials
 		// Graph intersections

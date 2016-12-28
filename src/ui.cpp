@@ -93,8 +93,9 @@ void UI::render(state* s, int w, int h) {
 			int w_y = funcs[windex]->render(s, w, h, ui_w, 5 + xoff, cur_y); // widget
 			if(funcs[windex]->active)
 				drawRect(s->rect_s, xoff + 5 + funcs[windex]->cursor_x, cur_y + 3 + funcs[windex]->cursor_y, 2, 24, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // cursor
-			cur_y += w_y + 3;
+			cur_y = w_y + 3;
 			drawRect(s->rect_s, xoff, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // top/bottom black strip
+			cur_y += 3;
 			windex++;
 		}
 	}
@@ -178,7 +179,7 @@ bool fxy_equation::update(state* s, SDL_Event* ev) {
 				return true;
 			case SDLK_BACKSPACE:
 				if (exp != " ") {
-					exp.pop_back();
+					exp.erase(cursor_pos - 1, 1);
 					cursor_pos--;
 					if (!exp.size()) exp = " ";
 					update_cursor(s);
@@ -188,11 +189,11 @@ bool fxy_equation::update(state* s, SDL_Event* ev) {
 			case SDLK_HOME:
 				cursor_pos = 0;
 				update_cursor(s);
-				break;
+				return true;
 			case SDLK_END:
 				cursor_pos = exp.size();
 				update_cursor(s);
-				break;
+				return true;
 			case SDLK_ESCAPE:
 				active = false;
 				SDL_StopTextInput();

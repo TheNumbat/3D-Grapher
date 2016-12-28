@@ -26,6 +26,7 @@ enum operators : op {
 	power = '^',
 	open_p = '(',
 	close_p = ')',
+	op_neg = 0,
 	num_break = 1000,
 
 	// common functions
