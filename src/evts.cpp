@@ -62,10 +62,10 @@ void evts::run(state* s) {
 void add_default_callbacks(state* s) {
 	s->ev.callbacks.push_back(callback([](state* s, SDL_Event* ev) -> bool {
 		float sens = 0.1f;
-		float dx = (ev->motion.x - mx) * sens;
-		float dy = (ev->motion.y - my) * sens;
-		mx = ev->motion.x;
-		my = ev->motion.y;
+		float dx = (ev->motion.x - s->mx) * sens;
+		float dy = (ev->motion.y - s->my) * sens;
+		s->mx = ev->motion.x;
+		s->my = ev->motion.y;
 		if (s->ev.current == in_cam) {
 			s->c.yaw += dx;
 			s->c.pitch -= dy;
@@ -88,16 +88,16 @@ void add_default_callbacks(state* s) {
 	s->ev.callbacks.push_back(callback([](state* s, SDL_Event* ev) -> bool {
 		if (s->ui->uistate == ui_funcs) {
 			if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO) && ev->button.y >(s->ui->widgets.size() ? s->ui->widgets.back()->current_yh : 0)) {
-				s->graphs.push_back(new graph(next_graph_id, "", -10, 10, -10, 10, 200, 200));
+				s->graphs.push_back(new graph(s->next_graph_id, "", -10, 10, -10, 10, 200, 200));
 				s->graphs.back()->gen();
-				fxy_equation* w = new fxy_equation(next_graph_id, true);
+				fxy_equation* w = new fxy_equation(s->next_graph_id, true);
 				w->break_str(s, (int)round(s->w * UI_SCREEN_RATIO));
 				s->ui->widgets.push_back(w);
 				auto func = bind(&widget::update, w, placeholders::_1, placeholders::_2);
-				s->ev.callbacks.push_back(callback(func, in_widget, SDL_TEXTINPUT, next_graph_id));
-				s->ev.callbacks.push_back(callback(func, in_widget, SDL_KEYDOWN, next_graph_id));
+				s->ev.callbacks.push_back(callback(func, in_widget, SDL_TEXTINPUT, s->next_graph_id));
+				s->ev.callbacks.push_back(callback(func, in_widget, SDL_KEYDOWN, s->next_graph_id));
 				s->ev.current = in_widget;
-				next_graph_id++;
+				s->next_graph_id++;
 				return true;
 			}
 			else {
@@ -137,6 +137,10 @@ void add_default_callbacks(state* s) {
 			s->ev.current = in_cam;
 			SDL_CaptureMouse(SDL_TRUE);
 			SDL_SetRelativeMouseMode(SDL_TRUE);
+			s->mx = ev->button.x;
+			s->my = ev->button.y;
+			s->last_mx = ev->button.x;
+			s->last_my = ev->button.y;
 			return true;
 		}
 		return false;
@@ -152,8 +156,12 @@ void add_default_callbacks(state* s) {
 	}, in_idle, SDL_MOUSEBUTTONDOWN));
 
 	s->ev.callbacks.push_back(callback([](state* s, SDL_Event* ev) -> bool {
-		if (ev->button.x > 43 && ev->button.y > 32) {
+		if (ev->button.x > 43 || ev->button.y > 32) {
 			s->ev.current = in_cam;
+			s->mx = ev->button.x;
+			s->my = ev->button.y;
+			s->last_mx = ev->button.x;
+			s->last_my = ev->button.y;
 			SDL_CaptureMouse(SDL_TRUE);
 			SDL_SetRelativeMouseMode(SDL_TRUE);
 			return true;
@@ -168,7 +176,7 @@ void add_default_callbacks(state* s) {
 			s->ev.current = in_idle;
 		SDL_CaptureMouse(SDL_FALSE);
 		SDL_SetRelativeMouseMode(SDL_FALSE);
-		SDL_WarpMouseInWindow(s->window, s->ui->active ? (int)round(s->w * ((1 - UI_SCREEN_RATIO) / 2 + UI_SCREEN_RATIO)) : s->w / 2, s->h / 2);
+		SDL_WarpMouseInWindow(s->window, s->last_mx, s->last_my);
 		return true;
 	}, in_cam, SDL_MOUSEBUTTONUP));
 }

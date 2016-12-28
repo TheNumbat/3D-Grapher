@@ -2,12 +2,14 @@
 #include "state.h"
 #include "data/font.data"
 
-int next_graph_id = 0;
-int mx = screen_w / 2, my = screen_h / 2;
 
 state::state() {
 	w = screen_w;
 	h = screen_h;
+	mx = w / 2;
+	my = h / 2;
+	next_graph_id = 0;
+	last_mx = last_my = 0;
 
 	assert(SDL_Init(SDL_INIT_EVERYTHING) == 0);
 
