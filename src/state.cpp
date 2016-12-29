@@ -16,7 +16,7 @@ state::state() {
 	set.graphopacity = 1.0f;
 	set.antialiasing = 0;
 	set.display = dim_3d;
-	set.camtype = cam_3d;
+	set.camtype = cam_3d_static;
 	set.xmin = -10;
 	set.xmax = 10;
 	set.ymin = -10;
