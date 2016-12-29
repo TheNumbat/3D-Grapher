@@ -229,14 +229,14 @@ void gengraph(state* s, int index) {
 
 	if (s->set.axisnormalization) {
 		for (unsigned int i = 0; i < s->graphs[index]->verticies.size(); i += 3) {
-			s->graphs[index]->verticies[i] /= (s->graphs[index]->xmax - s->graphs[index]->xmin) / 20;
-			s->graphs[index]->verticies[i + 1] /= (s->graphs[index]->ymax - s->graphs[index]->ymin) / 20;
+			s->graphs[index]->verticies[i] /= (s->set.xmax - s->set.xmin) / 20;
+			s->graphs[index]->verticies[i + 1] /= (s->set.ymax - s->set.ymin) / 20;
 			s->graphs[index]->verticies[i + 2] /= (s->graphs[index]->zmax - s->graphs[index]->zmin) / 20;
 		}
-		s->graphs[index]->xmin = -10;
-		s->graphs[index]->xmax = 10;
-		s->graphs[index]->ymin = -10;
-		s->graphs[index]->ymax = 10;
+		s->graphs[index]->xmin = s->set.xmin;
+		s->graphs[index]->xmax = s->set.xmax;
+		s->graphs[index]->ymin = s->set.ymin;
+		s->graphs[index]->ymax = s->set.ymax;
 		s->graphs[index]->zmin = -10;
 		s->graphs[index]->zmax = 10;
 	}

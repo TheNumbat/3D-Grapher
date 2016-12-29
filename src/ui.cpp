@@ -391,10 +391,12 @@ int multi_text::render(state* s, int w, int h, int ui_w, int x, int y) {
 
 bool multi_text::update(state* s, SDL_Event* ev) {
 	if (ev->type == SDL_MOUSEBUTTONDOWN) {
-		if(ev->button.button == SDL_BUTTON_LEFT)
+		if (ev->button.button == SDL_BUTTON_LEFT)
 			++pos %= text.size();
-		else if(ev->button.button == SDL_BUTTON_RIGHT)
-			--pos %= text.size();
+		else if (ev->button.button == SDL_BUTTON_RIGHT) {
+			--pos;
+			if (pos < 0) pos = text.size() - 1;
+		}
 		toggleCallback(s, text[pos]);
 		return true;
 	}
