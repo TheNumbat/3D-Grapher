@@ -79,7 +79,7 @@ void graph::draw(state* s, mat4& modelviewproj) {
 			glUniformMatrix4fv(s->graph_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
 
 			glEnable(GL_DEPTH_TEST);
-			glDisable(GL_BLEND);
+			glEnable(GL_BLEND);
 
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			glPolygonOffset(1.0f, 0.0f);
@@ -88,6 +88,8 @@ void graph::draw(state* s, mat4& modelviewproj) {
 			glDrawElements(GL_TRIANGLES, (int)indicies.size(), GL_UNSIGNED_INT, (void*)0);
 
 			if (s->set.wireframe) {
+				glDisable(GL_BLEND);
+
 				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 				glPolygonOffset(0.0f, 0.0f);
 

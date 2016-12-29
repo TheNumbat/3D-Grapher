@@ -37,21 +37,22 @@ UI::UI(state* s) {
 			s->set.camtype = cam_3d_static;
 		}
 	}));
+
+	settings.push_back(new slider("Opacity", 1.0f, [](state* s, float f) -> void {s->set.graphopacity = f; }));
 	
 	auto settingsCallback = [](state* s, SDL_Event* ev) -> bool {
-		if (ev->type == SDL_MOUSEBUTTONDOWN) {
-			if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO)) {
-				for (widget* w : s->ui->settings) {
-					if (ev->button.y > w->current_y - 3 && ev->button.y <= w->current_yh + 3) {
-						w->update(s, ev);
-						return true;
-					}
+		if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO)) {
+			for (widget* w : s->ui->settings) {
+				if (ev->button.y > w->current_y - 3 && ev->button.y <= w->current_yh + 3) {
+					w->update(s, ev);
+					return true;
 				}
 			}
 		}
 		return false;
 	};
 	s->ev.callbacks.push_back(callback(settingsCallback, in_settings, SDL_MOUSEBUTTONDOWN));
+	s->ev.callbacks.push_back(callback(settingsCallback, in_settings, SDL_MOUSEBUTTONUP));
 	s->ev.callbacks.push_back(callback(settingsCallback, in_settings, SDL_MOUSEMOTION));
 
 	in.gen();
@@ -119,9 +120,6 @@ void UI::render(state* s, int w, int h) {
 	else
 		xoff = -ui_w + 5;
 	drawRect(s->rect_s, xoff, 0, ui_w, h, 1.0f, 1.0f, 1.0f, 1.0f, fw, fh); // white background
-	drawRect(s->rect_s, xoff + ui_w, 0, 3, h, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // right black strip
-	drawRect(s->rect_s, xoff, 0, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // top black strip
-	drawRect(s->rect_s, xoff, h - 3, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // bottom black strip
 	if (uistate == ui_funcs) {
 		int cur_y = 0;
 		unsigned int windex = 0;
@@ -154,6 +152,9 @@ void UI::render(state* s, int w, int h) {
 			windex++;
 		}
 	}
+	drawRect(s->rect_s, xoff + ui_w, 0, 3, h, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // right black strip
+	drawRect(s->rect_s, xoff, 0, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // top black strip
+	drawRect(s->rect_s, xoff, h - 3, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // bottom black strip
 	render_sidebar(s);
 }
 
@@ -195,7 +196,10 @@ void fxy_equation::update_cursor(state* s) {
 }
 
 bool fxy_equation::update(state* s, SDL_Event* ev) {
-	if (active) {
+	if (ev->type == SDL_WINDOWEVENT) {
+		break_str(s, (int)round(s->w * UI_SCREEN_RATIO) - 5);
+	}
+	else if (active) {
 		if (ev->type == SDL_TEXTINPUT) {
 			if (exp == " ") exp.clear();
 			exp.insert(cursor_pos, ev->text.text);
@@ -203,7 +207,7 @@ bool fxy_equation::update(state* s, SDL_Event* ev) {
 			update_cursor(s);
 			return true;
 		}
-		if (ev->type == SDL_KEYDOWN) {
+		else if (ev->type == SDL_KEYDOWN) {
 			int g_ind = getIndex(s, g_id);
 			switch (ev->key.keysym.sym) {
 			case SDLK_LEFT:
@@ -352,7 +356,7 @@ int toggle_text::render(state* s, int w, int h, int ui_w, int x, int y) {
 		background = { 255, 255, 255 };
 	SDL_Surface* surf = TTF_RenderText_Shaded(s->font, text.c_str(), { 0, 0, 0 }, background);
 	r.tex.load(surf);
-	r.set((float)x, (float)y, (float)surf->w, (float)surf->h);
+	r.set((float)x, (float)y, (float)(surf->w <= ui_w - 5 ? surf->w : ui_w - 5), (float)surf->h);
 	r.render(w, h, s->UI_s);
 	y += surf->h;
 	SDL_FreeSurface(surf);
@@ -361,9 +365,12 @@ int toggle_text::render(state* s, int w, int h, int ui_w, int x, int y) {
 }
 
 bool toggle_text::update(state* s, SDL_Event* ev) {
-	on = !on;
-	toggleCallback(s);
-	return true;
+	if (ev->type == SDL_MOUSEBUTTONDOWN) {
+		on = !on;
+		toggleCallback(s);
+		return true;
+	}
+	return false;
 }
 
 multi_text::multi_text(vector<string> strs, int p, function<void(state*, string)> c) {
@@ -377,7 +384,7 @@ int multi_text::render(state* s, int w, int h, int ui_w, int x, int y) {
 	current_y = y;
 	SDL_Surface* surf = TTF_RenderText_Shaded(s->font, text[pos].c_str(), { 0, 0, 0 }, { 191, 191, 191 });
 	r.tex.load(surf);
-	r.set((float)x, (float)y, (float)surf->w, (float)surf->h);
+	r.set((float)x, (float)y, (float)(surf->w <= ui_w - 5 ? surf->w : ui_w - 5), (float)surf->h);
 	r.render(w, h, s->UI_s);
 	y += surf->h;
 	SDL_FreeSurface(surf);
@@ -386,7 +393,50 @@ int multi_text::render(state* s, int w, int h, int ui_w, int x, int y) {
 }
 
 bool multi_text::update(state* s, SDL_Event* ev) {
-	++pos %= text.size();
-	toggleCallback(s, text[pos]);
+	if (ev->type == SDL_MOUSEBUTTONDOWN) {
+		if(ev->button.button == SDL_BUTTON_LEFT)
+			++pos %= text.size();
+		else if(ev->button.button == SDL_BUTTON_RIGHT)
+			--pos %= text.size();
+		toggleCallback(s, text[pos]);
+		return true;
+	}
+	return false;
+}
+
+slider::slider(string t, float f, function<void(state*, float)> c) {
+	text = t;
+	moveCallback = c;
+	pos = f;
+	slider_w = 0;
+	r.gen();
+}
+
+int slider::render(state* s, int w, int h, int ui_w, int x, int y) {
+	current_y = y;
+	SDL_Surface* surf = TTF_RenderText_Shaded(s->font, text.c_str(), { 0, 0, 0 }, { 191, 191, 191 });
+	r.tex.load(surf);
+	float total_w = (float)(surf->w <= ui_w - 5 ? surf->w : ui_w  - 5- 20);
+	r.set((float)x, (float)y, total_w, (float)surf->h);
+	r.render(w, h, s->UI_s);
+	y += surf->h;
+	current_yh = y;
+	slider_w = ui_w - x - total_w - 6;
+	s->ui->drawRect(s->rect_s, x + total_w + 3, ((current_yh - current_y) / 2) + current_y, slider_w, 2, 0.0f, 0.0f, 0.0f, 0.5f, (float)w, (float)h);
+	s->ui->drawRect(s->rect_s, x + total_w + 3 + pos * (slider_w - 10), ((current_yh - current_y) / 2) + current_y - 4, 10, 10, 0.0f, 0.0f, 0.0f, 0.5f, (float)w, (float)h);
+	SDL_FreeSurface(surf);
+	return y;
+}
+
+bool slider::update(state* s, SDL_Event* ev) {
+	if (ev->type == SDL_MOUSEMOTION) {
+		Uint32 mflags = SDL_GetMouseState(NULL, NULL);
+		if (mflags & SDL_BUTTON(1) && slider_w) {
+			pos += ev->motion.xrel / (float)slider_w;
+			if (pos > 1) pos = 1;
+			if (pos < 0) pos = 0;
+			moveCallback(s, pos);
+		}
+	}
 	return true;
 }

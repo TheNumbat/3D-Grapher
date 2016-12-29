@@ -31,10 +31,9 @@ void evts::run(state* s) {
 				glViewport(0, 0, s->w, s->h);
 				glScissor(0, 0, s->w, s->h);
 			}
-			break;
 		default:
 			for (callback& c : callbacks) {
-				if (current == c.instate && ev.type == c.type) {
+				if ((current == c.instate || c.instate == in_any) && ev.type == c.type) {
 					if (c.func(s, &ev)) break;
 				}
 			}
@@ -99,6 +98,7 @@ void add_default_callbacks(state* s) {
 				auto func = bind(&widget::update, w, placeholders::_1, placeholders::_2);
 				s->ev.callbacks.push_back(callback(func, in_widget, SDL_TEXTINPUT, s->next_graph_id));
 				s->ev.callbacks.push_back(callback(func, in_widget, SDL_KEYDOWN, s->next_graph_id));
+				s->ev.callbacks.push_back(callback(func, in_any, SDL_WINDOWEVENT, s->next_graph_id));
 				s->ev.current = in_widget;
 				SDL_ShowCursor(0);
 				s->next_graph_id++;

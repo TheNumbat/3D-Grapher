@@ -77,3 +77,15 @@ struct multi_text : public widget {
 	vector<string> text;
 	textured_rect r;
 };
+
+struct slider : public widget {
+	slider(string t, float f, function<void(state*, float)> c);
+	~slider() {}
+	int render(state* s, int w, int h, int ui_w, int x, int y);
+	bool update(state* s, SDL_Event* ev);
+	function<void(state*, float)> moveCallback;
+	string text;
+	float pos;
+	int slider_w;
+	textured_rect r;
+};
