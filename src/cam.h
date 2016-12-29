@@ -10,7 +10,6 @@ using namespace glm;
 enum cam_type {
 	cam_2d,
 	cam_3d,
-	cam_2d_static,
 	cam_3d_static
 };
 

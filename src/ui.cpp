@@ -22,18 +22,15 @@ UI::UI(state* s) {
 	settings.push_back(new toggle_text("Lighting", false, [](state* s) -> void {s->set.lighting = !s->set.lighting; }));
 	settings.push_back(new toggle_text("Axis Normalization", false, [](state* s) -> void {s->set.axisnormalization = !s->set.axisnormalization; regenall(s); }));
 
-	vector<string> cameras = { "Camera: 2D", "Camera: Static 2D", "Camera: 3D", "Camera: Static 3D" };
+	vector<string> cameras = { "Camera: 2D","Camera: 3D", "Camera: Fixed 3D" };
 	settings.push_back(new multi_text(cameras, 2, [](state* s, string str) -> void {
 		if (str == "Camera: 2D") {
 			s->set.camtype = cam_2d;
 		}
-		else if (str == "Camera: Static 2D") {
-			s->set.camtype = cam_2d_static;
-		}
 		else if (str == "Camera: 3D") {
 			s->set.camtype = cam_3d;
 		}
-		else if (str == "Camera: Static 3D") {
+		else if (str == "Camera: Fixed 3D") {
 			s->set.camtype = cam_3d_static;
 		}
 	}));
@@ -416,14 +413,14 @@ int slider::render(state* s, int w, int h, int ui_w, int x, int y) {
 	current_y = y;
 	SDL_Surface* surf = TTF_RenderText_Shaded(s->font, text.c_str(), { 0, 0, 0 }, { 191, 191, 191 });
 	r.tex.load(surf);
-	float total_w = (float)(surf->w <= ui_w - 5 ? surf->w : ui_w  - 5- 20);
-	r.set((float)x, (float)y, total_w, (float)surf->h);
+	int total_w = surf->w <= ui_w - 5 ? surf->w : ui_w - 25;
+	r.set((float)x, (float)y, (float)total_w, (float)surf->h);
 	r.render(w, h, s->UI_s);
 	y += surf->h;
 	current_yh = y;
 	slider_w = ui_w - x - total_w - 6;
 	s->ui->drawRect(s->rect_s, x + total_w + 3, ((current_yh - current_y) / 2) + current_y, slider_w, 2, 0.0f, 0.0f, 0.0f, 0.5f, (float)w, (float)h);
-	s->ui->drawRect(s->rect_s, x + total_w + 3 + pos * (slider_w - 10), ((current_yh - current_y) / 2) + current_y - 4, 10, 10, 0.0f, 0.0f, 0.0f, 0.5f, (float)w, (float)h);
+	s->ui->drawRect(s->rect_s, x + total_w + 3 + (int)round(pos * (slider_w - 10)), ((current_yh - current_y) / 2) + current_y - 4, 10, 10, 0.0f, 0.0f, 0.0f, 0.5f, (float)w, (float)h);
 	SDL_FreeSurface(surf);
 	return y;
 }
