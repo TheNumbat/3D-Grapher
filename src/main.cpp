@@ -10,8 +10,6 @@
 		// Settings
 			// lighting
 			// antialiasing
-			// display
-		// Dimensions
 		// Graph types
 	// UI
 		// Scroll bar

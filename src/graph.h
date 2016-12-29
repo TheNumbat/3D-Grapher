@@ -55,7 +55,7 @@ struct graph {
 	GLuint VAO, VBO, EBO;
 
 	float xmin, xmax, ymin, ymax, zmin, zmax;
-	unsigned int xrez, yrez;
+	int xrez, yrez;
 	int ID;
 
 	dimension dim;

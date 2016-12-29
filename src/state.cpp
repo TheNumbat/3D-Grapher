@@ -65,7 +65,7 @@ state::state() {
 	ui = new UI(this);
 
 	c_3d.default();
-	c_3d_static.default(sqrt((set.xmax - set.xmin) * (set.xmax - set.xmin) + (set.ymax - set.ymin) * (set.ymax - set.ymin)) / 2.0f);
+	c_3d_static.default((float)sqrt((set.xmax - set.xmin) * (set.xmax - set.xmin) + (set.ymax - set.ymin) * (set.ymax - set.ymin)) / 2.0f);
 	running = true;
 }
 

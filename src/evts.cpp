@@ -90,7 +90,7 @@ void add_default_callbacks(state* s) {
 	s->ev.callbacks.push_back(callback([](state* s, SDL_Event* ev) -> bool {
 		if (s->ui->uistate == ui_funcs) {
 			if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO) && ev->button.y >(s->ui->funcs.size() ? s->ui->funcs.back()->current_yh : 0)) {
-				s->graphs.push_back(new graph(s->next_graph_id, "", s->set.xmin, s->set.xmax, s->set.ymin, s->set.ymax, s->set.xrez, s->set.yrez));
+				s->graphs.push_back(new graph(s->next_graph_id, "", (float)s->set.xmin, (float)s->set.xmax, (float)s->set.ymin, (float)s->set.ymax, s->set.xrez, s->set.yrez));
 				s->graphs.back()->gen();
 				fxy_equation* w = new fxy_equation(s->next_graph_id, true);
 				w->break_str(s, (int)round(s->w * UI_SCREEN_RATIO));

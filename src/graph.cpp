@@ -28,7 +28,7 @@ struct gendata {
 	state* s;
 	vector<float> ret;
 	float zmin, zmax, xmin, dx, dy;
-	unsigned int txrez;
+	int txrez;
 };
 
 graph::graph(int id, string s, float xmi, float xma, float ymi, float yma, unsigned int xr, unsigned int yr) {
@@ -146,9 +146,9 @@ void sendAxes(state* s) {
 
 void genthread(gendata* g, int index) {
 	float x = g->xmin;
-	for (unsigned int tx = 0; tx < g->txrez; tx++, x += g->dx) {
+	for (int tx = 0; tx < g->txrez; tx++, x += g->dx) {
 		float y = g->s->graphs[index]->ymin;
-		for (unsigned int ty = 0; ty <= g->s->graphs[index]->yrez; ty++, y += g->dy) {
+		for (int ty = 0; ty <= g->s->graphs[index]->yrez; ty++, y += g->dy) {
 			float z = eval(g->s->graphs[index]->eq, x, y);
 
 			if (z < g->zmin) g->zmin = z;
@@ -202,8 +202,8 @@ void gengraph(state* s, int index) {
 		data[i]->ret.clear();
 	}
 
-	for (unsigned int x = 0; x < s->graphs[index]->xrez; x++) {
-		for (unsigned int y = 0; y < s->graphs[index]->yrez; y++) {
+	for (int x = 0; x < s->graphs[index]->xrez; x++) {
+		for (int y = 0; y < s->graphs[index]->yrez; y++) {
 			GLuint i_index = x * (s->graphs[index]->yrez + 1) + y;
 
 			if (!isnan(s->graphs[index]->verticies[i_index * 3 + 2]) &&
