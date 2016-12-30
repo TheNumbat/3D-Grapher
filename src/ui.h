@@ -52,7 +52,7 @@ struct UI {
 };
 
 struct edit_text : public widget {
-	edit_text(state* s, string h, function<void(state*, string)> c, function<bool(state*)> rm, bool a = true);
+	edit_text(state* s, string e, string h, function<void(state*, string)> c, function<bool(state*)> rm, bool a = true);
 	int render(state* s, int w, int h, int ui_w, int x, int y);
 	bool update(state* s, SDL_Event* ev);
 	void break_str(state* s);

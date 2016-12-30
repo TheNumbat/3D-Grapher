@@ -77,10 +77,70 @@ UI::UI(state* s) {
 
 	settings.push_back(new slider("Opacity", 1.0f, [](state* s, float f) -> void {s->set.graphopacity = f; }));
 	
-	settings.push_back(new edit_text(s, "xmin: ", [](state* s, string exp) -> void {
+	settings.push_back(new edit_text(s, to_string((int)s->set.xmin), "xmin: ", [](state* s, string exp) -> void {
 		try {
 			float num = stof(exp);
 			s->set.xmin = num;
+			regenall(s);
+			s->ev.current = in_settings;
+			SDL_ShowCursor(1);
+		}
+		catch (...) {
+			cout << "\terr: couldn't parse float" << endl;
+		}
+	}, [](state* s) -> bool {return false; }, false));
+	settings.push_back(new edit_text(s, to_string((int)s->set.xmax), "xmax: ", [](state* s, string exp) -> void {
+		try {
+			float num = stof(exp);
+			s->set.xmax = num;
+			regenall(s);
+			s->ev.current = in_settings;
+			SDL_ShowCursor(1);
+		}
+		catch (...) {
+			cout << "\terr: couldn't parse float" << endl;
+		}
+	}, [](state* s) -> bool {return false; }, false));
+	settings.push_back(new edit_text(s, to_string((int)s->set.ymin), "ymin: ", [](state* s, string exp) -> void {
+		try {
+			float num = stof(exp);
+			s->set.ymin = num;
+			regenall(s);
+			s->ev.current = in_settings;
+			SDL_ShowCursor(1);
+		}
+		catch (...) {
+			cout << "\terr: couldn't parse float" << endl;
+		}
+	}, [](state* s) -> bool {return false; }, false));
+	settings.push_back(new edit_text(s, to_string((int)s->set.ymax), "ymax: ", [](state* s, string exp) -> void {
+		try {
+			float num = stof(exp);
+			s->set.ymax = num;
+			regenall(s);
+			s->ev.current = in_settings;
+			SDL_ShowCursor(1);
+		}
+		catch (...) {
+			cout << "\terr: couldn't parse float" << endl;
+		}
+	}, [](state* s) -> bool {return false; }, false));
+	settings.push_back(new edit_text(s, to_string((int)s->set.xrez), "xrez: ", [](state* s, string exp) -> void {
+		try {
+			int num = stoi(exp);
+			s->set.xrez = num;
+			regenall(s);
+			s->ev.current = in_settings;
+			SDL_ShowCursor(1);
+		}
+		catch (...) {
+			cout << "\terr: couldn't parse int" << endl;
+		}
+	}, [](state* s) -> bool {return false; }, false));
+	settings.push_back(new edit_text(s, to_string((int)s->set.yrez), "yrez: ", [](state* s, string exp) -> void {
+		try {
+			int num = stoi(exp);
+			s->set.yrez = num;
 			regenall(s);
 			s->ev.current = in_settings;
 			SDL_ShowCursor(1);
@@ -244,15 +304,15 @@ void UI::render_sidebar(state* s) {
 	}
 }
 
-edit_text::edit_text(state* s, string h, function<void(state*, string)> c, function<bool(state*)> rm, bool a) {
+edit_text::edit_text(state* s, string e, string h, function<void(state*, string)> c, function<bool(state*)> rm, bool a) {
 	r.gen();
 	active = a;
+	exp = e;
 	head = h;
-	exp = " ";
 	should_remove = false;
 	cursor_x = 0;
 	cursor_y = 0;
-	cursor_pos = 0;
+	cursor_pos = e.size();
 	enterCallback = c;
 	removeCallback = rm;
 	break_str(s);
