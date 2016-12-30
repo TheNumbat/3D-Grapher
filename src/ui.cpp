@@ -12,6 +12,35 @@
 
 // the code in this file is p bad and disorganized, good luck
 
+fxy_enter_callback::fxy_enter_callback(int i) {
+	g_id = i;
+}
+
+void fxy_enter_callback::operator()(state* s, string e) const {
+	if (e.size() && e != " ") {
+		int g_ind = getIndex(s, g_id);
+		if (g_ind == -1) {
+			s->graphs.push_back(new graph(g_id, "", (float)s->set.xmin, (float)s->set.xmax, (float)s->set.ymin, (float)s->set.ymax, s->set.xrez, s->set.yrez));
+			s->graphs.back()->gen();
+			g_ind = s->graphs.size() - 1;
+		}
+		s->graphs[g_ind]->eq_str = e;
+		regengraph(s, g_ind);
+		s->ev.current = in_ui;
+		SDL_ShowCursor(1);
+	}
+}
+
+fxy_remove_callback::fxy_remove_callback(int i) {
+	g_id = i;
+}
+
+void fxy_remove_callback::operator()(state* s, string e) const {
+	int g_ind = getIndex(s, g_id);
+	delete s->graphs[g_ind];
+	s->graphs.erase(s->graphs.begin() + g_ind);
+}
+
 UI::UI(state* s) {
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
@@ -94,12 +123,14 @@ void UI::remove_dead_widgets() {
 		if (funcs[i]->should_remove) {
 			delete funcs[i];
 			funcs.erase(funcs.begin() + i);
+			i--;
 		}
 	}
 	for (unsigned int i = 0; i < settings.size(); i++) {
 		if (settings[i]->should_remove) {
 			delete settings[i];
 			settings.erase(settings.begin() + i);
+			i--;
 		}
 	}
 }
@@ -192,7 +223,7 @@ void UI::render_sidebar(state* s) {
 	}
 }
 
-edit_text::edit_text(function<void(state*, string)> c, bool a) {
+edit_text::edit_text(function<void(state*, string)> c, function<void(state*, string)> rm, bool a) {
 	r.gen();
 	active = a;
 	exp = " ";
@@ -201,6 +232,7 @@ edit_text::edit_text(function<void(state*, string)> c, bool a) {
 	cursor_y = 0;
 	cursor_pos = 0;
 	enterCallback = c;
+	removeCallback = rm;
 }
 
 void edit_text::update_cursor(state* s) {
@@ -274,7 +306,10 @@ bool edit_text::update(state* s, SDL_Event* ev) {
 			case SDLK_RETURN:
 			case SDLK_RETURN2:
 			case SDLK_KP_ENTER:
-				enterCallback(s, exp);
+				if (active) {
+					active = false;
+					enterCallback(s, exp);
+				}
 				return true;
 			}
 		}
@@ -283,6 +318,7 @@ bool edit_text::update(state* s, SDL_Event* ev) {
 }
 
 void edit_text::remove(state* s) {
+	removeCallback(s, exp);
 	should_remove = true;
 	s->ui->remove_dead_widgets(); // basically 'delete this' ... quesitonable practice
 	s->ev.current = in_ui;
@@ -345,6 +381,7 @@ toggle_text::toggle_text(string t, bool o, function<void(state*)> c) {
 	text = t;
 	on = o;
 	toggleCallback = c;
+	should_remove = false;
 	r.gen();
 }
 
@@ -377,6 +414,7 @@ bool toggle_text::update(state* s, SDL_Event* ev) {
 multi_text::multi_text(vector<string> strs, int p, function<void(state*, string)> c) {
 	text = strs;
 	toggleCallback = c;
+	should_remove = false;
 	pos = p;
 	r.gen();
 }
@@ -411,6 +449,7 @@ slider::slider(string t, float f, function<void(state*, float)> c) {
 	text = t;
 	moveCallback = c;
 	pos = f;
+	should_remove = false;
 	slider_w = 0;
 	r.gen();
 }

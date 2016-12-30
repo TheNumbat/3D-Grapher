@@ -3,11 +3,10 @@
 #include "gl.h"
 #include "state.h"
 
-callback::callback(function<bool(state*, SDL_Event*)> f, inputstate s, SDL_EventType t, int i) {
+callback::callback(function<bool(state*, SDL_Event*)> f, inputstate s, SDL_EventType t) {
 	func = f;
 	instate = s;
 	type = t;
-	id = i;
 }
 
 evts::evts() {
@@ -88,24 +87,23 @@ void add_default_callbacks(state* s) {
 	}, in_cam, SDL_MOUSEWHEEL));
 
 	s->ev.callbacks.push_back(callback([](state* s, SDL_Event* ev) -> bool {
-		if (s->ui->uistate == ui_funcs) {
-			if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO) && ev->button.y >(s->ui->funcs.size() ? s->ui->funcs.back()->current_yh : 0)) {
-				edit_text* w = new edit_text([](state* s, string st) -> void {}, true);
-				w->break_str(s, (int)round(s->w * UI_SCREEN_RATIO));
-				s->ui->funcs.push_back(w);
-				s->ev.current = in_widget;
-				SDL_ShowCursor(0);
-				SDL_StartTextInput();
-				return true;
-			}
-			else {
-				for (widget* w : s->ui->funcs) {
-					if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO) && ev->button.y > w->current_y && ev->button.y <= w->current_yh) {
-						w->active = true;
-						SDL_StartTextInput();
-						SDL_ShowCursor(0);
-						s->ev.current = in_widget;
-					}
+		if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO) && ev->button.y >(s->ui->funcs.size() ? s->ui->funcs.back()->current_yh : 0)) {
+			edit_text* w = new edit_text(fxy_enter_callback(s->next_graph_id), fxy_remove_callback(s->next_graph_id), true);
+			w->break_str(s, (int)round(s->w * UI_SCREEN_RATIO));
+			s->ui->funcs.push_back(w);
+			s->ev.current = in_widget;
+			SDL_ShowCursor(0);
+			SDL_StartTextInput();
+			s->next_graph_id++;
+			return true;
+		}
+		else {
+			for (widget* w : s->ui->funcs) {
+				if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO) && ev->button.y > w->current_y && ev->button.y <= w->current_yh) {
+					w->active = true;
+					SDL_StartTextInput();
+					SDL_ShowCursor(0);
+					s->ev.current = in_widget;
 				}
 			}
 		}

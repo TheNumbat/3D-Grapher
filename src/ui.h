@@ -15,6 +15,18 @@ enum ui_state {
 
 struct state;
 
+struct fxy_enter_callback {
+	fxy_enter_callback(int i);
+	void operator()(state* s, string e) const;
+	int g_id;
+};
+
+struct fxy_remove_callback {
+	fxy_remove_callback(int i);
+	void operator()(state* s, string e) const;
+	int g_id;
+};
+
 struct widget {
 	virtual ~widget() {};
 	virtual int render(state* s, int w, int h, int ui_w, int x, int y) = 0;
@@ -41,7 +53,7 @@ struct UI {
 };
 
 struct edit_text : public widget {
-	edit_text(function<void(state*, string)> c, bool a = true);
+	edit_text(function<void(state*, string)> c, function<void(state*, string)> rm, bool a = true);
 	int render(state* s, int w, int h, int ui_w, int x, int y);
 	bool update(state* s, SDL_Event* ev);
 	void break_str(state* s, int w);
@@ -49,7 +61,7 @@ struct edit_text : public widget {
 	void remove(state* s);
 	int currentLine();
 	int currentPos();
-	function<void(state*, string)> enterCallback;
+	function<void(state*, string)> enterCallback, removeCallback;
 	string exp;
 	vector<string> lines;
 	textured_rect r;

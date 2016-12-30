@@ -19,11 +19,10 @@ enum inputstate {
 };
 
 struct callback {
-	callback(function<bool(state*, SDL_Event*)> f, inputstate s, SDL_EventType t, int i = -1);
+	callback(function<bool(state*, SDL_Event*)> f, inputstate s, SDL_EventType t);
 	function<bool(state*, SDL_Event*)> func;
 	inputstate instate;
 	SDL_EventType type;
-	int id;
 };
 
 struct evts {
