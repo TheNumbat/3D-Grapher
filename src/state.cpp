@@ -1,6 +1,7 @@
 
 #include "state.h"
 #include "data/font.data"
+#include <algorithm>
 
 state::state() {
 	w = screen_w;
@@ -65,12 +66,12 @@ state::state() {
 	font = TTF_OpenFontRW(SDL_RWFromConstMem((const void*)DroidSans_ttf, DroidSans_ttf_len), 1, 24);
 	
 	add_default_callbacks(this);
-	sendAxes(this);
+	updateAxes(this);
 
 	ui = new UI(this);
 
 	c_3d.default();
-	c_3d_static.default((float)sqrt((set.xmax - set.xmin) * (set.xmax - set.xmin) + (set.ymax - set.ymin) * (set.ymax - set.ymin)) / 2.0f);
+	c_3d_static.default(std::max(set.ymax - set.ymin, set.xmax - set.xmin));
 	running = true;
 }
 

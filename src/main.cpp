@@ -5,11 +5,8 @@
 	// Bugs
 		// Rects have to be set every frame
 	// Implement
-		// Static 3D cam on axis edge
 		// 2D Cameras
-		// Settings
-			// lighting
-			// antialiasing
+		// Lighting
 		// Graph types
 	// UI
 		// Scroll bar

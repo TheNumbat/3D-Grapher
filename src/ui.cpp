@@ -40,7 +40,7 @@ bool fxy_remove_callback::operator()(state* s) const {
 	if (g_ind >= 0) {
 		delete s->graphs[g_ind];
 		s->graphs.erase(s->graphs.begin() + g_ind);
-		sendAxes(s);
+		updateAxes(s);
 	}
 	return true;
 }

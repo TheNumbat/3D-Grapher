@@ -102,7 +102,7 @@ void graph::draw(state* s, mat4& modelviewproj) {
 	}
 }
 
-void sendAxes(state* s) {
+void updateAxes(state* s) {
 	float zmin = FLT_MAX, zmax = -FLT_MAX;
 	
 	if (s->graphs.size()) {
@@ -126,6 +126,8 @@ void sendAxes(state* s) {
 	axes[x_max] = s->set.xmax;
 	axes[y_max] = s->set.ymax;
 	axes[z_max] = s->set.zmax;
+
+	s->c_3d_static.scale = std::max(s->set.ymax - s->set.ymin, s->set.xmax - s->set.xmin);
 
 	glBindVertexArray(s->axisVAO);
 	{
@@ -249,7 +251,7 @@ void regengraph(state* s, int index) {
 	Uint64 end = SDL_GetPerformanceCounter();
 	cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << endl;
 
-	sendAxes(s);
+	updateAxes(s);
 	s->graphs[index]->send();
 }
 
@@ -273,5 +275,5 @@ void regenall(state* s) {
 		}
 	}
 	if (!gen)
-		sendAxes(s);
+		updateAxes(s);
 }
