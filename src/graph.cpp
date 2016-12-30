@@ -127,7 +127,19 @@ void updateAxes(state* s) {
 	axes[y_max] = s->set.ymax;
 	axes[z_max] = s->set.zmax;
 
+	if (axes[x_min] > 0) axes[x_min] = 0;
+	if (axes[y_min] > 0) axes[y_min] = 0;
+	if (axes[z_min] > 0) axes[z_min] = 0;
+	if (axes[x_max] < 0) axes[x_max] = 0;
+	if (axes[y_max] < 0) axes[y_max] = 0;
+	if (axes[z_max] < 0) axes[z_max] = 0;
+
 	s->c_3d_static.scale = std::max(s->set.ymax - s->set.ymin, s->set.xmax - s->set.xmin);
+	s->c_3d_static.pos.x = (s->set.xmax + s->set.xmin) / 2;
+	s->c_3d_static.pos.z = (s->set.ymax + s->set.ymin) / -2;
+
+	s->c_3d.pos.x = (s->set.xmax + s->set.xmin) / 2;
+	s->c_3d.pos.z = (s->set.ymax + s->set.ymin) / -2;
 
 	glBindVertexArray(s->axisVAO);
 	{

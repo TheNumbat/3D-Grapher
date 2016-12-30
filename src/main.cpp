@@ -4,6 +4,7 @@
 // TODO:
 	// Bugs
 		// Rects have to be set every frame
+		// Something is wrong with static 3d cam when not at 0, 0, 0
 	// Implement
 		// 2D Cameras
 		// Lighting

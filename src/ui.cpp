@@ -80,8 +80,11 @@ UI::UI(state* s) {
 	settings.push_back(new edit_text(s, to_string((int)s->set.xmin), "xmin: ", [](state* s, string exp) -> void {
 		try {
 			float num = stof(exp);
-			s->set.xmin = num;
-			regenall(s);
+			if (num < s->set.xmax) {
+				s->set.xmin = num;
+				regenall(s);
+			}
+			else cout << "\terr: xmin >= xmax" << endl;
 		}
 		catch (...) {
 			cout << "\terr: couldn't parse float" << endl;
@@ -92,8 +95,11 @@ UI::UI(state* s) {
 	settings.push_back(new edit_text(s, to_string((int)s->set.xmax), "xmax: ", [](state* s, string exp) -> void {
 		try {
 			float num = stof(exp);
-			s->set.xmax = num;
-			regenall(s);
+			if (num > s->set.xmin) {
+				s->set.xmax = num;
+				regenall(s);
+			}
+			else cout << "\terr: xmax <= xmin" << endl;
 		}
 		catch (...) {
 			cout << "\terr: couldn't parse float" << endl;
@@ -104,8 +110,11 @@ UI::UI(state* s) {
 	settings.push_back(new edit_text(s, to_string((int)s->set.ymin), "ymin: ", [](state* s, string exp) -> void {
 		try {
 			float num = stof(exp);
-			s->set.ymin = num;
-			regenall(s);
+			if (num < s->set.ymax) {
+				s->set.ymin = num;
+				regenall(s);
+			}
+			else cout << "\terr: ymin >= ymax" << endl;
 		}
 		catch (...) {
 			cout << "\terr: couldn't parse float" << endl;
@@ -116,8 +125,11 @@ UI::UI(state* s) {
 	settings.push_back(new edit_text(s, to_string((int)s->set.ymax), "ymax: ", [](state* s, string exp) -> void {
 		try {
 			float num = stof(exp);
-			s->set.ymax = num;
-			regenall(s);
+			if (num > s->set.ymin) {
+				s->set.ymax = num;
+				regenall(s);
+			}
+			else cout << "\terr: ymax <= ymin" << endl;
 		}
 		catch (...) {
 			cout << "\terr: couldn't parse float" << endl;
@@ -293,7 +305,7 @@ edit_text::edit_text(state* s, string e, string h, function<void(state*, string)
 	should_remove = false;
 	cursor_x = 0;
 	cursor_y = 0;
-	cursor_pos = e.size();
+	cursor_pos = e == " " ? 0 : e.size();
 	enterCallback = c;
 	removeCallback = rm;
 	break_str(s);
@@ -360,8 +372,11 @@ bool edit_text::update(state* s, SDL_Event* ev) {
 			case SDLK_ESCAPE:
 				active = false;
 				SDL_StopTextInput();
-				s->ev.current = in_funcs;
 				SDL_ShowCursor(1);
+				if (s->ui->uistate == ui_funcs)
+					s->ev.current = in_funcs;
+				else
+					s->ev.current = in_settings;
 				return true;
 			case SDLK_RETURN:
 			case SDLK_RETURN2:

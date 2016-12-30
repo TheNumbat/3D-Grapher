@@ -58,7 +58,7 @@ struct _cam_3d {
 
 struct _cam_3d_static : _cam_3d {
 	mat4 getView() {
-		mat4 ret = lookAt(scale * front, vec3(0, 0, 0), globalUp);
+		mat4 ret = lookAt(scale * front, pos, globalUp);
 		ret = rotate(ret, radians(-90.0f), vec3(1, 0, 0));
 		return ret;
 	}
@@ -68,6 +68,7 @@ struct _cam_3d_static : _cam_3d {
 		pitch = 45.0f;
 		scale = s;
 		fov = 60.0f;
+		pos = vec3(0, 0, 0);
 		updateFront();
 	}
 
