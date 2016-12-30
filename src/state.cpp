@@ -21,6 +21,8 @@ state::state() {
 	set.xmax = 10;
 	set.ymin = -10;
 	set.ymax = 10;
+	set.zmin = -10;
+	set.zmax = 10;
 	set.xrez = 200;
 	set.yrez = 200;
 

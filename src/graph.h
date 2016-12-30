@@ -54,8 +54,7 @@ struct graph {
 	vector<GLuint> indicies;
 	GLuint VAO, VBO, EBO;
 
-	float xmin, xmax, ymin, ymax, zmin, zmax;
-	int xrez, yrez;
+	float zmin, zmax;
 	int ID;
 
 	dimension dim;

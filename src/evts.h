@@ -12,7 +12,7 @@ struct state;
 enum inputstate {
 	in_idle,
 	in_cam,
-	in_ui,
+	in_funcs,
 	in_widget,
 	in_settings,
 	in_any

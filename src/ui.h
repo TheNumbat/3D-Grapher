@@ -23,7 +23,7 @@ struct fxy_enter_callback {
 
 struct fxy_remove_callback {
 	fxy_remove_callback(int i);
-	void operator()(state* s, string e) const;
+	bool operator()(state* s) const;
 	int g_id;
 };
 
@@ -32,7 +32,6 @@ struct widget {
 	virtual int render(state* s, int w, int h, int ui_w, int x, int y) = 0;
 	virtual bool update(state* s, SDL_Event* ev) = 0;
 	point pts[6];
-	int cursor_pos, cursor_x, cursor_y; // updated by update()
 	int current_y, current_yh;
 	bool active, should_remove;
 };
@@ -53,18 +52,20 @@ struct UI {
 };
 
 struct edit_text : public widget {
-	edit_text(function<void(state*, string)> c, function<void(state*, string)> rm, bool a = true);
+	edit_text(state* s, function<void(state*, string)> c, function<bool(state*)> rm, bool a = true);
 	int render(state* s, int w, int h, int ui_w, int x, int y);
 	bool update(state* s, SDL_Event* ev);
-	void break_str(state* s, int w);
+	void break_str(state* s);
 	void update_cursor(state* s);
 	void remove(state* s);
 	int currentLine();
 	int currentPos();
-	function<void(state*, string)> enterCallback, removeCallback;
+	function<void(state*, string)> enterCallback;
+	function<bool(state*)> removeCallback;
 	string exp;
 	vector<string> lines;
 	textured_rect r;
+	int cursor_pos, cursor_x, cursor_y; // updated by update()
 };
 
 struct toggle_text : public widget {

@@ -88,8 +88,7 @@ void add_default_callbacks(state* s) {
 
 	s->ev.callbacks.push_back(callback([](state* s, SDL_Event* ev) -> bool {
 		if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO) && ev->button.y >(s->ui->funcs.size() ? s->ui->funcs.back()->current_yh : 0)) {
-			edit_text* w = new edit_text(fxy_enter_callback(s->next_graph_id), fxy_remove_callback(s->next_graph_id), true);
-			w->break_str(s, (int)round(s->w * UI_SCREEN_RATIO));
+			edit_text* w = new edit_text(s, fxy_enter_callback(s->next_graph_id), fxy_remove_callback(s->next_graph_id), true);
 			s->ui->funcs.push_back(w);
 			s->ev.current = in_widget;
 			SDL_ShowCursor(0);
@@ -99,6 +98,22 @@ void add_default_callbacks(state* s) {
 		}
 		else {
 			for (widget* w : s->ui->funcs) {
+				if (dynamic_cast<edit_text*>(w)) {
+					if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO) && ev->button.y > w->current_y && ev->button.y <= w->current_yh) {
+						w->active = true;
+						SDL_StartTextInput();
+						SDL_ShowCursor(0);
+						s->ev.current = in_widget;
+					}
+				}
+			}
+		}
+		return false;
+	}, in_funcs, SDL_MOUSEBUTTONDOWN));
+
+	s->ev.callbacks.push_back(callback([](state* s, SDL_Event* ev) -> bool {
+		for (widget* w : s->ui->settings) {
+			if (dynamic_cast<edit_text*>(w)) {
 				if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO) && ev->button.y > w->current_y && ev->button.y <= w->current_yh) {
 					w->active = true;
 					SDL_StartTextInput();
@@ -108,7 +123,7 @@ void add_default_callbacks(state* s) {
 			}
 		}
 		return false;
-	}, in_ui, SDL_MOUSEBUTTONDOWN));
+	}, in_settings, SDL_MOUSEBUTTONDOWN));
 
 	s->ev.callbacks.push_back(callback([](state* s, SDL_Event* ev) -> bool {
 		if (ev->button.x > (int)round(s->w * UI_SCREEN_RATIO)) {
@@ -136,7 +151,7 @@ void add_default_callbacks(state* s) {
 			return true;
 		}
 		return false;
-	}, in_ui, SDL_MOUSEBUTTONDOWN));
+	}, in_funcs, SDL_MOUSEBUTTONDOWN));
 
 	s->ev.callbacks.push_back(callback([](state* s, SDL_Event* ev) -> bool {
 		if (ev->button.x > (int)round(s->w * UI_SCREEN_RATIO)) {
@@ -149,7 +164,7 @@ void add_default_callbacks(state* s) {
 				else if (ev->button.y >= 35 && ev->button.y <= 35 + 32) {
 					if (s->ui->uistate == ui_settings) {
 						s->ui->uistate = ui_funcs;
-						s->ev.current = in_ui;
+						s->ev.current = in_funcs;
 					}
 					return true;
 				}
@@ -170,7 +185,7 @@ void add_default_callbacks(state* s) {
 		if (ev->button.x <= 43 && ev->button.y <= 32) {
 			s->ui->active = true;
 			if (s->ui->uistate == ui_funcs)
-				s->ev.current = in_ui;
+				s->ev.current = in_funcs;
 			else
 				s->ev.current = in_settings;
 			return true;
@@ -195,7 +210,7 @@ void add_default_callbacks(state* s) {
 	s->ev.callbacks.push_back(callback([](state* s, SDL_Event* ev) -> bool {
 		if (s->ui->active)
 			if (s->ui->uistate == ui_funcs)
-				s->ev.current = in_ui;
+				s->ev.current = in_funcs;
 			else
 				s->ev.current = in_settings;
 		else

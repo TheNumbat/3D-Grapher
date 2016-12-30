@@ -26,7 +26,7 @@ void fxy_enter_callback::operator()(state* s, string e) const {
 		}
 		s->graphs[g_ind]->eq_str = e;
 		regengraph(s, g_ind);
-		s->ev.current = in_ui;
+		s->ev.current = in_funcs;
 		SDL_ShowCursor(1);
 	}
 }
@@ -35,10 +35,12 @@ fxy_remove_callback::fxy_remove_callback(int i) {
 	g_id = i;
 }
 
-void fxy_remove_callback::operator()(state* s, string e) const {
+bool fxy_remove_callback::operator()(state* s) const {
 	int g_ind = getIndex(s, g_id);
 	delete s->graphs[g_ind];
 	s->graphs.erase(s->graphs.begin() + g_ind);
+	sendAxes(s);
+	return true;
 }
 
 UI::UI(state* s) {
@@ -73,29 +75,38 @@ UI::UI(state* s) {
 
 	settings.push_back(new slider("Opacity", 1.0f, [](state* s, float f) -> void {s->set.graphopacity = f; }));
 	
-	auto settingsCallback = [](state* s, SDL_Event* ev) -> bool {
-		if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO)) {
+	settings.push_back(new edit_text(s, [](state* s, string exp) -> void {
+		try {
+			float num = stof(exp);
+			s->set.xmin = num;
+			regenall(s);
+			s->ev.current = in_settings;
+			SDL_ShowCursor(1);
+		}
+		catch (...) {
+			cout << "\terr: couldn't parse int" << endl;
+		}
+	}, [](state* s) -> bool {return false; }, false));
+
+	auto widgetsCallback = [](state* s, SDL_Event* ev) -> bool {
+		if (s->ui->uistate == ui_funcs) {
+			for (widget* w : s->ui->funcs) {
+				if (w->update(s, ev)) return true;
+			}
+		}
+		else {
 			for (widget* w : s->ui->settings) {
-				if (ev->button.y > w->current_y - 3 && ev->button.y <= w->current_yh + 3) {
-					return w->update(s, ev);
-				}
+				if (w->update(s, ev)) return true;
 			}
 		}
 		return false;
 	};
-	s->ev.callbacks.push_back(callback(settingsCallback, in_settings, SDL_MOUSEBUTTONDOWN));
-	s->ev.callbacks.push_back(callback(settingsCallback, in_settings, SDL_MOUSEBUTTONUP));
-	s->ev.callbacks.push_back(callback(settingsCallback, in_settings, SDL_MOUSEMOTION));
-
-	auto funcsCallback = [](state* s, SDL_Event* ev) -> bool {
-		for (widget* w : s->ui->funcs) {
-			if (w->update(s, ev)) return true;
-		}
-		return false;
-	};
-	s->ev.callbacks.push_back(callback(funcsCallback, in_widget, SDL_KEYDOWN));
-	s->ev.callbacks.push_back(callback(funcsCallback, in_widget, SDL_TEXTINPUT));
-	s->ev.callbacks.push_back(callback(funcsCallback, in_widget, SDL_WINDOWEVENT));
+	s->ev.callbacks.push_back(callback(widgetsCallback, in_any, SDL_KEYDOWN));
+	s->ev.callbacks.push_back(callback(widgetsCallback, in_any, SDL_TEXTINPUT));
+	s->ev.callbacks.push_back(callback(widgetsCallback, in_any, SDL_WINDOWEVENT));
+	s->ev.callbacks.push_back(callback(widgetsCallback, in_any, SDL_MOUSEBUTTONDOWN));
+	s->ev.callbacks.push_back(callback(widgetsCallback, in_any, SDL_MOUSEBUTTONUP));
+	s->ev.callbacks.push_back(callback(widgetsCallback, in_any, SDL_MOUSEMOTION));
 
 	in.gen();
 	out.gen();
@@ -170,8 +181,10 @@ void UI::render(state* s, int w, int h) {
 		while (cur_y < h && windex < funcs.size()) {
 			cur_y += 3;
 			int w_y = funcs[windex]->render(s, w, h, ui_w, 5 + xoff, cur_y); // widget
-			if(funcs[windex]->active)
-				drawRect(s->rect_s, xoff + 5 + funcs[windex]->cursor_x, cur_y + 3 + funcs[windex]->cursor_y, 2, 24, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // cursor
+			if (edit_text* e = dynamic_cast<edit_text*>(funcs[windex])) {
+				if(e->active)
+					drawRect(s->rect_s, xoff + 5 + e->cursor_x, cur_y + 3 + e->cursor_y, 2, 24, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // cursor
+			}
 			cur_y = w_y + 3;
 			drawRect(s->rect_s, xoff, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // top/bottom black strip
 			cur_y += 3;
@@ -186,11 +199,21 @@ void UI::render(state* s, int w, int h) {
 				if (t->on) {
 					drawRect(s->rect_s, xoff, cur_y, ui_w, 32, 0.0f, 0.0f, 0.0f, 0.25f, fw, fh);
 				}
+				cur_y = settings[windex]->render(s, w, h, ui_w, 5 + xoff, cur_y) + 3;
 			}
 			else {
-				drawRect(s->rect_s, xoff, cur_y, ui_w, 32, 0.0f, 0.0f, 0.0f, 0.25f, fw, fh);
+				edit_text* e = dynamic_cast<edit_text*>(settings[windex]);
+				if (e) {
+					int new_y = settings[windex]->render(s, w, h, ui_w, 5 + xoff, cur_y) + 3;
+					if(e->active)
+						drawRect(s->rect_s, xoff + 5 + e->cursor_x, cur_y + 3 + e->cursor_y, 2, 24, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // cursor
+					cur_y = new_y;
+				}
+				else {
+					drawRect(s->rect_s, xoff, cur_y, ui_w, 32, 0.0f, 0.0f, 0.0f, 0.25f, fw, fh);
+					cur_y = settings[windex]->render(s, w, h, ui_w, 5 + xoff, cur_y) + 3;
+				}
 			}
-			cur_y = settings[windex]->render(s, w, h, ui_w, 5 + xoff, cur_y) + 3;
 			drawRect(s->rect_s, xoff, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // top/bottom black strip
 			cur_y += 3;
 			windex++;
@@ -223,7 +246,7 @@ void UI::render_sidebar(state* s) {
 	}
 }
 
-edit_text::edit_text(function<void(state*, string)> c, function<void(state*, string)> rm, bool a) {
+edit_text::edit_text(state* s, function<void(state*, string)> c, function<bool(state*)> rm, bool a) {
 	r.gen();
 	active = a;
 	exp = " ";
@@ -233,16 +256,17 @@ edit_text::edit_text(function<void(state*, string)> c, function<void(state*, str
 	cursor_pos = 0;
 	enterCallback = c;
 	removeCallback = rm;
+	break_str(s);
 }
 
 void edit_text::update_cursor(state* s) {
-	break_str(s, (int)round(s->w * UI_SCREEN_RATIO) - 5);
+	break_str(s);
 	TTF_SizeText(s->font, lines[currentLine()].substr(0, currentPos()).c_str(), &cursor_x, NULL);
 }
 
 bool edit_text::update(state* s, SDL_Event* ev) {
 	if (ev->type == SDL_WINDOWEVENT) {
-		break_str(s, (int)round(s->w * UI_SCREEN_RATIO) - 5);
+		break_str(s);
 	}
 	else if (active) {
 		if (ev->type == SDL_TEXTINPUT) {
@@ -287,7 +311,10 @@ bool edit_text::update(state* s, SDL_Event* ev) {
 					if (!exp.size()) exp = " ";
 					update_cursor(s);
 				}
-				else remove(s);
+				else {
+					active = false;
+					remove(s);
+				}
 				return true;
 			case SDLK_HOME:
 				cursor_pos = 0;
@@ -300,16 +327,14 @@ bool edit_text::update(state* s, SDL_Event* ev) {
 			case SDLK_ESCAPE:
 				active = false;
 				SDL_StopTextInput();
-				s->ev.current = in_ui;
+				s->ev.current = in_funcs;
 				SDL_ShowCursor(1);
 				return true;
 			case SDLK_RETURN:
 			case SDLK_RETURN2:
 			case SDLK_KP_ENTER:
-				if (active) {
-					active = false;
-					enterCallback(s, exp);
-				}
+				active = false;
+				enterCallback(s, exp);
 				return true;
 			}
 		}
@@ -318,10 +343,14 @@ bool edit_text::update(state* s, SDL_Event* ev) {
 }
 
 void edit_text::remove(state* s) {
-	removeCallback(s, exp);
-	should_remove = true;
-	s->ui->remove_dead_widgets(); // basically 'delete this' ... quesitonable practice
-	s->ev.current = in_ui;
+	if (removeCallback(s)) {
+		should_remove = true;
+		s->ui->remove_dead_widgets(); // basically 'delete this' ... quesitonable practice
+	}
+	if (s->ui->uistate == ui_funcs)
+		s->ev.current = in_funcs;
+	else
+		s->ev.current = in_settings;
 	SDL_ShowCursor(1);
 }
 
@@ -355,8 +384,9 @@ int edit_text::currentLine() {
 	return line - 1;
 }
 
-void edit_text::break_str(state* s, int w) {
+void edit_text::break_str(state* s) {
 	lines.clear();
+	int w = (int)round(s->w * UI_SCREEN_RATIO) - 5;
 	int e_pos = 0, tw;
 	TTF_SizeText(s->font, exp.c_str(), &tw, NULL);
 	do {
@@ -404,9 +434,11 @@ int toggle_text::render(state* s, int w, int h, int ui_w, int x, int y) {
 
 bool toggle_text::update(state* s, SDL_Event* ev) {
 	if (ev->type == SDL_MOUSEBUTTONDOWN) {
-		on = !on;
-		toggleCallback(s);
-		return true;
+		if (ev->button.y > current_y - 3 && ev->button.y <= current_yh + 3) {
+			on = !on;
+			toggleCallback(s);
+			return true;
+		}
 	}
 	return false;
 }
@@ -433,14 +465,16 @@ int multi_text::render(state* s, int w, int h, int ui_w, int x, int y) {
 
 bool multi_text::update(state* s, SDL_Event* ev) {
 	if (ev->type == SDL_MOUSEBUTTONDOWN) {
-		if (ev->button.button == SDL_BUTTON_LEFT)
-			++pos %= text.size();
-		else if (ev->button.button == SDL_BUTTON_RIGHT) {
-			--pos;
-			if (pos < 0) pos = text.size() - 1;
+		if (ev->button.y > current_y - 3 && ev->button.y <= current_yh + 3) {
+			if (ev->button.button == SDL_BUTTON_LEFT)
+				++pos %= text.size();
+			else if (ev->button.button == SDL_BUTTON_RIGHT) {
+				--pos;
+				if (pos < 0) pos = text.size() - 1;
+			}
+			toggleCallback(s, text[pos]);
+			return true;
 		}
-		toggleCallback(s, text[pos]);
-		return true;
 	}
 	return false;
 }
@@ -471,14 +505,25 @@ int slider::render(state* s, int w, int h, int ui_w, int x, int y) {
 }
 
 bool slider::update(state* s, SDL_Event* ev) {
-	if (ev->type == SDL_MOUSEMOTION) {
-		Uint32 mflags = SDL_GetMouseState(NULL, NULL);
-		if (mflags & SDL_BUTTON(1) && slider_w) {
-			pos += ev->motion.xrel / (float)slider_w;
-			if (pos > 1) pos = 1;
-			if (pos < 0) pos = 0;
-			moveCallback(s, pos);
+	if (active) {
+		if (ev->type == SDL_MOUSEMOTION) {
+			Uint32 mflags = SDL_GetMouseState(NULL, NULL);
+			if (mflags & SDL_BUTTON(1) && slider_w) {
+				pos += ev->motion.xrel / (float)slider_w;
+				if (pos > 1) pos = 1;
+				if (pos < 0) pos = 0;
+				moveCallback(s, pos);
+			}
+			return true;
+		}
+		else if (ev->type == SDL_MOUSEBUTTONUP) {
+			active = false;
+			return true;
 		}
 	}
-	return true;
+	else if (ev->type == SDL_MOUSEBUTTONDOWN && ev->button.y > current_y - 3 && ev->button.y <= current_yh + 3) {
+		active = true;
+		return true;
+	}
+	return false;
 }
