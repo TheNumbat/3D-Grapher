@@ -40,9 +40,8 @@ struct UI {
 	bool active;
 };
 
-struct fxy_equation : public widget {
-	fxy_equation(int graph_id, bool a = false);
-	~fxy_equation() {}
+struct edit_text : public widget {
+	edit_text(function<void(state*, string)> c, bool a = true);
 	int render(state* s, int w, int h, int ui_w, int x, int y);
 	bool update(state* s, SDL_Event* ev);
 	void break_str(state* s, int w);
@@ -50,7 +49,7 @@ struct fxy_equation : public widget {
 	void remove(state* s);
 	int currentLine();
 	int currentPos();
-	int g_id;
+	function<void(state*, string)> enterCallback;
 	string exp;
 	vector<string> lines;
 	textured_rect r;

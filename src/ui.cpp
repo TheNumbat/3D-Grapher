@@ -21,8 +21,15 @@ UI::UI(state* s) {
 	settings.push_back(new toggle_text("Wirefame", true, [](state* s) -> void {s->set.wireframe = !s->set.wireframe;}));
 	settings.push_back(new toggle_text("Lighting", false, [](state* s) -> void {s->set.lighting = !s->set.lighting; }));
 	settings.push_back(new toggle_text("Axis Normalization", false, [](state* s) -> void {s->set.axisnormalization = !s->set.axisnormalization; regenall(s); }));
+	settings.push_back(new toggle_text("Antialiasing", true, [](state* s) -> void {
+		if (s->set.antialiasing)
+			glDisable(GL_MULTISAMPLE);
+		else
+			glEnable(GL_MULTISAMPLE);
+		s->set.antialiasing = !s->set.antialiasing;
+	}));
 
-	vector<string> cameras = { "Camera: 2D","Camera: 3D", "Camera: Fixed 3D" };
+	vector<string> cameras = { "Camera: 2D", "Camera: 3D", "Camera: Fixed 3D" };
 	settings.push_back(new multi_text(cameras, 2, [](state* s, string str) -> void {
 		if (str == "Camera: 2D") {
 			s->set.camtype = cam_2d;
@@ -41,8 +48,7 @@ UI::UI(state* s) {
 		if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO)) {
 			for (widget* w : s->ui->settings) {
 				if (ev->button.y > w->current_y - 3 && ev->button.y <= w->current_yh + 3) {
-					w->update(s, ev);
-					return true;
+					return w->update(s, ev);
 				}
 			}
 		}
@@ -51,6 +57,16 @@ UI::UI(state* s) {
 	s->ev.callbacks.push_back(callback(settingsCallback, in_settings, SDL_MOUSEBUTTONDOWN));
 	s->ev.callbacks.push_back(callback(settingsCallback, in_settings, SDL_MOUSEBUTTONUP));
 	s->ev.callbacks.push_back(callback(settingsCallback, in_settings, SDL_MOUSEMOTION));
+
+	auto funcsCallback = [](state* s, SDL_Event* ev) -> bool {
+		for (widget* w : s->ui->funcs) {
+			if (w->update(s, ev)) return true;
+		}
+		return false;
+	};
+	s->ev.callbacks.push_back(callback(funcsCallback, in_widget, SDL_KEYDOWN));
+	s->ev.callbacks.push_back(callback(funcsCallback, in_widget, SDL_TEXTINPUT));
+	s->ev.callbacks.push_back(callback(funcsCallback, in_widget, SDL_WINDOWEVENT));
 
 	in.gen();
 	out.gen();
@@ -176,23 +192,23 @@ void UI::render_sidebar(state* s) {
 	}
 }
 
-fxy_equation::fxy_equation(int graph_id, bool a) {
+edit_text::edit_text(function<void(state*, string)> c, bool a) {
 	r.gen();
-	g_id = graph_id;
 	active = a;
 	exp = " ";
 	should_remove = false;
 	cursor_x = 0;
 	cursor_y = 0;
 	cursor_pos = 0;
+	enterCallback = c;
 }
 
-void fxy_equation::update_cursor(state* s) {
+void edit_text::update_cursor(state* s) {
 	break_str(s, (int)round(s->w * UI_SCREEN_RATIO) - 5);
 	TTF_SizeText(s->font, lines[currentLine()].substr(0, currentPos()).c_str(), &cursor_x, NULL);
 }
 
-bool fxy_equation::update(state* s, SDL_Event* ev) {
+bool edit_text::update(state* s, SDL_Event* ev) {
 	if (ev->type == SDL_WINDOWEVENT) {
 		break_str(s, (int)round(s->w * UI_SCREEN_RATIO) - 5);
 	}
@@ -205,7 +221,6 @@ bool fxy_equation::update(state* s, SDL_Event* ev) {
 			return true;
 		}
 		else if (ev->type == SDL_KEYDOWN) {
-			int g_ind = getIndex(s, g_id);
 			switch (ev->key.keysym.sym) {
 			case SDLK_LEFT:
 				if(cursor_pos > 0) cursor_pos--;
@@ -259,13 +274,7 @@ bool fxy_equation::update(state* s, SDL_Event* ev) {
 			case SDLK_RETURN:
 			case SDLK_RETURN2:
 			case SDLK_KP_ENTER:
-				if (exp != " ") {
-					active = false;
-					s->graphs[g_ind]->eq_str = exp;
-					regengraph(s, g_ind);
-					s->ev.current = in_ui;
-					SDL_ShowCursor(1);
-				}
+				enterCallback(s, exp);
 				return true;
 			}
 		}
@@ -273,19 +282,14 @@ bool fxy_equation::update(state* s, SDL_Event* ev) {
 	return false;
 }
 
-void fxy_equation::remove(state* s) {
-	int g_ind = getIndex(s, g_id);
-	delete s->graphs[g_ind];
-	s->graphs.erase(s->graphs.begin() + g_ind);
+void edit_text::remove(state* s) {
 	should_remove = true;
-	active = false;
-	s->ev.callbacks.erase(remove_if(s->ev.callbacks.begin(), s->ev.callbacks.end(), [this](callback& c) -> bool { return c.id == g_id; }), s->ev.callbacks.end());
 	s->ui->remove_dead_widgets(); // basically 'delete this' ... quesitonable practice
 	s->ev.current = in_ui;
 	SDL_ShowCursor(1);
 }
 
-int fxy_equation::render(state* s, int w, int h, int ui_w, int x, int y) {
+int edit_text::render(state* s, int w, int h, int ui_w, int x, int y) {
 	current_y = y;
 	for (string l : lines) {
 		SDL_Surface* text = TTF_RenderText_Shaded(s->font, l.c_str(), { 0, 0, 0 }, { 255, 255, 255 });
@@ -299,7 +303,7 @@ int fxy_equation::render(state* s, int w, int h, int ui_w, int x, int y) {
 	return y;
 }
 
-int fxy_equation::currentPos() {
+int edit_text::currentPos() {
 	int line = currentLine() - 1, cpos = cursor_pos;
 	while (line >= 0) {
 		cpos -= lines[line--].size();
@@ -307,7 +311,7 @@ int fxy_equation::currentPos() {
 	return cpos;
 }
 
-int fxy_equation::currentLine() {
+int edit_text::currentLine() {
 	int line = 0, cpos = cursor_pos;
 	while (cpos >= 0 && line < (int)lines.size()) {
 		cpos -= lines[line++].size();
@@ -315,7 +319,7 @@ int fxy_equation::currentLine() {
 	return line - 1;
 }
 
-void fxy_equation::break_str(state* s, int w) {
+void edit_text::break_str(state* s, int w) {
 	lines.clear();
 	int e_pos = 0, tw;
 	TTF_SizeText(s->font, exp.c_str(), &tw, NULL);

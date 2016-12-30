@@ -14,7 +14,7 @@ state::state() {
 	set.lighting = false;
 	set.axisnormalization = false;
 	set.graphopacity = 1.0f;
-	set.antialiasing = 0;
+	set.antialiasing = true;
 	set.display = dim_3d;
 	set.camtype = cam_3d_static;
 	set.xmin = -10;
@@ -34,6 +34,8 @@ state::state() {
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
 	context = SDL_GL_CreateContext(window);
@@ -44,7 +46,8 @@ state::state() {
 
 	glEnable(GL_POLYGON_OFFSET_FILL);
 	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_BLEND);
+	glEnable(GL_MULTISAMPLE);
+	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glViewport(0, 0, w, h);
 

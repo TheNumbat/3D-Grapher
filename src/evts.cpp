@@ -90,18 +90,11 @@ void add_default_callbacks(state* s) {
 	s->ev.callbacks.push_back(callback([](state* s, SDL_Event* ev) -> bool {
 		if (s->ui->uistate == ui_funcs) {
 			if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO) && ev->button.y >(s->ui->funcs.size() ? s->ui->funcs.back()->current_yh : 0)) {
-				s->graphs.push_back(new graph(s->next_graph_id, "", (float)s->set.xmin, (float)s->set.xmax, (float)s->set.ymin, (float)s->set.ymax, s->set.xrez, s->set.yrez));
-				s->graphs.back()->gen();
-				fxy_equation* w = new fxy_equation(s->next_graph_id, true);
+				edit_text* w = new edit_text([](state* s, string st) -> void {}, true);
 				w->break_str(s, (int)round(s->w * UI_SCREEN_RATIO));
 				s->ui->funcs.push_back(w);
-				auto func = bind(&widget::update, w, placeholders::_1, placeholders::_2);
-				s->ev.callbacks.push_back(callback(func, in_widget, SDL_TEXTINPUT, s->next_graph_id));
-				s->ev.callbacks.push_back(callback(func, in_widget, SDL_KEYDOWN, s->next_graph_id));
-				s->ev.callbacks.push_back(callback(func, in_any, SDL_WINDOWEVENT, s->next_graph_id));
 				s->ev.current = in_widget;
 				SDL_ShowCursor(0);
-				s->next_graph_id++;
 				SDL_StartTextInput();
 				return true;
 			}
