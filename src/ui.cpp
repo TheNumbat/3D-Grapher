@@ -82,72 +82,72 @@ UI::UI(state* s) {
 			float num = stof(exp);
 			s->set.xmin = num;
 			regenall(s);
-			s->ev.current = in_settings;
-			SDL_ShowCursor(1);
 		}
 		catch (...) {
 			cout << "\terr: couldn't parse float" << endl;
 		}
+		s->ev.current = in_settings;
+		SDL_ShowCursor(1);
 	}, [](state* s) -> bool {return false; }, false));
 	settings.push_back(new edit_text(s, to_string((int)s->set.xmax), "xmax: ", [](state* s, string exp) -> void {
 		try {
 			float num = stof(exp);
 			s->set.xmax = num;
 			regenall(s);
-			s->ev.current = in_settings;
-			SDL_ShowCursor(1);
 		}
 		catch (...) {
 			cout << "\terr: couldn't parse float" << endl;
 		}
+		s->ev.current = in_settings;
+		SDL_ShowCursor(1);
 	}, [](state* s) -> bool {return false; }, false));
 	settings.push_back(new edit_text(s, to_string((int)s->set.ymin), "ymin: ", [](state* s, string exp) -> void {
 		try {
 			float num = stof(exp);
 			s->set.ymin = num;
 			regenall(s);
-			s->ev.current = in_settings;
-			SDL_ShowCursor(1);
 		}
 		catch (...) {
 			cout << "\terr: couldn't parse float" << endl;
 		}
+		s->ev.current = in_settings;
+		SDL_ShowCursor(1);
 	}, [](state* s) -> bool {return false; }, false));
 	settings.push_back(new edit_text(s, to_string((int)s->set.ymax), "ymax: ", [](state* s, string exp) -> void {
 		try {
 			float num = stof(exp);
 			s->set.ymax = num;
 			regenall(s);
-			s->ev.current = in_settings;
-			SDL_ShowCursor(1);
 		}
 		catch (...) {
 			cout << "\terr: couldn't parse float" << endl;
 		}
+		s->ev.current = in_settings;
+		SDL_ShowCursor(1);
 	}, [](state* s) -> bool {return false; }, false));
 	settings.push_back(new edit_text(s, to_string((int)s->set.xrez), "xrez: ", [](state* s, string exp) -> void {
 		try {
 			int num = stoi(exp);
 			s->set.xrez = num;
 			regenall(s);
-			s->ev.current = in_settings;
-			SDL_ShowCursor(1);
 		}
 		catch (...) {
 			cout << "\terr: couldn't parse int" << endl;
 		}
+		s->ev.current = in_settings;
+		SDL_ShowCursor(1);
 	}, [](state* s) -> bool {return false; }, false));
 	settings.push_back(new edit_text(s, to_string((int)s->set.yrez), "yrez: ", [](state* s, string exp) -> void {
 		try {
 			int num = stoi(exp);
 			s->set.yrez = num;
 			regenall(s);
-			s->ev.current = in_settings;
-			SDL_ShowCursor(1);
 		}
 		catch (...) {
 			cout << "\terr: couldn't parse int" << endl;
 		}
+		s->ev.current = in_settings;
+		SDL_ShowCursor(1);
 	}, [](state* s) -> bool {return false; }, false));
 
 	auto widgetsCallback = [](state* s, SDL_Event* ev) -> bool {
@@ -242,8 +242,7 @@ void UI::render(state* s, int w, int h) {
 		unsigned int windex = 0;
 		while (cur_y < h && windex < funcs.size()) {
 			cur_y += 3;
-			int w_y = funcs[windex]->render(s, w, h, ui_w, 5 + xoff, cur_y); // widget
-			cur_y = w_y + 3;
+			cur_y = funcs[windex]->render(s, w, h, ui_w, 5 + xoff, cur_y) + 3; // widget
 			drawRect(s->rect_s, xoff, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // top/bottom black strip
 			cur_y += 3;
 			windex++;
@@ -253,25 +252,7 @@ void UI::render(state* s, int w, int h) {
 		int cur_y = 3;
 		unsigned int windex = 0;
 		while (cur_y < h && windex < settings.size()) {
-			if (toggle_text* t = dynamic_cast<toggle_text*>(settings[windex])) {
-				if (t->on) {
-					drawRect(s->rect_s, xoff, cur_y, ui_w, 32, 0.0f, 0.0f, 0.0f, 0.25f, fw, fh);
-				}
-				cur_y = settings[windex]->render(s, w, h, ui_w, 5 + xoff, cur_y) + 3;
-			}
-			else {
-				edit_text* e = dynamic_cast<edit_text*>(settings[windex]);
-				if (e) {
-					int new_y = settings[windex]->render(s, w, h, ui_w, 5 + xoff, cur_y) + 3;
-					if(e->active)
-						drawRect(s->rect_s, xoff + 5 + e->cursor_x, cur_y + 3 + e->cursor_y, 2, 24, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // cursor
-					cur_y = new_y;
-				}
-				else {
-					drawRect(s->rect_s, xoff, cur_y, ui_w, 32, 0.0f, 0.0f, 0.0f, 0.25f, fw, fh);
-					cur_y = settings[windex]->render(s, w, h, ui_w, 5 + xoff, cur_y) + 3;
-				}
-			}
+			cur_y = settings[windex]->render(s, w, h, ui_w, 5 + xoff, cur_y) + 3;
 			drawRect(s->rect_s, xoff, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // top/bottom black strip
 			cur_y += 3;
 			windex++;
@@ -477,8 +458,10 @@ toggle_text::toggle_text(string t, bool o, function<void(state*)> c) {
 int toggle_text::render(state* s, int w, int h, int ui_w, int x, int y) {
 	current_y = y;
 	SDL_Color background;
-	if (on)
+	if (on) {
 		background = { 191, 191, 191 };
+		s->ui->drawRect(s->rect_s, x - 5, y, ui_w, 32, 0.0f, 0.0f, 0.0f, 0.25f, (float)w, (float)h);
+	}
 	else
 		background = { 255, 255, 255 };
 	SDL_Surface* surf = TTF_RenderText_Shaded(s->font, text.c_str(), { 0, 0, 0 }, background);
@@ -512,6 +495,7 @@ multi_text::multi_text(vector<string> strs, int p, function<void(state*, string)
 
 int multi_text::render(state* s, int w, int h, int ui_w, int x, int y) {
 	current_y = y;
+	s->ui->drawRect(s->rect_s, x - 5, y, ui_w, 32, 0.0f, 0.0f, 0.0f, 0.25f, (float)w, (float)h);
 	SDL_Surface* surf = TTF_RenderText_Shaded(s->font, text[pos].c_str(), { 0, 0, 0 }, { 191, 191, 191 });
 	r.tex.load(surf);
 	r.set((float)x, (float)y, (float)(surf->w <= ui_w - 5 ? surf->w : ui_w - 5), (float)surf->h);
@@ -549,6 +533,7 @@ slider::slider(string t, float f, function<void(state*, float)> c) {
 
 int slider::render(state* s, int w, int h, int ui_w, int x, int y) {
 	current_y = y;
+	s->ui->drawRect(s->rect_s, x - 5, y, ui_w, 32, 0.0f, 0.0f, 0.0f, 0.25f, (float)w, (float)h);
 	SDL_Surface* surf = TTF_RenderText_Shaded(s->font, text.c_str(), { 0, 0, 0 }, { 191, 191, 191 });
 	r.tex.load(surf);
 	int total_w = surf->w <= ui_w - 5 ? surf->w : ui_w - 25;
