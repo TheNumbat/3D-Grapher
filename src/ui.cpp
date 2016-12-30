@@ -10,7 +10,7 @@
 #include "data\tex_out.data"
 #include "data\tex_f.data"
 
-// the code in this file is p bad and disorganized, good luck
+// the code in this file is p disorganized, good luck
 
 fxy_enter_callback::fxy_enter_callback(int i) {
 	g_id = i;
@@ -354,8 +354,10 @@ bool edit_text::update(state* s, SDL_Event* ev) {
 				return true;
 			case SDLK_BACKSPACE:
 				if (exp != " ") {
-					exp.erase(cursor_pos - 1, 1);
-					cursor_pos--;
+					if (cursor_pos > 0) {
+						exp.erase(cursor_pos - 1, 1);
+						cursor_pos--;
+					}
 					if (!exp.size()) exp = " ";
 				}
 				else {
