@@ -52,7 +52,7 @@ struct UI {
 };
 
 struct edit_text : public widget {
-	edit_text(state* s, function<void(state*, string)> c, function<bool(state*)> rm, bool a = true);
+	edit_text(state* s, string h, function<void(state*, string)> c, function<bool(state*)> rm, bool a = true);
 	int render(state* s, int w, int h, int ui_w, int x, int y);
 	bool update(state* s, SDL_Event* ev);
 	void break_str(state* s);
@@ -62,7 +62,7 @@ struct edit_text : public widget {
 	int currentPos();
 	function<void(state*, string)> enterCallback;
 	function<bool(state*)> removeCallback;
-	string exp;
+	string head, exp;
 	vector<string> lines;
 	textured_rect r;
 	int cursor_pos, cursor_x, cursor_y; // updated by update()

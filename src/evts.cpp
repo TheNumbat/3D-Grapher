@@ -88,7 +88,7 @@ void add_default_callbacks(state* s) {
 
 	s->ev.callbacks.push_back(callback([](state* s, SDL_Event* ev) -> bool {
 		if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO) && ev->button.y >(s->ui->funcs.size() ? s->ui->funcs.back()->current_yh : 0)) {
-			edit_text* w = new edit_text(s, fxy_enter_callback(s->next_graph_id), fxy_remove_callback(s->next_graph_id), true);
+			edit_text* w = new edit_text(s, "f(x,y)= ", fxy_enter_callback(s->next_graph_id), fxy_remove_callback(s->next_graph_id), true);
 			s->ui->funcs.push_back(w);
 			s->ev.current = in_widget;
 			SDL_ShowCursor(0);

@@ -37,9 +37,11 @@ fxy_remove_callback::fxy_remove_callback(int i) {
 
 bool fxy_remove_callback::operator()(state* s) const {
 	int g_ind = getIndex(s, g_id);
-	delete s->graphs[g_ind];
-	s->graphs.erase(s->graphs.begin() + g_ind);
-	sendAxes(s);
+	if (g_ind >= 0) {
+		delete s->graphs[g_ind];
+		s->graphs.erase(s->graphs.begin() + g_ind);
+		sendAxes(s);
+	}
 	return true;
 }
 
@@ -75,7 +77,7 @@ UI::UI(state* s) {
 
 	settings.push_back(new slider("Opacity", 1.0f, [](state* s, float f) -> void {s->set.graphopacity = f; }));
 	
-	settings.push_back(new edit_text(s, [](state* s, string exp) -> void {
+	settings.push_back(new edit_text(s, "xmin: ", [](state* s, string exp) -> void {
 		try {
 			float num = stof(exp);
 			s->set.xmin = num;
@@ -181,10 +183,6 @@ void UI::render(state* s, int w, int h) {
 		while (cur_y < h && windex < funcs.size()) {
 			cur_y += 3;
 			int w_y = funcs[windex]->render(s, w, h, ui_w, 5 + xoff, cur_y); // widget
-			if (edit_text* e = dynamic_cast<edit_text*>(funcs[windex])) {
-				if(e->active)
-					drawRect(s->rect_s, xoff + 5 + e->cursor_x, cur_y + 3 + e->cursor_y, 2, 24, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // cursor
-			}
 			cur_y = w_y + 3;
 			drawRect(s->rect_s, xoff, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // top/bottom black strip
 			cur_y += 3;
@@ -246,9 +244,10 @@ void UI::render_sidebar(state* s) {
 	}
 }
 
-edit_text::edit_text(state* s, function<void(state*, string)> c, function<bool(state*)> rm, bool a) {
+edit_text::edit_text(state* s, string h, function<void(state*, string)> c, function<bool(state*)> rm, bool a) {
 	r.gen();
 	active = a;
+	head = h;
 	exp = " ";
 	should_remove = false;
 	cursor_x = 0;
@@ -273,34 +272,30 @@ bool edit_text::update(state* s, SDL_Event* ev) {
 			if (exp == " ") exp.clear();
 			exp.insert(cursor_pos, ev->text.text);
 			cursor_pos++;
-			update_cursor(s);
 			return true;
 		}
 		else if (ev->type == SDL_KEYDOWN) {
 			switch (ev->key.keysym.sym) {
 			case SDLK_LEFT:
 				if(cursor_pos > 0) cursor_pos--;
-				update_cursor(s);
 				return true;
 			case SDLK_RIGHT:
-				if (cursor_pos < (int)exp.size()) cursor_pos++;
-				update_cursor(s);
+				if (exp != " " && cursor_pos < (int)exp.size()) cursor_pos++;
 				return true;
 			case SDLK_DOWN:
-				cursor_pos += lines[currentLine()].size();
-				if (cursor_pos > (int)exp.size()) cursor_pos = exp.size();
-				update_cursor(s);
+				if (exp != " ") {
+					cursor_pos += lines[currentLine()].size();
+					if (cursor_pos > (int)exp.size()) cursor_pos = exp.size();
+				}
 				return true;
 			case SDLK_UP:
 				cursor_pos -= lines[currentLine()].size();
 				if (cursor_pos < 0) cursor_pos = 0;
-				update_cursor(s);
 				return true;
 			case SDLK_DELETE:
 				if (exp != " ") {
 					if (cursor_pos < (int)exp.size()) exp.erase(cursor_pos, 1);
 					if (!exp.size()) exp = " ";
-					update_cursor(s);
 				}
 				else remove(s);
 				return true;
@@ -309,7 +304,6 @@ bool edit_text::update(state* s, SDL_Event* ev) {
 					exp.erase(cursor_pos - 1, 1);
 					cursor_pos--;
 					if (!exp.size()) exp = " ";
-					update_cursor(s);
 				}
 				else {
 					active = false;
@@ -318,11 +312,9 @@ bool edit_text::update(state* s, SDL_Event* ev) {
 				return true;
 			case SDLK_HOME:
 				cursor_pos = 0;
-				update_cursor(s);
 				return true;
 			case SDLK_END:
 				cursor_pos = exp.size();
-				update_cursor(s);
 				return true;
 			case SDLK_ESCAPE:
 				active = false;
@@ -364,12 +356,17 @@ int edit_text::render(state* s, int w, int h, int ui_w, int x, int y) {
 		y += text->h;
 		SDL_FreeSurface(text);
 	}
+	if (active) {
+		update_cursor(s);
+		s->ui->drawRect(s->rect_s, x + cursor_x, current_y + 3 + cursor_y, 2, 24, 0.0f, 0.0f, 0.0f, 1.0f, (float)w, (float)h);
+	}
 	current_yh = y;
 	return y;
 }
 
 int edit_text::currentPos() {
 	int line = currentLine() - 1, cpos = cursor_pos;
+	cpos += head.size();
 	while (line >= 0) {
 		cpos -= lines[line--].size();
 	}
@@ -378,6 +375,7 @@ int edit_text::currentPos() {
 
 int edit_text::currentLine() {
 	int line = 0, cpos = cursor_pos;
+	cpos += head.size();
 	while (cpos >= 0 && line < (int)lines.size()) {
 		cpos -= lines[line++].size();
 	}
@@ -386,21 +384,22 @@ int edit_text::currentLine() {
 
 void edit_text::break_str(state* s) {
 	lines.clear();
+	string total = head + exp;
 	int w = (int)round(s->w * UI_SCREEN_RATIO) - 5;
 	int e_pos = 0, tw;
-	TTF_SizeText(s->font, exp.c_str(), &tw, NULL);
+	TTF_SizeText(s->font, total.c_str(), &tw, NULL);
 	do {
 		unsigned int end = e_pos;
 		int newtw;
 		do {
 			end++;
-			TTF_SizeText(s->font, exp.substr(e_pos, end - e_pos).c_str(), &newtw, NULL);
-		} while (end < exp.size() && newtw < w);
+			TTF_SizeText(s->font, total.substr(e_pos, end - e_pos).c_str(), &newtw, NULL);
+		} while (end < total.size() && newtw < w);
 		if (newtw > w) {
 			end--;
-			TTF_SizeText(s->font, exp.substr(e_pos, end - e_pos).c_str(), &newtw, NULL);
+			TTF_SizeText(s->font, total.substr(e_pos, end - e_pos).c_str(), &newtw, NULL);
 		}
-		lines.push_back(exp.substr(e_pos, end - e_pos));
+		lines.push_back(total.substr(e_pos, end - e_pos));
 		e_pos = end;
 		tw -= newtw;
 	} while (tw > 0);
