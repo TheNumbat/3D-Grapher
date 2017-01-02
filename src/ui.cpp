@@ -68,8 +68,7 @@ UI::UI(state* s) {
 		s->set.antialiasing = !s->set.antialiasing;
 	}));
 
-	vector<string> cameras = { "Camera: 2D", "Camera: 3D", "Camera: Fixed 3D" };
-	settings.push_back(new multi_text(cameras, 2, [](state* s, string str) -> void {
+	settings.push_back(new multi_text({ "Camera: 2D", "Camera: 3D", "Camera: Fixed 3D" }, 2, [](state* s, string str) -> void {
 		if (str == "Camera: 2D") {
 			s->set.camtype = cam_2d;
 		}
@@ -161,6 +160,7 @@ UI::UI(state* s) {
 		s->ev.current = in_settings;
 		SDL_ShowCursor(1);
 	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
+
 	settings.push_back(new edit_text(s, to_string((int)s->set.yrez), "yrez: ", [](state* s, string exp) -> void {
 		try {
 			int num = stoi(exp);
@@ -286,9 +286,8 @@ void UI::render(state* s) {
 		x = 0;
 	else
 		x = -ui_w + 5;
-	drawRect(s->rect_s, x, 0, ui_w, s->h, 1.0f, 1.0f, 1.0f, 1.0f, (float)s->w, (float)s->h); // white background
 
-	int y = 3;
+	int y = 6;
 
 	if (uistate == ui_funcs || uistate == ui_funcs_adding) {
 		render_widgets(s, funcs, ui_w, x, y, true);
@@ -304,11 +303,14 @@ void UI::render(state* s) {
 }
 
 int UI::render_widgets(state* s, vector<widget*>& v, int ui_w, int x, int y, bool fullborders) {
+	if(fullborders) drawRect(s->rect_s, x, 0, ui_w, s->h, 1.0f, 1.0f, 1.0f, 1.0f, (float)s->w, (float)s->h); // white background
 	int base_y = y;
-	y += 3;
 	unsigned int windex = 0;
 	while (y < s->h && windex < v.size()) {
-		y = v[windex]->render(s, ui_w, 5 + x, y) + 3;
+		// 1st time this is rendered height will be zero
+		drawRect(s->rect_s, x, y, ui_w, v[windex]->current_yh - v[windex]->current_y, 1.0f, 1.0f, 1.0f, 1.0f, (float)s->w, (float)s->h);
+
+		y = v[windex]->render(s, ui_w, 5 + x, y);
 		drawRect(s->rect_s, x, y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, (float)s->w, (float)s->h); // top/bottom black strip
 		y += 3;
 		windex++;
@@ -373,7 +375,7 @@ bool edit_text::update(state* s, SDL_Event* ev) {
 		else if (ev->type == SDL_KEYDOWN) {
 			switch (ev->key.keysym.sym) {
 			case SDLK_LEFT:
-				if(cursor_pos > 0) cursor_pos--;
+				if (cursor_pos > 0) cursor_pos--;
 				return true;
 			case SDLK_RIGHT:
 				if (exp != " " && cursor_pos < (int)exp.size()) cursor_pos++;
@@ -381,7 +383,7 @@ bool edit_text::update(state* s, SDL_Event* ev) {
 			case SDLK_DOWN:
 				if (exp != " ") {
 					cursor_pos += lines[currentLine()].size();
-					if (cursor_pos > (int)exp.size()) cursor_pos = exp.size();
+					if (cursor_pos >(int)exp.size()) cursor_pos = exp.size();
 				}
 				return true;
 			case SDLK_UP:
@@ -432,11 +434,17 @@ bool edit_text::update(state* s, SDL_Event* ev) {
 			}
 		}
 	}
-	else if (ev->type == SDL_MOUSEBUTTONDOWN) {
-		if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO) && ev->button.y > current_y && ev->button.y <= current_yh
+	if (ev->type == SDL_MOUSEBUTTONDOWN) {
+		if (!active && ev->button.x < (int)round(s->w * UI_SCREEN_RATIO) && ev->button.y > current_y && ev->button.y <= current_yh
 			&& ev->button.x >= current_x && ev->button.x <= current_xw && s->ev.current != in_widget) {
 			active = true;
 			s->ev.current = in_widget;
+			return true;
+		}
+		else if(active) {
+			active = false;
+			s->ev.current = in_funcs;
+			return true;
 		}
 	}
 	return false;

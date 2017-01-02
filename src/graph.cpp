@@ -226,18 +226,18 @@ void fxy_graph::generate(state* s) {
 		}
 	}
 
-	float zmin = FLT_MAX, zmax = -FLT_MAX;
+	float gzmin = FLT_MAX, gzmax = -FLT_MAX;
 	for (unsigned int i = 0; i < threads.size(); i++) {
-		if (data[i]->zmin < zmin) zmin = data[i]->zmin;
-		if (data[i]->zmax > zmax) zmax = data[i]->zmax;
+		if (data[i]->zmin < gzmin) gzmin = data[i]->zmin;
+		if (data[i]->zmax > gzmax) gzmax = data[i]->zmax;
 	}
-	zmin = zmin;
-	zmax = zmax;
+	zmin = gzmin;
+	zmax = gzmax;
+
+	normalize(s);
 
 	for (gendata* g : data)
 		delete g;
-
-	normalize(s);
 }
 
 void regengraph(state* s, int index) {
