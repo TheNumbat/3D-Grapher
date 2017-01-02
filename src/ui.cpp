@@ -68,11 +68,8 @@ UI::UI(state* s) {
 		s->set.antialiasing = !s->set.antialiasing;
 	}));
 
-	settings.push_back(new multi_text({ "Camera: 2D", "Camera: 3D", "Camera: Fixed 3D" }, 2, [](state* s, string str) -> void {
-		if (str == "Camera: 2D") {
-			s->set.camtype = cam_2d;
-		}
-		else if (str == "Camera: 3D") {
+	settings.push_back(new multi_text({ "Camera: Fixed 3D", "Camera: 3D" }, 0, [](state* s, string str) -> void {
+		if (str == "Camera: 3D") {
 			s->set.camtype = cam_3d;
 		}
 		else if (str == "Camera: Fixed 3D") {

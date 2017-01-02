@@ -99,7 +99,7 @@ void state::run() {
 			view = c_3d.getView();
 			proj = perspective(radians(c_3d.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
 		}
-		else if (set.camtype == cam_3d_static) {
+		else {
 			view = c_3d_static.getView();
 			proj = perspective(radians(c_3d_static.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
 		}
