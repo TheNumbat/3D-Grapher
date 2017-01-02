@@ -138,7 +138,7 @@ void state::run() {
 			glDisable(GL_DEPTH_TEST);
 			glEnable(GL_BLEND);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			ui->render(this, w, h);
+			ui->render(this);
 		}
 
 		ev.run(this);

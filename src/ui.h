@@ -10,7 +10,8 @@ using namespace std;
 
 enum ui_state {
 	ui_funcs,
-	ui_settings
+	ui_settings,
+	ui_funcs_adding
 };
 
 struct state;
@@ -29,10 +30,10 @@ struct fxy_remove_callback {
 
 struct widget {
 	virtual ~widget() {};
-	virtual int render(state* s, int w, int h, int ui_w, int x, int y) = 0;
+	virtual int render(state* s, int ui_w, int x, int y) = 0;
 	virtual bool update(state* s, SDL_Event* ev) = 0;
 	point pts[6];
-	int current_y, current_yh;
+	int current_y, current_yh, current_x, current_xw;
 	bool active, should_remove;
 };
 
@@ -41,19 +42,20 @@ struct UI {
 	~UI();
 	void remove_dead_widgets();
 	void drawRect(shader& shader, int x, int y, int w, int h, float r, float g, float b, float a, float screenw, float screenh);
-	void render(state* s, int w, int h);
-	void UI::render_sidebar(state* s);
-	vector<widget*> funcs;
-	vector<widget*> settings;
+	void render(state* s);
+	void render_sidebar(state* s);
+	int render_widgets(state* s, vector<widget*>& v, int ui_w, int x, int y, bool fullborders);
+	vector<widget*> funcs, funcs_add, settings;
 	GLuint VAO, VBO;
 	textured_rect in, out, gear, f;
 	ui_state uistate;
 	bool active;
+	int adding_x, adding_y;
 };
 
 struct edit_text : public widget {
 	edit_text(state* s, string e, string h, function<void(state*, string)> c, function<bool(state*)> rm, bool a = true);
-	int render(state* s, int w, int h, int ui_w, int x, int y);
+	int render(state* s, int ui_w, int x, int y);
 	bool update(state* s, SDL_Event* ev);
 	void break_str(state* s);
 	void update_cursor(state* s);
@@ -71,7 +73,7 @@ struct edit_text : public widget {
 struct toggle_text : public widget {
 	toggle_text(string t, bool o, function<void(state*)> c);
 	~toggle_text() {}
-	int render(state* s, int w, int h, int ui_w, int x, int y);
+	int render(state* s, int ui_w, int x, int y);
 	bool update(state* s, SDL_Event* ev);
 	function<void(state*)> toggleCallback;
 	bool on;
@@ -79,10 +81,20 @@ struct toggle_text : public widget {
 	textured_rect r;
 };
 
+struct static_text : public widget {
+	static_text(string t, function<void(state*)> c);
+	~static_text() {}
+	int render(state* s, int ui_w, int x, int y);
+	bool update(state* s, SDL_Event* ev);
+	function<void(state*)> clickCallback;
+	string text;
+	textured_rect r;
+};
+
 struct multi_text : public widget {
 	multi_text(vector<string> strs, int p, function<void(state*, string)> c);
 	~multi_text() {}
-	int render(state* s, int w, int h, int ui_w, int x, int y);
+	int render(state* s, int ui_w, int x, int y);
 	bool update(state* s, SDL_Event* ev);
 	function<void(state*, string)> toggleCallback;
 	int pos;
@@ -93,7 +105,7 @@ struct multi_text : public widget {
 struct slider : public widget {
 	slider(string t, float f, function<void(state*, float)> c);
 	~slider() {}
-	int render(state* s, int w, int h, int ui_w, int x, int y);
+	int render(state* s, int ui_w, int x, int y);
 	bool update(state* s, SDL_Event* ev);
 	function<void(state*, float)> moveCallback;
 	string text;

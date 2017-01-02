@@ -6,11 +6,10 @@
 		// Rects have to be set every frame
 		// Something is wrong with static 3d cam when not at 0, 0, 0
 	// Implement
-		// 2D Cameras
+		// 2D Camera
 		// Lighting
 		// Graph types
 	// UI
-		// Scroll bar
 		// Error messages
 	// Math Features
 		// Multiply without *
@@ -28,7 +27,6 @@
 		// Maxs & mins (abs and rel)
 		// Parametric Lines & Surfaces
 		// Line/Surface/Flux integrals
-
 
 int main(int argc, char** args) {
 

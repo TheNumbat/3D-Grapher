@@ -42,6 +42,7 @@ bool fxy_remove_callback::operator()(state* s) const {
 		s->graphs.erase(s->graphs.begin() + g_ind);
 		updateAxes(s);
 	}
+	s->ev.current = in_funcs;
 	return true;
 }
 
@@ -91,7 +92,7 @@ UI::UI(state* s) {
 		}
 		s->ev.current = in_settings;
 		SDL_ShowCursor(1);
-	}, [](state* s) -> bool {return false; }, false));
+	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
 	settings.push_back(new edit_text(s, to_string((int)s->set.xmax), "xmax: ", [](state* s, string exp) -> void {
 		try {
 			float num = stof(exp);
@@ -106,7 +107,7 @@ UI::UI(state* s) {
 		}
 		s->ev.current = in_settings;
 		SDL_ShowCursor(1);
-	}, [](state* s) -> bool {return false; }, false));
+	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
 	settings.push_back(new edit_text(s, to_string((int)s->set.ymin), "ymin: ", [](state* s, string exp) -> void {
 		try {
 			float num = stof(exp);
@@ -121,7 +122,7 @@ UI::UI(state* s) {
 		}
 		s->ev.current = in_settings;
 		SDL_ShowCursor(1);
-	}, [](state* s) -> bool {return false; }, false));
+	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
 	settings.push_back(new edit_text(s, to_string((int)s->set.ymax), "ymax: ", [](state* s, string exp) -> void {
 		try {
 			float num = stof(exp);
@@ -136,7 +137,7 @@ UI::UI(state* s) {
 		}
 		s->ev.current = in_settings;
 		SDL_ShowCursor(1);
-	}, [](state* s) -> bool {return false; }, false));
+	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
 	settings.push_back(new edit_text(s, to_string((int)s->set.xrez), "xrez: ", [](state* s, string exp) -> void {
 		try {
 			int num = stoi(exp);
@@ -148,7 +149,7 @@ UI::UI(state* s) {
 		}
 		s->ev.current = in_settings;
 		SDL_ShowCursor(1);
-	}, [](state* s) -> bool {return false; }, false));
+	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
 	settings.push_back(new edit_text(s, to_string((int)s->set.yrez), "yrez: ", [](state* s, string exp) -> void {
 		try {
 			int num = stoi(exp);
@@ -160,7 +161,16 @@ UI::UI(state* s) {
 		}
 		s->ev.current = in_settings;
 		SDL_ShowCursor(1);
-	}, [](state* s) -> bool {return false; }, false));
+	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
+
+	funcs_add.push_back(new static_text("f(x,y)", [](state* s) -> void {
+		edit_text* w = new edit_text(s, " ", "f(x,y)= ", fxy_enter_callback(s->next_graph_id), fxy_remove_callback(s->next_graph_id), true);
+		s->ui->funcs.push_back(w);
+		s->ev.current = in_widget;
+		s->ui->uistate = ui_funcs;
+		SDL_StartTextInput();
+		s->next_graph_id++;
+	}));
 
 	auto widgetsCallback = [](state* s, SDL_Event* ev) -> bool {
 		if (s->ui->uistate == ui_funcs) {
@@ -168,9 +178,19 @@ UI::UI(state* s) {
 				if (w->update(s, ev)) return true;
 			}
 		}
-		else {
+		else if (s->ui->uistate == ui_settings) {
 			for (widget* w : s->ui->settings) {
 				if (w->update(s, ev)) return true;
+			}
+		}
+		else {
+			for (widget* w : s->ui->funcs_add) {
+				if (w->update(s, ev)) return true;
+			}
+			if (ev->type == SDL_MOUSEBUTTONDOWN || (ev->type == SDL_KEYDOWN && ev->key.keysym.sym == SDLK_ESCAPE)) {
+				s->ev.current = in_funcs;
+				s->ui->uistate = ui_funcs;
+				return true;
 			}
 		}
 		return false;
@@ -241,44 +261,49 @@ void UI::drawRect(shader& shader, int x, int y, int w, int h, float r, float g, 
 	glBindVertexArray(0);
 }
 
-void UI::render(state* s, int w, int h) {
-	float fw = (float)w, fh = (float)h;
-	int xoff, ui_w = (int)round(w * UI_SCREEN_RATIO);
+void UI::render(state* s) {
+	int ui_w = (int)round(s->w * UI_SCREEN_RATIO);
+	int x;
 	if (active)
-		xoff = 0;
+		x = 0;
 	else
-		xoff = -ui_w + 5;
-	drawRect(s->rect_s, xoff, 0, ui_w, h, 1.0f, 1.0f, 1.0f, 1.0f, fw, fh); // white background
-	if (uistate == ui_funcs) {
-		int cur_y = 0;
-		unsigned int windex = 0;
-		while (cur_y < h && windex < funcs.size()) {
-			cur_y += 3;
-			cur_y = funcs[windex]->render(s, w, h, ui_w, 5 + xoff, cur_y) + 3; // widget
-			drawRect(s->rect_s, xoff, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // top/bottom black strip
-			cur_y += 3;
-			windex++;
-		}
+		x = -ui_w + 5;
+	drawRect(s->rect_s, x, 0, ui_w, s->h, 1.0f, 1.0f, 1.0f, 1.0f, (float)s->w, (float)s->h); // white background
+
+	int y = 3;
+
+	if (uistate == ui_funcs || uistate == ui_funcs_adding) {
+		render_widgets(s, funcs, ui_w, x, y, true);
 	}
-	else if(uistate == ui_settings) {
-		int cur_y = 3;
-		unsigned int windex = 0;
-		while (cur_y < h && windex < settings.size()) {
-			cur_y = settings[windex]->render(s, w, h, ui_w, 5 + xoff, cur_y) + 3;
-			drawRect(s->rect_s, xoff, cur_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // top/bottom black strip
-			cur_y += 3;
-			windex++;
-		}
+	else if (uistate == ui_settings) {
+		render_widgets(s, settings, ui_w, x, y, true);
 	}
-	drawRect(s->rect_s, xoff + ui_w, 0, 3, h, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // right black strip
-	drawRect(s->rect_s, xoff, 0, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // top black strip
-	drawRect(s->rect_s, xoff, h - 3, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, fw, fh); // bottom black strip
 	render_sidebar(s);
+	if (uistate == ui_funcs_adding) {
+		y = render_widgets(s, funcs_add, ui_w / 2, adding_x, adding_y, false);
+		drawRect(s->rect_s, adding_x, adding_y, 3, y - adding_y, 0.0f, 0.0f, 0.0f, 1.0f, (float)s->w, (float)s->h); // right black strip
+	}
+}
+
+int UI::render_widgets(state* s, vector<widget*>& v, int ui_w, int x, int y, bool fullborders) {
+	int base_y = y;
+	y += 3;
+	unsigned int windex = 0;
+	while (y < s->h && windex < v.size()) {
+		y = v[windex]->render(s, ui_w, 5 + x, y) + 3;
+		drawRect(s->rect_s, x, y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, (float)s->w, (float)s->h); // top/bottom black strip
+		y += 3;
+		windex++;
+	}
+	drawRect(s->rect_s, x + ui_w, base_y, 3, (fullborders ? s->h : y) - base_y, 0.0f, 0.0f, 0.0f, 1.0f, (float)s->w, (float)s->h); // right black strip
+	drawRect(s->rect_s, x, base_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, (float)s->w, (float)s->h); // top black strip
+	drawRect(s->rect_s, x, (fullborders ? s->h : y) - 3, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, (float)s->w, (float)s->h); // bottom black strip
+	return y;
 }
 
 void UI::render_sidebar(state* s) {
 	if (active) {
-		if (uistate == ui_funcs) {
+		if (uistate == ui_funcs || uistate == ui_funcs_adding) {
 			drawRect(s->rect_s, (int)round(s->w * UI_SCREEN_RATIO) + 3, 33, 36, 36, 0.0f, 0.0f, 0.0f, 0.251f, (float)s->w, (float)s->h);
 		}
 		else if (uistate == ui_settings) {
@@ -389,6 +414,13 @@ bool edit_text::update(state* s, SDL_Event* ev) {
 			}
 		}
 	}
+	else if (ev->type == SDL_MOUSEBUTTONDOWN) {
+		if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO) && ev->button.y > current_y && ev->button.y <= current_yh
+			&& ev->button.x >= current_x && ev->button.x <= current_xw && s->ev.current != in_widget) {
+			active = true;
+			s->ev.current = in_widget;
+		}
+	}
 	return false;
 }
 
@@ -397,28 +429,26 @@ void edit_text::remove(state* s) {
 		should_remove = true;
 		s->ui->remove_dead_widgets(); // basically 'delete this' ... quesitonable practice
 	}
-	if (s->ui->uistate == ui_funcs)
-		s->ev.current = in_funcs;
-	else
-		s->ev.current = in_settings;
 	SDL_ShowCursor(1);
 }
 
-int edit_text::render(state* s, int w, int h, int ui_w, int x, int y) {
+int edit_text::render(state* s, int ui_w, int x, int y) {
 	current_y = y;
+	current_x = x;
 	for (string l : lines) {
 		SDL_Surface* text = TTF_RenderText_Shaded(s->font, l.c_str(), { 0, 0, 0 }, { 255, 255, 255 });
 		r.tex.load(text);
 		r.set((float)x, (float)y, (float)text->w, (float)text->h);
-		r.render(w, h, s->UI_s);
+		r.render(s->w, s->h, s->UI_s);
 		y += text->h;
 		SDL_FreeSurface(text);
 	}
 	if (active) {
 		update_cursor(s);
-		s->ui->drawRect(s->rect_s, x + cursor_x, current_y + 3 + cursor_y, 2, 24, 0.0f, 0.0f, 0.0f, 1.0f, (float)w, (float)h);
+		s->ui->drawRect(s->rect_s, x + cursor_x, current_y + 3 + cursor_y, 2, 24, 0.0f, 0.0f, 0.0f, 1.0f, (float)s->w, (float)s->h);
 	}
 	current_yh = y;
+	current_xw = x + ui_w;
 	return y;
 }
 
@@ -457,11 +487,43 @@ void edit_text::break_str(state* s) {
 			end--;
 			TTF_SizeText(s->font, total.substr(e_pos, end - e_pos).c_str(), &newtw, NULL);
 		}
+		if (end == e_pos) break;
 		lines.push_back(total.substr(e_pos, end - e_pos));
 		e_pos = end;
 		tw -= newtw;
 	} while (tw > 0);
 	cursor_y = currentLine() * 29;
+}
+
+static_text::static_text(string t, function<void(state*)> c) {
+	text = t;
+	clickCallback = c;
+	r.gen();
+}
+
+int static_text::render(state* s, int ui_w, int x, int y) {
+	current_y = y;
+	current_x = x;
+	SDL_Surface* surf = TTF_RenderText_Shaded(s->font, text.c_str(), { 0, 0, 0 }, { 255, 255, 255 });
+	r.tex.load(surf);
+	r.set((float)x, (float)y, (float)(surf->w <= ui_w - 5 ? surf->w : ui_w - 5), (float)surf->h);
+	r.render(s->w, s->h, s->UI_s);
+	y += surf->h;
+	SDL_FreeSurface(surf);
+	current_yh = y;
+	current_xw = x + ui_w;
+	return y;
+}
+
+bool static_text::update(state* s, SDL_Event* ev) {
+	if (ev->type == SDL_MOUSEBUTTONDOWN) {
+		if (ev->button.y > current_y - 3 && ev->button.y <= current_yh + 3
+			&& ev->button.x >= current_x && ev->button.x <= current_xw) {
+			clickCallback(s);
+			return true;
+		}
+	}
+	return false;
 }
 
 toggle_text::toggle_text(string t, bool o, function<void(state*)> c) {
@@ -472,28 +534,31 @@ toggle_text::toggle_text(string t, bool o, function<void(state*)> c) {
 	r.gen();
 }
 
-int toggle_text::render(state* s, int w, int h, int ui_w, int x, int y) {
+int toggle_text::render(state* s, int ui_w, int x, int y) {
 	current_y = y;
+	current_x = x;
 	SDL_Color background;
 	if (on) {
 		background = { 191, 191, 191 };
-		s->ui->drawRect(s->rect_s, x - 5, y, ui_w, 32, 0.0f, 0.0f, 0.0f, 0.25f, (float)w, (float)h);
+		s->ui->drawRect(s->rect_s, x - 5, y, ui_w, 32, 0.0f, 0.0f, 0.0f, 0.25f, (float)s->w, (float)s->h);
 	}
 	else
 		background = { 255, 255, 255 };
 	SDL_Surface* surf = TTF_RenderText_Shaded(s->font, text.c_str(), { 0, 0, 0 }, background);
 	r.tex.load(surf);
 	r.set((float)x, (float)y, (float)(surf->w <= ui_w - 5 ? surf->w : ui_w - 5), (float)surf->h);
-	r.render(w, h, s->UI_s);
+	r.render(s->w, s->h, s->UI_s);
 	y += surf->h;
 	SDL_FreeSurface(surf);
 	current_yh = y;
+	current_xw = x + ui_w;
 	return y;
 }
 
 bool toggle_text::update(state* s, SDL_Event* ev) {
 	if (ev->type == SDL_MOUSEBUTTONDOWN) {
-		if (ev->button.y > current_y - 3 && ev->button.y <= current_yh + 3) {
+		if (ev->button.y > current_y - 3 && ev->button.y <= current_yh + 3
+			&& ev->button.x >= current_x && ev->button.x <= current_xw) {
 			on = !on;
 			toggleCallback(s);
 			return true;
@@ -510,22 +575,25 @@ multi_text::multi_text(vector<string> strs, int p, function<void(state*, string)
 	r.gen();
 }
 
-int multi_text::render(state* s, int w, int h, int ui_w, int x, int y) {
+int multi_text::render(state* s, int ui_w, int x, int y) {
 	current_y = y;
-	s->ui->drawRect(s->rect_s, x - 5, y, ui_w, 32, 0.0f, 0.0f, 0.0f, 0.25f, (float)w, (float)h);
+	current_x = x;
+	s->ui->drawRect(s->rect_s, x - 5, y, ui_w, 32, 0.0f, 0.0f, 0.0f, 0.25f, (float)s->w, (float)s->h);
 	SDL_Surface* surf = TTF_RenderText_Shaded(s->font, text[pos].c_str(), { 0, 0, 0 }, { 191, 191, 191 });
 	r.tex.load(surf);
 	r.set((float)x, (float)y, (float)(surf->w <= ui_w - 5 ? surf->w : ui_w - 5), (float)surf->h);
-	r.render(w, h, s->UI_s);
+	r.render(s->w, s->h, s->UI_s);
 	y += surf->h;
 	SDL_FreeSurface(surf);
 	current_yh = y;
+	current_xw = x + ui_w;
 	return y;
 }
 
 bool multi_text::update(state* s, SDL_Event* ev) {
 	if (ev->type == SDL_MOUSEBUTTONDOWN) {
-		if (ev->button.y > current_y - 3 && ev->button.y <= current_yh + 3) {
+		if (ev->button.y > current_y - 3 && ev->button.y <= current_yh + 3
+			&& ev->button.x >= current_x && ev->button.x <= current_xw) {
 			if (ev->button.button == SDL_BUTTON_LEFT)
 				++pos %= text.size();
 			else if (ev->button.button == SDL_BUTTON_RIGHT) {
@@ -548,19 +616,21 @@ slider::slider(string t, float f, function<void(state*, float)> c) {
 	r.gen();
 }
 
-int slider::render(state* s, int w, int h, int ui_w, int x, int y) {
+int slider::render(state* s, int ui_w, int x, int y) {
 	current_y = y;
-	s->ui->drawRect(s->rect_s, x - 5, y, ui_w, 32, 0.0f, 0.0f, 0.0f, 0.25f, (float)w, (float)h);
+	current_x = x;
+	s->ui->drawRect(s->rect_s, x - 5, y, ui_w, 32, 0.0f, 0.0f, 0.0f, 0.25f, (float)s->w, (float)s->h);
 	SDL_Surface* surf = TTF_RenderText_Shaded(s->font, text.c_str(), { 0, 0, 0 }, { 191, 191, 191 });
 	r.tex.load(surf);
 	int total_w = surf->w <= ui_w - 5 ? surf->w : ui_w - 25;
 	r.set((float)x, (float)y, (float)total_w, (float)surf->h);
-	r.render(w, h, s->UI_s);
+	r.render(s->w, s->h, s->UI_s);
 	y += surf->h;
 	current_yh = y;
-	slider_w = ui_w - x - total_w - 6;
-	s->ui->drawRect(s->rect_s, x + total_w + 3, ((current_yh - current_y) / 2) + current_y, slider_w, 2, 0.0f, 0.0f, 0.0f, 0.5f, (float)w, (float)h);
-	s->ui->drawRect(s->rect_s, x + total_w + 3 + (int)round(pos * (slider_w - 10)), ((current_yh - current_y) / 2) + current_y - 4, 10, 10, 0.0f, 0.0f, 0.0f, 0.5f, (float)w, (float)h);
+	current_xw = x + ui_w;
+	slider_w = ui_w - total_w - 11;
+	s->ui->drawRect(s->rect_s, x + total_w + 3, ((current_yh - current_y) / 2) + current_y, slider_w, 2, 0.0f, 0.0f, 0.0f, 0.5f, (float)s->w, (float)s->h);
+	s->ui->drawRect(s->rect_s, x + total_w + 3 + (int)round(pos * (slider_w - 10)), ((current_yh - current_y) / 2) + current_y - 4, 10, 10, 0.0f, 0.0f, 0.0f, 0.5f, (float)s->w, (float)s->h);
 	SDL_FreeSurface(surf);
 	return y;
 }
@@ -582,7 +652,8 @@ bool slider::update(state* s, SDL_Event* ev) {
 			return true;
 		}
 	}
-	else if (ev->type == SDL_MOUSEBUTTONDOWN && ev->button.y > current_y - 3 && ev->button.y <= current_yh + 3) {
+	else if (ev->type == SDL_MOUSEBUTTONDOWN && ev->button.y > current_y - 3 && ev->button.y <= current_yh + 3
+			 && ev->button.x >= current_x && ev->button.x <= current_xw) {
 		active = true;
 		return true;
 	}
