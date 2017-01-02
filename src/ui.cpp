@@ -83,6 +83,8 @@ UI::UI(state* s) {
 
 	settings.push_back(new slider("Opacity", 1.0f, [](state* s, float f) -> void {s->set.graphopacity = f; }));
 	
+	settings.push_back(new static_text("Domain", [](state*) -> void {}));
+
 	settings.push_back(new edit_text(s, to_string((int)s->set.xmin), "xmin: ", [](state* s, string exp) -> void {
 		try {
 			float num = stof(exp);
@@ -98,6 +100,7 @@ UI::UI(state* s) {
 		s->ev.current = in_settings;
 		SDL_ShowCursor(1);
 	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
+
 	settings.push_back(new edit_text(s, to_string((int)s->set.xmax), "xmax: ", [](state* s, string exp) -> void {
 		try {
 			float num = stof(exp);
@@ -143,6 +146,9 @@ UI::UI(state* s) {
 		s->ev.current = in_settings;
 		SDL_ShowCursor(1);
 	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
+
+	settings.push_back(new static_text("Graph Resolution", [](state*) -> void {}));
+
 	settings.push_back(new edit_text(s, to_string((int)s->set.xrez), "xrez: ", [](state* s, string exp) -> void {
 		try {
 			int num = stoi(exp);
