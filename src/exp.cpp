@@ -3,10 +3,16 @@
 #include <string>
 #include <stack>
 #include <queue>
+#include <tuple>
 
 bool isop(char c) {
 	return c == open_p || c == add || c == subtract || c == op_neg ||
 		   c == multiply || c == modulo || c == divide || c == power;
+}
+
+bool isnonfunc(char c) {
+	return c == close_p || c == add || c == subtract || c == op_neg ||
+		c == multiply || c == modulo || c == divide || c == power;
 }
 
 #define get2() two = s.top(); \
@@ -17,7 +23,7 @@ bool isop(char c) {
 #define get1() one = s.top(); \
 			   s.pop();
 
-float eval(const vector<op>& EQ, float x, float y, float z) {
+float eval(const vector<op>& EQ, vector<tuple<char, float>> vars) {
 	stack<float> s;
 	float one = 0, two = 0, result = 0;
 	size_t size = EQ.size();
@@ -162,15 +168,19 @@ float eval(const vector<op>& EQ, float x, float y, float z) {
 			result = -one;
 			s.push(result);
 			break;
-		case var_x:
-			s.push(x);
+		case var: {
+			char v = EQ[index + 1];
+			auto entry = find_if(vars.begin(), vars.end(), [v](const tuple<char, float>& tup) -> bool { return get<0>(tup) == v; });
+			if (entry == vars.end()) {
+				//cout << "\terr: unkown variable " << v << endl;
+				return 0;
+			}
+			else {
+				s.push(get<1>(*entry));
+			}
+			index++;
 			break;
-		case var_y:
-			s.push(y);
-			break;
-		case var_z:
-			s.push(z);
-			break;
+		}
 		case const_e:
 			s.push(val_e);
 			break;
@@ -261,9 +271,6 @@ bool in(string str, vector<op>& EQ) {
 			ins = true;
 			s.push(buf);
 			break;
-		case var_x:
-		case var_y:
-		case var_z:
 		case const_pi:
 		case const_e:
 			ins = true;
@@ -272,64 +279,71 @@ bool in(string str, vector<op>& EQ) {
 		case ',':
 			ins = true;
 			break;
-		default: // Functions & numbers
+		default: // Functions, variables, and numbers
 			if (!num(buf)) {
-				string str;
-				getline(in, str, '(');
-				str.insert(0, 1, buf);
-				// Test function name
-				{
-					if (str == "sqrt")
-						s.push(op_sqrt);
-					else if (str == "sin")
-						s.push(op_sin);
-					else if (str == "cos")
-						s.push(op_cos);
-					else if (str == "tan")
-						s.push(op_tan);
-					else if (str == "asin")
-						s.push(op_asin);
-					else if (str == "acos")
-						s.push(op_acos);
-					else if (str == "atan")
-						s.push(op_atan);
-					else if (str == "abs")
-						s.push(op_abs);
-					else if (str == "exp")
-						s.push(op_exp);
-					else if (str == "exptwo")
-						s.push(op_exptwo);
-					else if (str == "ceil")
-						s.push(op_ceil);
-					else if (str == "floor")
-						s.push(op_floor);
-					else if (str == "ln")
-						s.push(op_ln);
-					else if (str == "log")
-						s.push(op_log);
-					else if (str == "log2")
-						s.push(op_log2);
-					else if (str == "sec")
-						s.push(op_sec);
-					else if (str == "csc")
-						s.push(op_csc);
-					else if (str == "cot")
-						s.push(op_cot);
-					else if (str == "asec")
-						s.push(op_asec);
-					else if (str == "acsc")
-						s.push(op_acsc);
-					else if (str == "acot")
-						s.push(op_acot);
-					else {
-						if (!in.good())
-							cout << "   err: unkown name '" << str << "'" << endl;
-						else
-							cout << "   err: unkown function '" << str << "()'" << endl;
-						return false;
+				if (in.peek() != EOF && !isnonfunc(in.peek())) {
+					string str;
+					getline(in, str, '(');
+					str.insert(0, 1, buf);
+					// Test function name
+					{
+						if (str == "sqrt")
+							s.push(op_sqrt);
+						else if (str == "sin")
+							s.push(op_sin);
+						else if (str == "cos")
+							s.push(op_cos);
+						else if (str == "tan")
+							s.push(op_tan);
+						else if (str == "asin")
+							s.push(op_asin);
+						else if (str == "acos")
+							s.push(op_acos);
+						else if (str == "atan")
+							s.push(op_atan);
+						else if (str == "abs")
+							s.push(op_abs);
+						else if (str == "exp")
+							s.push(op_exp);
+						else if (str == "exptwo")
+							s.push(op_exptwo);
+						else if (str == "ceil")
+							s.push(op_ceil);
+						else if (str == "floor")
+							s.push(op_floor);
+						else if (str == "ln")
+							s.push(op_ln);
+						else if (str == "log")
+							s.push(op_log);
+						else if (str == "log2")
+							s.push(op_log2);
+						else if (str == "sec")
+							s.push(op_sec);
+						else if (str == "csc")
+							s.push(op_csc);
+						else if (str == "cot")
+							s.push(op_cot);
+						else if (str == "asec")
+							s.push(op_asec);
+						else if (str == "acsc")
+							s.push(op_acsc);
+						else if (str == "acot")
+							s.push(op_acot);
+						else {
+							if (!in.good())
+								cout << "\terr: unkown name '" << str << "'" << endl;
+							else
+								cout << "\terr: unkown function '" << str << "()'" << endl;
+							return false;
+						}
 					}
+					s.push('(');
 				}
-				s.push('(');
+				else {
+					ins = true;
+					EQ.push_back(var);
+					EQ.push_back(buf);
+				}
 			}
 			else {
 				while (!in.eof() && num(buf)) {
@@ -344,7 +358,7 @@ bool in(string str, vector<op>& EQ) {
 	}
 	while (s.size()) {
 		if (s.top() == '(' || s.top() == ')') {
-			cout << "   err: unbalanced parenthesis" << endl;
+			cout << "\terr: unbalanced parenthesis" << endl;
 			return false;
 		}
 		EQ.push_back(s.top());
@@ -399,6 +413,8 @@ void printeq(ostream& out, vector<op> eq) {
 			out << "acot";
 		else if (c == op_neg)
 			out << "neg";
+		else if (c == var)
+			out << "var";
 		else
 			out << (char)c;
 		out << " ";

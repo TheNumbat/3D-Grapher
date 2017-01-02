@@ -12,7 +12,7 @@ const float val_pi = 3.141592653589793238462643383279f;
 
 typedef int op;
 
-float eval(const vector<op>& EQ, float x, float y, float z = 0.0f);
+float eval(const vector<op>& EQ, vector<tuple<char, float>> vars);
 bool in(string str, vector<op>& EQ);
 void printeq(ostream& out, vector<op> eq);
 
@@ -52,10 +52,7 @@ enum operators : op {
 	op_acsc = 1020,
 	op_acot = 1021,
 
-	// variables
-	var_x = 'x',
-	var_y = 'y',
-	var_z = 'z',
+	var = 9999,
 
 	// constants
 	const_pi = 'P',

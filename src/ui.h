@@ -1,7 +1,8 @@
-
+﻿
 #pragma once
 
 #include "gl.h"
+#include "graph.h"
 #include <string>
 #include <vector>
 #include <functional>
@@ -16,14 +17,15 @@ enum ui_state {
 
 struct state;
 
-struct fxy_enter_callback {
-	fxy_enter_callback(int i);
+struct graph_enter_callback {
+	graph_enter_callback(int i, graph_type g);
 	void operator()(state* s, string e) const;
 	int g_id;
+	graph_type gt;
 };
 
-struct fxy_remove_callback {
-	fxy_remove_callback(int i);
+struct graph_remove_callback {
+	graph_remove_callback(int i);
 	bool operator()(state* s) const;
 	int g_id;
 };

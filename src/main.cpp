@@ -11,6 +11,9 @@
 		// Graph types
 	// UI
 		// Error messages
+			// Unknown function name
+			// Unused variable
+			// Unbalanced Parenthesis
 	// Math Features
 		// Multiply without *
 		// Highlight curve along a set x/y

@@ -20,18 +20,7 @@ GLfloat axes[] = {
 	0.0f ,  0.0f ,  10.0f,		0.0f, 0.0f, 1.0f
 };
 
-struct gendata {
-	gendata() {
-		zmin = FLT_MAX;
-		zmax = -FLT_MAX;
-	};
-	state* s;
-	vector<float> ret;
-	float zmin, zmax, xmin, dx, dy;
-	int txrez;
-};
-
-graph::graph(int id, string s, float xmi, float xma, float ymi, float yma, unsigned int xr, unsigned int yr) {
+fxy_graph::fxy_graph(int id, string s) {
 	eq_str = s;
 	ID = id;
 	zmin = zmax = 0;
@@ -148,12 +137,13 @@ void updateAxes(state* s) {
 	}
 }
 
-void genthread(gendata* g, int index) {
+void fxy_graph::genthread(gendata* g) {
+	int index = getIndex(g->s, g->ID);
 	float x = g->xmin;
 	for (int tx = 0; tx < g->txrez; tx++, x += g->dx) {
 		float y = g->s->set.ymin;
 		for (int ty = 0; ty <= g->s->set.yrez; ty++, y += g->dy) {
-			float z = eval(g->s->graphs[index]->eq, x, y);
+			float z = eval(g->s->graphs[index]->eq, { { 'x',x },{ 'y',y } });
 
 			if (z < g->zmin) g->zmin = z;
 			else if (z > g->zmax) g->zmax = z;
@@ -165,7 +155,19 @@ void genthread(gendata* g, int index) {
 	}
 }
 
-void gengraph(state* s, int index) {
+void graph::normalize(state* s) {
+	if (s->set.axisnormalization) {
+		for (unsigned int i = 0; i < verticies.size(); i += 3) {
+			verticies[i] /= (s->set.xmax - s->set.xmin) / 20;
+			verticies[i + 1] /= (s->set.ymax - s->set.ymin) / 20;
+			verticies[i + 2] /= (zmax - zmin) / 20;
+		}
+		zmin = -10;
+		zmax = 10;
+	}
+}
+
+void fxy_graph::generate(state* s) {
 	unsigned int numthreads = thread::hardware_concurrency();
 	int cpuinfo[4];
 	__cpuid(cpuinfo, 1);
@@ -193,16 +195,17 @@ void gengraph(state* s, int index) {
 			d->dx = dx;
 			d->dy = dy;
 			d->xmin = xmin;
+			d->ID = ID;
 
 			data.push_back(d);
-			threads.push_back(thread(genthread, data.back(), index));
+			threads.push_back(thread(genthread, data.back()));
 
 			xmin += txDelta * dx;
 		}
 	}
 	for (unsigned int i = 0; i < threads.size(); i++) {
 		threads[i].join();
-		s->graphs[index]->verticies.insert(s->graphs[index]->verticies.end(), data[i]->ret.begin(), data[i]->ret.end());
+		verticies.insert(verticies.end(), data[i]->ret.begin(), data[i]->ret.end());
 		data[i]->ret.clear();
 	}
 
@@ -210,15 +213,15 @@ void gengraph(state* s, int index) {
 		for (int y = 0; y < s->set.yrez; y++) {
 			GLuint i_index = x * (s->set.yrez + 1) + y;
 
-			if (!isnan(s->graphs[index]->verticies[i_index * 3 + 2]) &&
-				!isinf(s->graphs[index]->verticies[i_index * 3 + 2])) {
-				s->graphs[index]->indicies.push_back(i_index);
-				s->graphs[index]->indicies.push_back(i_index + 1);
-				s->graphs[index]->indicies.push_back(i_index + s->set.yrez + 1);
+			if (!isnan(verticies[i_index * 3 + 2]) &&
+				!isinf(verticies[i_index * 3 + 2])) {
+				indicies.push_back(i_index);
+				indicies.push_back(i_index + 1);
+				indicies.push_back(i_index + s->set.yrez + 1);
 
-				s->graphs[index]->indicies.push_back(i_index + 1);
-				s->graphs[index]->indicies.push_back(i_index + s->set.yrez + 1);
-				s->graphs[index]->indicies.push_back(i_index + s->set.yrez + 2);
+				indicies.push_back(i_index + 1);
+				indicies.push_back(i_index + s->set.yrez + 1);
+				indicies.push_back(i_index + s->set.yrez + 2);
 			}
 		}
 	}
@@ -228,21 +231,13 @@ void gengraph(state* s, int index) {
 		if (data[i]->zmin < zmin) zmin = data[i]->zmin;
 		if (data[i]->zmax > zmax) zmax = data[i]->zmax;
 	}
-	s->graphs[index]->zmin = zmin;
-	s->graphs[index]->zmax = zmax;
-
-	if (s->set.axisnormalization) {
-		for (unsigned int i = 0; i < s->graphs[index]->verticies.size(); i += 3) {
-			s->graphs[index]->verticies[i] /= (s->set.xmax - s->set.xmin) / 20;
-			s->graphs[index]->verticies[i + 1] /= (s->set.ymax - s->set.ymin) / 20;
-			s->graphs[index]->verticies[i + 2] /= (s->graphs[index]->zmax - s->graphs[index]->zmin) / 20;
-		}
-		s->graphs[index]->zmin = -10;
-		s->graphs[index]->zmax = 10;
-	}
+	zmin = zmin;
+	zmax = zmax;
 
 	for (gendata* g : data)
 		delete g;
+
+	normalize(s);
 }
 
 void regengraph(state* s, int index) {
@@ -259,7 +254,7 @@ void regengraph(state* s, int index) {
 	printeq(cout, s->graphs[index]->eq);
 
 	Uint64 start = SDL_GetPerformanceCounter();
-	gengraph(s, index);
+	s->graphs[index]->generate(s);
 	Uint64 end = SDL_GetPerformanceCounter();
 	cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << endl;
 

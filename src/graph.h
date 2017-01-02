@@ -41,24 +41,55 @@ const int z_max = 32;
 extern GLfloat axes[];
 
 struct graph {
-	graph(int id, string s, float xmi, float xma, float ymi, float yma, unsigned int xr, unsigned int yr);
-	~graph();
+	virtual void generate(state* s) = 0;
+	virtual ~graph();
+	void draw(state* s, mat4& modelveiwproj);
 	void gen();
 	void send();
-	void draw(state* s, mat4& modelveiwproj);
-	
-	vector<op> eq;
-	string eq_str;
-
+	void normalize(state* s);
 	vector<GLfloat> verticies;
 	vector<GLuint> indicies;
 	GLuint VAO, VBO, EBO;
-
-	float zmin, zmax;
-	int ID;
-
 	dimension dim;
 	graph_type type;
+	vector<op> eq;
+	string eq_str;
+	float zmin, zmax;
+	int ID;
+};
+
+struct cyl_graph : public graph {
+	struct gendata {
+		gendata() {
+			zmin = FLT_MAX;
+			zmax = -FLT_MAX;
+		};
+		state* s;
+		vector<float> ret;
+		float zmin, zmax, rmin, dr, dtheta;
+		int trrez, ID;
+	};
+
+	cyl_graph(int id, string s = " ") {}
+	void generate(state* s) {}
+	static void genthread(gendata* g) {}
+};
+
+struct fxy_graph : public graph {
+	struct gendata {
+		gendata() {
+			zmin = FLT_MAX;
+			zmax = -FLT_MAX;
+		};
+		state* s;
+		vector<float> ret;
+		float zmin, zmax, xmin, dx, dy;
+		int txrez, ID;
+	};
+
+	fxy_graph(int id, string s = " ");
+	void generate(state* s);
+	static void genthread(gendata* g);
 };
 
 void updateAxes(state* s);

@@ -1,4 +1,4 @@
-
+﻿
 #include "ui.h"
 #include "state.h"
 
@@ -12,15 +12,20 @@
 
 // the code in this file is p disorganized, good luck
 
-fxy_enter_callback::fxy_enter_callback(int i) {
+graph_enter_callback::graph_enter_callback(int i, graph_type g) {
 	g_id = i;
+	gt = g;
 }
 
-void fxy_enter_callback::operator()(state* s, string e) const {
+void graph_enter_callback::operator()(state* s, string e) const {
 	if (e.size() && e != " ") {
 		int g_ind = getIndex(s, g_id);
 		if (g_ind == -1) {
-			s->graphs.push_back(new graph(g_id, "", (float)s->set.xmin, (float)s->set.xmax, (float)s->set.ymin, (float)s->set.ymax, s->set.xrez, s->set.yrez));
+			switch (gt) {
+			case graph_func: s->graphs.push_back(new fxy_graph(s->next_graph_id)); break;
+			case graph_cylindrical: s->graphs.push_back(new cyl_graph(s->next_graph_id)); break;
+			}
+			s->next_graph_id++;
 			s->graphs.back()->gen();
 			g_ind = s->graphs.size() - 1;
 		}
@@ -31,11 +36,11 @@ void fxy_enter_callback::operator()(state* s, string e) const {
 	}
 }
 
-fxy_remove_callback::fxy_remove_callback(int i) {
+graph_remove_callback::graph_remove_callback(int i) {
 	g_id = i;
 }
 
-bool fxy_remove_callback::operator()(state* s) const {
+bool graph_remove_callback::operator()(state* s) const {
 	int g_ind = getIndex(s, g_id);
 	if (g_ind >= 0) {
 		delete s->graphs[g_ind];
@@ -164,12 +169,19 @@ UI::UI(state* s) {
 	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
 
 	funcs_add.push_back(new static_text("f(x,y)", [](state* s) -> void {
-		edit_text* w = new edit_text(s, " ", "f(x,y)= ", fxy_enter_callback(s->next_graph_id), fxy_remove_callback(s->next_graph_id), true);
+		edit_text* w = new edit_text(s, " ", "f(x,y)= ", graph_enter_callback(s->next_graph_id, graph_func), graph_remove_callback(s->next_graph_id), true);
 		s->ui->funcs.push_back(w);
 		s->ev.current = in_widget;
 		s->ui->uistate = ui_funcs;
 		SDL_StartTextInput();
-		s->next_graph_id++;
+	}));
+
+	funcs_add.push_back(new static_text("f(r,t)", [](state* s) -> void {
+		edit_text* w = new edit_text(s, " ", "f(r,t)= ", graph_enter_callback(s->next_graph_id, graph_cylindrical), graph_remove_callback(s->next_graph_id), true);
+		s->ui->funcs.push_back(w);
+		s->ev.current = in_widget;
+		s->ui->uistate = ui_funcs;
+		SDL_StartTextInput();
 	}));
 
 	auto widgetsCallback = [](state* s, SDL_Event* ev) -> bool {
@@ -436,7 +448,7 @@ int edit_text::render(state* s, int ui_w, int x, int y) {
 	current_y = y;
 	current_x = x;
 	for (string l : lines) {
-		SDL_Surface* text = TTF_RenderText_Shaded(s->font, l.c_str(), { 0, 0, 0 }, { 255, 255, 255 });
+		SDL_Surface* text = TTF_RenderUTF8_Shaded(s->font, l.c_str(), { 0, 0, 0 }, { 255, 255, 255 });
 		r.tex.load(text);
 		r.set((float)x, (float)y, (float)text->w, (float)text->h);
 		r.render(s->w, s->h, s->UI_s);
@@ -504,7 +516,7 @@ static_text::static_text(string t, function<void(state*)> c) {
 int static_text::render(state* s, int ui_w, int x, int y) {
 	current_y = y;
 	current_x = x;
-	SDL_Surface* surf = TTF_RenderText_Shaded(s->font, text.c_str(), { 0, 0, 0 }, { 255, 255, 255 });
+	SDL_Surface* surf = TTF_RenderUTF8_Shaded(s->font, text.c_str(), { 0, 0, 0 }, { 255, 255, 255 });
 	r.tex.load(surf);
 	r.set((float)x, (float)y, (float)(surf->w <= ui_w - 5 ? surf->w : ui_w - 5), (float)surf->h);
 	r.render(s->w, s->h, s->UI_s);
@@ -544,7 +556,7 @@ int toggle_text::render(state* s, int ui_w, int x, int y) {
 	}
 	else
 		background = { 255, 255, 255 };
-	SDL_Surface* surf = TTF_RenderText_Shaded(s->font, text.c_str(), { 0, 0, 0 }, background);
+	SDL_Surface* surf = TTF_RenderUTF8_Shaded(s->font, text.c_str(), { 0, 0, 0 }, background);
 	r.tex.load(surf);
 	r.set((float)x, (float)y, (float)(surf->w <= ui_w - 5 ? surf->w : ui_w - 5), (float)surf->h);
 	r.render(s->w, s->h, s->UI_s);
@@ -579,7 +591,7 @@ int multi_text::render(state* s, int ui_w, int x, int y) {
 	current_y = y;
 	current_x = x;
 	s->ui->drawRect(s->rect_s, x - 5, y, ui_w, 32, 0.0f, 0.0f, 0.0f, 0.25f, (float)s->w, (float)s->h);
-	SDL_Surface* surf = TTF_RenderText_Shaded(s->font, text[pos].c_str(), { 0, 0, 0 }, { 191, 191, 191 });
+	SDL_Surface* surf = TTF_RenderUTF8_Shaded(s->font, text[pos].c_str(), { 0, 0, 0 }, { 191, 191, 191 });
 	r.tex.load(surf);
 	r.set((float)x, (float)y, (float)(surf->w <= ui_w - 5 ? surf->w : ui_w - 5), (float)surf->h);
 	r.render(s->w, s->h, s->UI_s);
@@ -620,7 +632,7 @@ int slider::render(state* s, int ui_w, int x, int y) {
 	current_y = y;
 	current_x = x;
 	s->ui->drawRect(s->rect_s, x - 5, y, ui_w, 32, 0.0f, 0.0f, 0.0f, 0.25f, (float)s->w, (float)s->h);
-	SDL_Surface* surf = TTF_RenderText_Shaded(s->font, text.c_str(), { 0, 0, 0 }, { 191, 191, 191 });
+	SDL_Surface* surf = TTF_RenderUTF8_Shaded(s->font, text.c_str(), { 0, 0, 0 }, { 191, 191, 191 });
 	r.tex.load(surf);
 	int total_w = surf->w <= ui_w - 5 ? surf->w : ui_w - 25;
 	r.set((float)x, (float)y, (float)total_w, (float)surf->h);
