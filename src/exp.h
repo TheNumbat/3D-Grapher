@@ -12,7 +12,7 @@ const float val_pi = 3.141592653589793238462643383279f;
 
 typedef int op;
 
-float eval(const vector<op>& EQ, vector<tuple<char, float>> vars);
+float eval(const vector<op>& EQ, vector<pair<char, float>> vars);
 bool in(string str, vector<op>& EQ);
 void printeq(ostream& out, vector<op> eq);
 

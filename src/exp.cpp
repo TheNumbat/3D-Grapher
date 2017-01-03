@@ -3,7 +3,6 @@
 #include <string>
 #include <stack>
 #include <queue>
-#include <tuple>
 
 bool isop(char c) {
 	return c == open_p || c == add || c == subtract || c == op_neg ||
@@ -23,7 +22,7 @@ bool isnonfunc(char c) {
 #define get1() one = s.top(); \
 			   s.pop();
 
-float eval(const vector<op>& EQ, vector<tuple<char, float>> vars) {
+float eval(const vector<op>& EQ, vector<pair<char, float>> vars) {
 	stack<float> s;
 	float one = 0, two = 0, result = 0;
 	size_t size = EQ.size();
@@ -170,13 +169,13 @@ float eval(const vector<op>& EQ, vector<tuple<char, float>> vars) {
 			break;
 		case var: {
 			char v = EQ[index + 1];
-			auto entry = find_if(vars.begin(), vars.end(), [v](const tuple<char, float>& tup) -> bool { return get<0>(tup) == v; });
+			auto entry = find_if(vars.begin(), vars.end(), [v](const pair<char, float>& var) -> bool { return var.first == v; });
 			if (entry == vars.end()) {
 				//cout << "\terr: unkown variable " << v << endl;
 				return 0;
 			}
 			else {
-				s.push(get<1>(*entry));
+				s.push(entry->second);
 			}
 			index++;
 			break;
