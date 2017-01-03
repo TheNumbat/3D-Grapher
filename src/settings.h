@@ -10,8 +10,8 @@ struct rect_domain {
 };
 
 struct cyl_domain {
-	float rmin, rmax, tmin, tmax, zmin, zmax;
-	int rrez, trez;
+	float zmin, zmax, tmin, tmax, rmin, rmax;
+	int zrez, trez;
 };
 
 struct settings {

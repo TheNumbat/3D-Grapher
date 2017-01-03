@@ -62,13 +62,13 @@ struct graph {
 struct cyl_graph : public graph {
 	struct gendata {
 		gendata() {
-			zmin = FLT_MAX;
-			zmax = -FLT_MAX;
+			rmin = FLT_MAX;
+			rmax = -FLT_MAX;
 		};
 		state* s;
 		vector<float> ret;
-		float zmin, zmax, rmin, dr, dt;
-		int trrez, ID;
+		float rmin, rmax, zmin, dz, dt;
+		int tzrez, ID;
 	};
 
 	cyl_graph(int id, string s = " ");

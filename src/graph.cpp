@@ -33,17 +33,17 @@ cyl_graph::cyl_graph(int id, string s) : graph(id, s) {
 
 void cyl_graph::genthread(gendata* g) {
 	int index = getIndex(g->s, g->ID);
-	float r = g->rmin;
-	for (int tr = 0; tr < g->trrez; tr++, r += g->dr) {
+	float z = g->zmin;
+	for (int tz = 0; tz < g->tzrez; tz++, z += g->dz) {
 		float t = g->s->set.cdom.tmin;
 		for (int tt = 0; tt <= g->s->set.cdom.trez; tt++, t += g->dt) {
-			float z = eval(g->s->graphs[index]->eq, { { 'r',r },{ 't',t } });
+			float r = eval(g->s->graphs[index]->eq, { { 'z',z },{ 't',t } });
 
-			if (z < g->zmin) g->zmin = z;
-			else if (z > g->zmax) g->zmax = z;
+			if (z < g->rmin) g->rmin = r;
+			else if (z > g->rmax) g->rmax = r;
 
-			g->ret.push_back(r * std::cos(t));
-			g->ret.push_back(r * std::sin(t));
+			g->ret.push_back(r * cos(t));
+			g->ret.push_back(r * sin(t));
 			g->ret.push_back(z);
 		}
 	}
@@ -274,33 +274,33 @@ void cyl_graph::generate(state* s) {
 	bool HT = (cpuinfo[3] & (1 << 28)) > 0;
 	if (HT) numthreads /= 2;
 
-	float dr = (s->set.cdom.rmax - s->set.cdom.rmin) / s->set.cdom.rrez;
+	float dz = (s->set.cdom.zmax - s->set.cdom.zmin) / s->set.cdom.zrez;
 	float dt = (s->set.cdom.tmax - s->set.cdom.tmin) / s->set.cdom.trez;
-	float rmin = s->set.cdom.rmin;
-	unsigned int trDelta = s->set.cdom.rrez / numthreads;
-	unsigned int trLast = s->set.cdom.rrez - (numthreads - 1) * trDelta + 1;
+	float zmin = s->set.cdom.zmin;
+	unsigned int tzDelta = s->set.cdom.zrez / numthreads;
+	unsigned int trLast = s->set.cdom.zrez - (numthreads - 1) * tzDelta + 1;
 
 	vector<thread> threads;
 	vector<gendata*> data;
 	for (unsigned int i = 0; i < numthreads; i++) {
-		if (trDelta || i == numthreads - 1) {
+		if (tzDelta || i == numthreads - 1) {
 			gendata* d = new gendata;
 
 			if (i == numthreads - 1)
-				d->trrez = trLast;
+				d->tzrez = trLast;
 			else
-				d->trrez = trDelta;
+				d->tzrez = tzDelta;
 
 			d->s = s;
-			d->dr = dr;
+			d->dz = dz;
 			d->dt = dt;
-			d->rmin = rmin;
+			d->rmin = zmin;
 			d->ID = ID;
 
 			data.push_back(d);
 			threads.push_back(thread(genthread, data.back()));
 
-			rmin += trDelta * dr;
+			zmin += tzDelta * dz;
 		}
 	}
 	for (unsigned int i = 0; i < threads.size(); i++) {
@@ -326,13 +326,13 @@ void cyl_graph::generate(state* s) {
 		}
 	}
 
-	float gzmin = FLT_MAX, gzmax = -FLT_MAX;
+	float grmin = FLT_MAX, grmax = -FLT_MAX;
 	for (unsigned int i = 0; i < threads.size(); i++) {
-		if (data[i]->zmin < gzmin) gzmin = data[i]->zmin;
-		if (data[i]->zmax > gzmax) gzmax = data[i]->zmax;
+		if (data[i]->rmin < grmin) grmin = data[i]->rmin;
+		if (data[i]->rmax > grmax) grmax = data[i]->rmax;
 	}
-	zmin = gzmin;
-	zmax = gzmax;
+	zmin = grmin;
+	zmax = grmax;
 
 	normalize(s);
 

@@ -170,26 +170,26 @@ UI::UI(state* s) {
 	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
 
 
-	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.rmax), "rmax: ", [](state* s, string exp) -> void {
+	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.zmax), "zmax: ", [](state* s, string exp) -> void {
 		if(exp.size() && exp != " ") {
 			vector<op> expv;
 			in(exp, expv);
 			float num = eval(expv);
-			if (num > s->set.cdom.rmin) {
-				s->set.cdom.rmax = num;
+			if (num > s->set.cdom.zmin) {
+				s->set.cdom.zmax = num;
 				regenall(s);
 			}
 		}
 		s->ev.current = in_settings;
 	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
 
-	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.rmin), "rmin: ", [](state* s, string exp) -> void {
+	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.zmin), "zmin: ", [](state* s, string exp) -> void {
 		if(exp.size() && exp != " ") {
 			vector<op> expv;
 			in(exp, expv);
 			float num = eval(expv);
-			if (num < s->set.cdom.rmax) {
-				s->set.cdom.rmin = num;
+			if (num < s->set.cdom.zmax) {
+				s->set.cdom.zmin = num;
 				regenall(s);
 			}
 		}
@@ -223,11 +223,11 @@ UI::UI(state* s) {
 	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
 
 
-	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.rrez), "rrez: ", [](state* s, string exp) -> void {
+	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.zrez), "zrez: ", [](state* s, string exp) -> void {
 		if(exp.size() && exp != " ") {
 			try {
 				int num = stoi(exp);
-				s->set.cdom.rrez = num;
+				s->set.cdom.zrez = num;
 				regenall(s);
 			}
 			catch (...) {
@@ -259,8 +259,8 @@ UI::UI(state* s) {
 		SDL_StartTextInput();
 	}));
 
-	funcs_add.push_back(new static_text("f(r,t)", [](state* s) -> void {
-		edit_text* w = new edit_text(s, " ", "f(r,t)= ", graph_enter_callback(s->next_graph_id, graph_cylindrical), graph_remove_callback(s->next_graph_id), true);
+	funcs_add.push_back(new static_text("r(t,z)", [](state* s) -> void {
+		edit_text* w = new edit_text(s, " ", "r(t,z)= ", graph_enter_callback(s->next_graph_id, graph_cylindrical), graph_remove_callback(s->next_graph_id), true);
 		s->ui->funcs.push_back(w);
 		s->ev.current = in_widget;
 		s->ui->uistate = ui_funcs;
