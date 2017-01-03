@@ -56,6 +56,7 @@ UI::UI(state* s) {
 	glGenBuffers(1, &VBO);
 	active = false;
 	uistate = ui_funcs;
+	domain = graph_func;
 
 	settings.push_back(new toggle_text("Wirefame", true, [](state* s) -> void {s->set.wireframe = !s->set.wireframe;}));
 	settings.push_back(new toggle_text("Lighting", false, [](state* s) -> void {s->set.lighting = !s->set.lighting; }));
@@ -79,96 +80,175 @@ UI::UI(state* s) {
 
 	settings.push_back(new slider("Opacity", 1.0f, [](state* s, float f) -> void {s->set.graphopacity = f; }));
 	
-	settings.push_back(new static_text("Domain", [](state*) -> void {}));
+	settings.push_back(new multi_text({ "Domain: Rectangluar", "Domain: Cylindrical" }, 0, [](state* s, string o) -> void {
+		if (o == "Domain: Rectangluar") {
+			s->ui->domain = graph_func;
+		}
+		else if(o == "Domain: Cylindrical") {
+			s->ui->domain = graph_cylindrical;
+		}
+	}));
 
-	settings.push_back(new edit_text(s, to_string((int)s->set.xmin), "xmin: ", [](state* s, string exp) -> void {
-		try {
-			float num = stof(exp);
-			if (num < s->set.xmax) {
-				s->set.xmin = num;
+	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.xmin), "xmin: ", [](state* s, string exp) -> void {
+		if(exp.size() && exp != " ") {
+			vector<op> expv;
+			in(exp, expv);
+			float num = eval(expv);
+			if (num < s->set.rdom.xmax) {
+				s->set.rdom.xmin = num;
 				regenall(s);
 			}
-			else cout << "\terr: xmin >= xmax" << endl;
-		}
-		catch (...) {
-			cout << "\terr: couldn't parse float" << endl;
 		}
 		s->ev.current = in_settings;
-		SDL_ShowCursor(1);
 	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
 
-	settings.push_back(new edit_text(s, to_string((int)s->set.xmax), "xmax: ", [](state* s, string exp) -> void {
-		try {
-			float num = stof(exp);
-			if (num > s->set.xmin) {
-				s->set.xmax = num;
+	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.xmax), "xmax: ", [](state* s, string exp) -> void {
+		if (exp.size() && exp != " ") {
+			vector<op> expv;
+			in(exp, expv);
+			float num = eval(expv);
+			if (num > s->set.rdom.xmin) {
+				s->set.rdom.xmax = num;
 				regenall(s);
 			}
-			else cout << "\terr: xmax <= xmin" << endl;
-		}
-		catch (...) {
-			cout << "\terr: couldn't parse float" << endl;
 		}
 		s->ev.current = in_settings;
-		SDL_ShowCursor(1);
 	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
-	settings.push_back(new edit_text(s, to_string((int)s->set.ymin), "ymin: ", [](state* s, string exp) -> void {
-		try {
-			float num = stof(exp);
-			if (num < s->set.ymax) {
-				s->set.ymin = num;
+
+	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.ymin), "ymin: ", [](state* s, string exp) -> void {
+		if(exp.size() && exp != " ") {
+			vector<op> expv;
+			in(exp, expv);
+			float num = eval(expv);
+			if (num < s->set.rdom.ymax) {
+				s->set.rdom.ymin = num;
 				regenall(s);
 			}
-			else cout << "\terr: ymin >= ymax" << endl;
-		}
-		catch (...) {
-			cout << "\terr: couldn't parse float" << endl;
 		}
 		s->ev.current = in_settings;
-		SDL_ShowCursor(1);
 	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
-	settings.push_back(new edit_text(s, to_string((int)s->set.ymax), "ymax: ", [](state* s, string exp) -> void {
-		try {
-			float num = stof(exp);
-			if (num > s->set.ymin) {
-				s->set.ymax = num;
+
+	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.ymax), "ymax: ", [](state* s, string exp) -> void {
+		if(exp.size() && exp != " ") {
+			vector<op> expv;
+			in(exp, expv);
+			float num = eval(expv);
+			if (num > s->set.rdom.ymin) {
+				s->set.rdom.ymax = num;
 				regenall(s);
 			}
-			else cout << "\terr: ymax <= ymin" << endl;
-		}
-		catch (...) {
-			cout << "\terr: couldn't parse float" << endl;
 		}
 		s->ev.current = in_settings;
-		SDL_ShowCursor(1);
 	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
 
-	settings.push_back(new static_text("Graph Resolution", [](state*) -> void {}));
-
-	settings.push_back(new edit_text(s, to_string((int)s->set.xrez), "xrez: ", [](state* s, string exp) -> void {
-		try {
-			int num = stoi(exp);
-			s->set.xrez = num;
-			regenall(s);
-		}
-		catch (...) {
-			cout << "\terr: couldn't parse int" << endl;
+	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.xrez), "xrez: ", [](state* s, string exp) -> void {
+		if(exp.size() && exp != " ") {
+			try {
+				int num = stoi(exp);
+				s->set.rdom.xrez = num;
+				regenall(s);
+			}
+			catch (...) {
+				cout << "\terr: couldn't parse int" << endl;
+			}
 		}
 		s->ev.current = in_settings;
-		SDL_ShowCursor(1);
 	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
 
-	settings.push_back(new edit_text(s, to_string((int)s->set.yrez), "yrez: ", [](state* s, string exp) -> void {
-		try {
-			int num = stoi(exp);
-			s->set.yrez = num;
-			regenall(s);
-		}
-		catch (...) {
-			cout << "\terr: couldn't parse int" << endl;
+	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.yrez), "yrez: ", [](state* s, string exp) -> void {
+		if(exp.size() && exp != " ") {
+			try {
+				int num = stoi(exp);
+				s->set.rdom.yrez = num;
+				regenall(s);
+			}
+			catch (...) {
+				cout << "\terr: couldn't parse int" << endl;
+			}
 		}
 		s->ev.current = in_settings;
-		SDL_ShowCursor(1);
+	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
+
+
+	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.rmax), "rmax: ", [](state* s, string exp) -> void {
+		if(exp.size() && exp != " ") {
+			vector<op> expv;
+			in(exp, expv);
+			float num = eval(expv);
+			if (num > s->set.cdom.rmin) {
+				s->set.cdom.rmax = num;
+				regenall(s);
+			}
+		}
+		s->ev.current = in_settings;
+	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
+
+	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.rmin), "rmin: ", [](state* s, string exp) -> void {
+		if(exp.size() && exp != " ") {
+			vector<op> expv;
+			in(exp, expv);
+			float num = eval(expv);
+			if (num < s->set.cdom.rmax) {
+				s->set.cdom.rmin = num;
+				regenall(s);
+			}
+		}
+		s->ev.current = in_settings;
+	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
+
+	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.tmax), "tmax: ", [](state* s, string exp) -> void {
+		if(exp.size() && exp != " ") {
+			vector<op> expv;
+			in(exp, expv);
+			float num = eval(expv);
+			if (num > s->set.cdom.tmin) {
+				s->set.cdom.tmax = num;
+				regenall(s);
+			}
+		}
+		s->ev.current = in_settings;
+	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
+
+	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.tmin), "tmin: ", [](state* s, string exp) -> void {
+		if(exp.size() && exp != " ") {
+			vector<op> expv;
+			in(exp, expv);
+			float num = eval(expv);
+			if (num > s->set.cdom.tmax) {
+				s->set.cdom.tmin = num;
+				regenall(s);
+			}
+		}
+		s->ev.current = in_settings;
+	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
+
+
+	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.rrez), "rrez: ", [](state* s, string exp) -> void {
+		if(exp.size() && exp != " ") {
+			try {
+				int num = stoi(exp);
+				s->set.cdom.rrez = num;
+				regenall(s);
+			}
+			catch (...) {
+				cout << "\terr: couldn't parse int" << endl;
+			}
+		}
+		s->ev.current = in_settings;
+	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
+
+	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.trez), "trez: ", [](state* s, string exp) -> void {
+		if(exp.size() && exp != " ") {
+			try {
+				int num = stoi(exp);
+				s->set.cdom.trez = num;
+				regenall(s);
+			}
+			catch (...) {
+				cout << "\terr: couldn't parse int" << endl;
+			}
+		}
+		s->ev.current = in_settings;
 	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
 
 	funcs_add.push_back(new static_text("f(x,y)", [](state* s) -> void {
@@ -197,6 +277,16 @@ UI::UI(state* s) {
 			for (widget* w : s->ui->settings) {
 				if (w->update(s, ev)) return true;
 			}
+			if (s->ui->domain == graph_func) {
+				for (widget* w : s->ui->dom_rect) {
+					if (w->update(s, ev)) return true;
+				}
+			}
+			else if (s->ui->domain == graph_cylindrical) {
+				for (widget* w : s->ui->dom_cyl) {
+					if (w->update(s, ev)) return true;
+				}
+			}
 		}
 		else {
 			for (widget* w : s->ui->funcs_add) {
@@ -217,14 +307,14 @@ UI::UI(state* s) {
 	s->ev.callbacks.push_back(callback(widgetsCallback, in_any, SDL_MOUSEBUTTONUP));
 	s->ev.callbacks.push_back(callback(widgetsCallback, in_any, SDL_MOUSEMOTION));
 
-	in.gen();
-	out.gen();
-	gear.gen();
-	f.gen();
-	in.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(in_bmp, in_bmp_len), 1));
-	out.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(out_bmp, out_bmp_len), 1));
-	gear.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(gear_bmp, gear_bmp_len), 1));
-	f.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(f_bmp, f_bmp_len), 1));
+	in_r.gen();
+	out_r.gen();
+	gear_r.gen();
+	f_r.gen();
+	in_r.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(in_bmp, in_bmp_len), 1));
+	out_r.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(out_bmp, out_bmp_len), 1));
+	gear_r.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(gear_bmp, gear_bmp_len), 1));
+	f_r.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(f_bmp, f_bmp_len), 1));
 }
 
 UI::~UI() {
@@ -290,7 +380,11 @@ void UI::render(state* s) {
 		render_widgets(s, funcs, ui_w, x, y, true);
 	}
 	else if (uistate == ui_settings) {
-		render_widgets(s, settings, ui_w, x, y, true);
+		y = render_widgets(s, settings, ui_w, x, y, true) - 3;
+		if (domain == graph_func)
+			render_widgets(s, dom_rect, ui_w, x, y, false);
+		else if (domain == graph_cylindrical)
+			render_widgets(s, dom_cyl, ui_w, x, y, false);
 	}
 	render_sidebar(s);
 	if (uistate == ui_funcs_adding) {
@@ -326,16 +420,16 @@ void UI::render_sidebar(state* s) {
 		else if (uistate == ui_settings) {
 			drawRect(s->rect_s, (int)round(s->w * UI_SCREEN_RATIO) + 3, 68, 36, 36, 0.0f, 0.0f, 0.0f, 0.251f, (float)s->w, (float)s->h);
 		}
-		in.set((int)round(s->w * UI_SCREEN_RATIO) + 5.0f, 0, 32, 32);
-		in.render(s->w, s->h, s->UI_s);
-		f.set((int)round(s->w * UI_SCREEN_RATIO) + 5.0f, 35, 32, 32);
-		f.render(s->w, s->h, s->UI_s);
-		gear.set((int)round(s->w * UI_SCREEN_RATIO) + 5.0f, 70, 32, 32);
-		gear.render(s->w, s->h, s->UI_s);
+		in_r.set((int)round(s->w * UI_SCREEN_RATIO) + 5.0f, 0, 32, 32);
+		in_r.render(s->w, s->h, s->UI_s);
+		f_r.set((int)round(s->w * UI_SCREEN_RATIO) + 5.0f, 35, 32, 32);
+		f_r.render(s->w, s->h, s->UI_s);
+		gear_r.set((int)round(s->w * UI_SCREEN_RATIO) + 5.0f, 70, 32, 32);
+		gear_r.render(s->w, s->h, s->UI_s);
 	}
 	else {
-		out.set(11, 0, 32, 32);
-		out.render(s->w, s->h, s->UI_s);
+		out_r.set(11, 0, 32, 32);
+		out_r.render(s->w, s->h, s->UI_s);
 	}
 }
 
@@ -354,8 +448,13 @@ edit_text::edit_text(state* s, string e, string h, function<void(state*, string)
 }
 
 void edit_text::update_cursor(state* s) {
+	if (exp == " ") {
+		exp = "";
+		cursor_pos = 0;
+	}
 	break_str(s);
 	TTF_SizeText(s->font, lines[currentLine()].substr(0, currentPos()).c_str(), &cursor_x, NULL);
+	if (exp == "") exp = " ";
 }
 
 bool edit_text::update(state* s, SDL_Event* ev) {

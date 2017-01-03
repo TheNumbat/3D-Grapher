@@ -47,10 +47,11 @@ struct UI {
 	void render(state* s);
 	void render_sidebar(state* s);
 	int render_widgets(state* s, vector<widget*>& v, int ui_w, int x, int y, bool fullborders);
-	vector<widget*> funcs, funcs_add, settings;
+	vector<widget*> funcs, funcs_add, settings, dom_rect, dom_cyl;
 	GLuint VAO, VBO;
-	textured_rect in, out, gear, f;
+	textured_rect in_r, out_r, gear_r, f_r;
 	ui_state uistate;
+	graph_type domain;
 	bool active;
 	int adding_x, adding_y;
 };

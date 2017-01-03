@@ -18,14 +18,8 @@ state::state() {
 	set.antialiasing = true;
 	set.display = dim_3d;
 	set.camtype = cam_3d_static;
-	set.xmin = -10;
-	set.xmax = 10;
-	set.ymin = -10;
-	set.ymax = 10;
-	set.zmin = -10;
-	set.zmax = 10;
-	set.xrez = 200;
-	set.yrez = 200;
+	set.rdom = { -10, 10, -10, 10, -10, 10, 200, 200 };
+	set.cdom = { 0, 10, 0, 2 * val_pi, -10, 10, 200, 200 };
 
 	assert(SDL_Init(SDL_INIT_EVERYTHING) == 0);
 
@@ -71,7 +65,7 @@ state::state() {
 	ui = new UI(this);
 
 	c_3d.default();
-	c_3d_static.default(std::max(set.ymax - set.ymin, set.xmax - set.xmin));
+	c_3d_static.default(std::max(set.rdom.ymax - set.rdom.ymin, set.rdom.xmax - set.rdom.xmin));
 	running = true;
 }
 

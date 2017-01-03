@@ -11,7 +11,11 @@ bool isop(char c) {
 
 bool isnonfunc(char c) {
 	return c == close_p || c == add || c == subtract || c == op_neg ||
-		c == multiply || c == modulo || c == divide || c == power;
+		   c == multiply || c == modulo || c == divide || c == power;
+}
+
+bool num(char c) {
+	return c >= '0' && c <= '9' || c == '.';
 }
 
 #define get2() two = s.top(); \
@@ -199,10 +203,6 @@ float eval(const vector<op>& EQ, vector<pair<char, float>> vars) {
 		}
 	}
 	return s.top();
-}
-
-bool num(char c) {
-	return c >= '0' && c <= '9' || c == '.';
 }
 
 int precedence(char c) {

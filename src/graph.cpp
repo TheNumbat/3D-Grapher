@@ -20,10 +20,36 @@ GLfloat axes[] = {
 	0.0f ,  0.0f ,  10.0f,		0.0f, 0.0f, 1.0f
 };
 
-fxy_graph::fxy_graph(int id, string s) {
+graph::graph(int id, string s) {
 	eq_str = s;
 	ID = id;
 	zmin = zmax = 0;
+}
+
+cyl_graph::cyl_graph(int id, string s) : graph(id, s) {
+	dim = dim_3d;
+	type = graph_cylindrical;
+}
+
+void cyl_graph::genthread(gendata* g) {
+	int index = getIndex(g->s, g->ID);
+	float r = g->rmin;
+	for (int tr = 0; tr < g->trrez; tr++, r += g->dr) {
+		float t = g->s->set.cdom.tmin;
+		for (int tt = 0; tt <= g->s->set.cdom.trez; tt++, t += g->dt) {
+			float z = eval(g->s->graphs[index]->eq, { { 'r',r },{ 't',t } });
+
+			if (z < g->zmin) g->zmin = z;
+			else if (z > g->zmax) g->zmax = z;
+
+			g->ret.push_back(r * std::cos(t));
+			g->ret.push_back(r * std::sin(t));
+			g->ret.push_back(z);
+		}
+	}
+}
+
+fxy_graph::fxy_graph(int id, string s) : graph(id, s) {
 	dim = dim_3d;
 	type = graph_func;
 }
@@ -51,6 +77,7 @@ void graph::send() {
 
 	glBindVertexArray(0);
 }
+
 
 void graph::draw(state* s, mat4& modelviewproj) {
 	if (dim == s->set.display) {
@@ -107,14 +134,14 @@ void updateAxes(state* s) {
 		zmax = 10;
 	}
 
-	s->set.zmin = zmin;
-	s->set.zmax = zmax;
-	axes[x_min] = s->set.xmin;
-	axes[y_min] = s->set.ymin;
-	axes[z_min] = s->set.zmin;
-	axes[x_max] = s->set.xmax;
-	axes[y_max] = s->set.ymax;
-	axes[z_max] = s->set.zmax;
+	s->set.rdom.zmin = zmin;
+	s->set.rdom.zmax = zmax;
+	axes[x_min] = s->set.rdom.xmin;
+	axes[y_min] = s->set.rdom.ymin;
+	axes[z_min] = s->set.rdom.zmin;
+	axes[x_max] = s->set.rdom.xmax;
+	axes[y_max] = s->set.rdom.ymax;
+	axes[z_max] = s->set.rdom.zmax;
 
 	if (axes[x_min] > 0) axes[x_min] = 0;
 	if (axes[y_min] > 0) axes[y_min] = 0;
@@ -123,12 +150,12 @@ void updateAxes(state* s) {
 	if (axes[y_max] < 0) axes[y_max] = 0;
 	if (axes[z_max] < 0) axes[z_max] = 0;
 
-	s->c_3d_static.scale = std::max(s->set.ymax - s->set.ymin, s->set.xmax - s->set.xmin);
-	s->c_3d_static.pos.x = (s->set.xmax + s->set.xmin) / 2;
-	s->c_3d_static.pos.z = (s->set.ymax + s->set.ymin) / -2;
+	s->c_3d_static.scale = std::max(s->set.rdom.ymax - s->set.rdom.ymin, s->set.rdom.xmax - s->set.rdom.xmin);
+	s->c_3d_static.pos.x = (s->set.rdom.xmax + s->set.rdom.xmin) / 2;
+	s->c_3d_static.pos.z = (s->set.rdom.ymax + s->set.rdom.ymin) / -2;
 
-	s->c_3d.pos.x = (s->set.xmax + s->set.xmin) / 2;
-	s->c_3d.pos.z = (s->set.ymax + s->set.ymin) / -2;
+	s->c_3d.pos.x = (s->set.rdom.xmax + s->set.rdom.xmin) / 2;
+	s->c_3d.pos.z = (s->set.rdom.ymax + s->set.rdom.ymin) / -2;
 
 	glBindVertexArray(s->axisVAO);
 	{
@@ -141,8 +168,8 @@ void fxy_graph::genthread(gendata* g) {
 	int index = getIndex(g->s, g->ID);
 	float x = g->xmin;
 	for (int tx = 0; tx < g->txrez; tx++, x += g->dx) {
-		float y = g->s->set.ymin;
-		for (int ty = 0; ty <= g->s->set.yrez; ty++, y += g->dy) {
+		float y = g->s->set.rdom.ymin;
+		for (int ty = 0; ty <= g->s->set.rdom.yrez; ty++, y += g->dy) {
 			float z = eval(g->s->graphs[index]->eq, { { 'x',x },{ 'y',y } });
 
 			if (z < g->zmin) g->zmin = z;
@@ -158,8 +185,8 @@ void fxy_graph::genthread(gendata* g) {
 void graph::normalize(state* s) {
 	if (s->set.axisnormalization) {
 		for (unsigned int i = 0; i < verticies.size(); i += 3) {
-			verticies[i] /= (s->set.xmax - s->set.xmin) / 20;
-			verticies[i + 1] /= (s->set.ymax - s->set.ymin) / 20;
+			verticies[i] /= (s->set.rdom.xmax - s->set.rdom.xmin) / 20;
+			verticies[i + 1] /= (s->set.rdom.ymax - s->set.rdom.ymin) / 20;
 			verticies[i + 2] /= (zmax - zmin) / 20;
 		}
 		zmin = -10;
@@ -174,11 +201,11 @@ void fxy_graph::generate(state* s) {
 	bool HT = (cpuinfo[3] & (1 << 28)) > 0;
 	if (HT) numthreads /= 2;
 
-	float dx = (s->set.xmax - s->set.xmin) / s->set.xrez;
-	float dy = (s->set.ymax - s->set.ymin) / s->set.yrez;
-	float xmin = s->set.xmin;
-	unsigned int txDelta = s->set.xrez / numthreads;
-	unsigned int txLast = s->set.xrez - (numthreads - 1) * txDelta + 1;
+	float dx = (s->set.rdom.xmax - s->set.rdom.xmin) / s->set.rdom.xrez;
+	float dy = (s->set.rdom.ymax - s->set.rdom.ymin) / s->set.rdom.yrez;
+	float xmin = s->set.rdom.xmin;
+	unsigned int txDelta = s->set.rdom.xrez / numthreads;
+	unsigned int txLast = s->set.rdom.xrez - (numthreads - 1) * txDelta + 1;
 
 	vector<thread> threads;
 	vector<gendata*> data;
@@ -209,19 +236,92 @@ void fxy_graph::generate(state* s) {
 		data[i]->ret.clear();
 	}
 
-	for (int x = 0; x < s->set.xrez; x++) {
-		for (int y = 0; y < s->set.yrez; y++) {
-			GLuint i_index = x * (s->set.yrez + 1) + y;
+	for (int x = 0; x < s->set.rdom.xrez; x++) {
+		for (int y = 0; y < s->set.rdom.yrez; y++) {
+			GLuint i_index = x * (s->set.rdom.yrez + 1) + y;
 
 			if (!isnan(verticies[i_index * 3 + 2]) &&
 				!isinf(verticies[i_index * 3 + 2])) {
 				indicies.push_back(i_index);
 				indicies.push_back(i_index + 1);
-				indicies.push_back(i_index + s->set.yrez + 1);
+				indicies.push_back(i_index + s->set.rdom.yrez + 1);
 
 				indicies.push_back(i_index + 1);
-				indicies.push_back(i_index + s->set.yrez + 1);
-				indicies.push_back(i_index + s->set.yrez + 2);
+				indicies.push_back(i_index + s->set.rdom.yrez + 1);
+				indicies.push_back(i_index + s->set.rdom.yrez + 2);
+			}
+		}
+	}
+
+	float gzmin = FLT_MAX, gzmax = -FLT_MAX;
+	for (unsigned int i = 0; i < threads.size(); i++) {
+		if (data[i]->zmin < gzmin) gzmin = data[i]->zmin;
+		if (data[i]->zmax > gzmax) gzmax = data[i]->zmax;
+	}
+	zmin = gzmin;
+	zmax = gzmax;
+
+	normalize(s);
+
+	for (gendata* g : data)
+		delete g;
+}
+
+void cyl_graph::generate(state* s) {
+	unsigned int numthreads = thread::hardware_concurrency();
+	int cpuinfo[4];
+	__cpuid(cpuinfo, 1);
+	bool HT = (cpuinfo[3] & (1 << 28)) > 0;
+	if (HT) numthreads /= 2;
+
+	float dr = (s->set.cdom.rmax - s->set.cdom.rmin) / s->set.cdom.rrez;
+	float dt = (s->set.cdom.tmax - s->set.cdom.tmin) / s->set.cdom.trez;
+	float rmin = s->set.cdom.rmin;
+	unsigned int trDelta = s->set.cdom.rrez / numthreads;
+	unsigned int trLast = s->set.cdom.rrez - (numthreads - 1) * trDelta + 1;
+
+	vector<thread> threads;
+	vector<gendata*> data;
+	for (unsigned int i = 0; i < numthreads; i++) {
+		if (trDelta || i == numthreads - 1) {
+			gendata* d = new gendata;
+
+			if (i == numthreads - 1)
+				d->trrez = trLast;
+			else
+				d->trrez = trDelta;
+
+			d->s = s;
+			d->dr = dr;
+			d->dt = dt;
+			d->rmin = rmin;
+			d->ID = ID;
+
+			data.push_back(d);
+			threads.push_back(thread(genthread, data.back()));
+
+			rmin += trDelta * dr;
+		}
+	}
+	for (unsigned int i = 0; i < threads.size(); i++) {
+		threads[i].join();
+		verticies.insert(verticies.end(), data[i]->ret.begin(), data[i]->ret.end());
+		data[i]->ret.clear();
+	}
+
+	for (int x = 0; x < s->set.rdom.xrez; x++) {
+		for (int y = 0; y < s->set.rdom.yrez; y++) {
+			GLuint i_index = x * (s->set.rdom.yrez + 1) + y;
+
+			if (!isnan(verticies[i_index * 3 + 2]) &&
+				!isinf(verticies[i_index * 3 + 2])) {
+				indicies.push_back(i_index);
+				indicies.push_back(i_index + 1);
+				indicies.push_back(i_index + s->set.rdom.yrez + 1);
+
+				indicies.push_back(i_index + 1);
+				indicies.push_back(i_index + s->set.rdom.yrez + 1);
+				indicies.push_back(i_index + s->set.rdom.yrez + 2);
 			}
 		}
 	}

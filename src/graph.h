@@ -41,6 +41,7 @@ const int z_max = 32;
 extern GLfloat axes[];
 
 struct graph {
+	graph(int id, string s = " ");
 	virtual void generate(state* s) = 0;
 	virtual ~graph();
 	void draw(state* s, mat4& modelveiwproj);
@@ -66,13 +67,13 @@ struct cyl_graph : public graph {
 		};
 		state* s;
 		vector<float> ret;
-		float zmin, zmax, rmin, dr, dtheta;
+		float zmin, zmax, rmin, dr, dt;
 		int trrez, ID;
 	};
 
-	cyl_graph(int id, string s = " ") {}
-	void generate(state* s) {}
-	static void genthread(gendata* g) {}
+	cyl_graph(int id, string s = " ");
+	void generate(state* s);
+	static void genthread(gendata* g);
 };
 
 struct fxy_graph : public graph {
