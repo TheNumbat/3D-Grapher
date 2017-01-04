@@ -11,6 +11,7 @@ PFNGLVERTEXATTRIBPOINTERPROC		glVertexAttribPointer;
 PFNGLUNIFORMMATRIX4FVPROC			glUniformMatrix4fv;
 PFNGLGETUNIFORMLOCATIONPROC			glGetUniformLocation;
 PFNGLUNIFORM4FPROC					glUniform4f;
+PFNGLUNIFORM3FPROC					glUniform3f;
 PFNGLCREATESHADERPROC				glCreateShader;
 PFNGLSHADERSOURCEPROC				glShaderSource;
 PFNGLCOMPILESHADERPROC				glCompileShader;
@@ -147,6 +148,7 @@ void setupFuns() {
 	glUniformMatrix4fv			= (PFNGLUNIFORMMATRIX4FVPROC)			wglGetProcAddress("glUniformMatrix4fv");
 	glGetUniformLocation		= (PFNGLGETUNIFORMLOCATIONPROC)			wglGetProcAddress("glGetUniformLocation");
 	glUniform4f					= (PFNGLUNIFORM4FPROC)					wglGetProcAddress("glUniform4f");
+	glUniform3f					= (PFNGLUNIFORM3FPROC)					wglGetProcAddress("glUniform3f");
 	glCreateShader				= (PFNGLCREATESHADERPROC)				wglGetProcAddress("glCreateShader");
 	glShaderSource				= (PFNGLSHADERSOURCEPROC)				wglGetProcAddress("glShaderSource");
 	glCompileShader				= (PFNGLCOMPILESHADERPROC)				wglGetProcAddress("glCompileShader");
@@ -183,6 +185,44 @@ const GLchar* graph_fragment = {
 
 	"void main() {\n"
 	"	color = vcolor;\n"
+	"}\n"
+};
+
+const GLchar* graph_vertex_lighting = {
+	"#version 330 core\n"
+
+	"layout (location = 0) in vec3 position;\n"
+	"layout (location = 1) in vec3 normal;\n"
+
+	"uniform mat4 modelviewproj;\n"
+	"uniform mat4 model;\n"
+	"out vec3 norm;\n"
+	"out vec3 fragPos;\n"
+
+	"void main() {\n"
+	"	gl_Position = modelviewproj * vec4(position, 1.0f);\n"
+	"	norm = normal;\n"
+	"   fragPos = position;\n"
+	"}\n"
+};
+
+const GLchar* graph_fragment_lighting = {
+	"#version 330 core\n"
+
+	"uniform vec4 vcolor;\n"
+	"uniform vec3 lightColor;\n"
+	"uniform vec3 lightPos;\n"
+	"in vec3 norm;\n"
+	"in vec3 fragPos;\n"
+	"out vec4 color;\n"
+
+	"void main() {\n"
+	"   float ambientStrength = 1.0f;\n"
+	"	vec3 ambient = ambientStrength * lightColor;\n"
+	"   vec3 lightDir = normalize(lightPos - fragPos);\n"
+	"   float diff = max(dot(norm, lightDir), 0.0f);\n"
+	"   vec3 diffuse = diff * lightColor;\n"
+	"	color = vec4(ambient, 1.0f) * vec4(diffuse, 1.0f) * vcolor;\n"
 	"}\n"
 };
 

@@ -18,6 +18,7 @@ extern PFNGLVERTEXATTRIBPOINTERPROC			glVertexAttribPointer;
 extern PFNGLUNIFORMMATRIX4FVPROC			glUniformMatrix4fv;
 extern PFNGLGETUNIFORMLOCATIONPROC			glGetUniformLocation;
 extern PFNGLUNIFORM4FPROC					glUniform4f;
+extern PFNGLUNIFORM3FPROC					glUniform3f;
 extern PFNGLCREATESHADERPROC				glCreateShader;
 extern PFNGLSHADERSOURCEPROC				glShaderSource;
 extern PFNGLCOMPILESHADERPROC				glCompileShader;
@@ -35,6 +36,8 @@ extern PFNGLDISABLEVERTEXATTRIBARRAYPROC	glDisableVertexAttribArray;
 
 extern const GLchar* graph_vertex;
 extern const GLchar* graph_fragment;
+extern const GLchar* graph_vertex_lighting;
+extern const GLchar* graph_fragment_lighting;
 extern const GLchar* ui_vertex;
 extern const GLchar* ui_fragment;
 extern const GLchar* rect_vertex;

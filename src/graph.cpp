@@ -58,12 +58,14 @@ graph::~graph() {
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
 	glDeleteBuffers(1, &EBO);
+	glDeleteBuffers(1, &normVBO);
 }
 
 void graph::gen() {
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);
+	glGenBuffers(1, &normVBO);
 }
 
 void graph::send() {
@@ -72,34 +74,57 @@ void graph::send() {
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * verticies.size(), verticies.size() ? &verticies[0] : NULL, GL_STATIC_DRAW);
 
+	glBindBuffer(GL_ARRAY_BUFFER, normVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * normals.size(), normals.size() ? &normals[0] : NULL, GL_STATIC_DRAW);
+
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * indicies.size(), indicies.size() ? &indicies[0] : NULL, GL_STATIC_DRAW);
 
 	glBindVertexArray(0);
 }
 
-
-void graph::draw(state* s, mat4& modelviewproj) {
+void graph::draw(state* s, mat4 modelviewproj) {
 	if (dim == s->set.display) {
 		glBindVertexArray(VAO);
 		{
-			s->graph_s.use();
-
-			glBindBuffer(GL_ARRAY_BUFFER, VBO);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-			glEnableVertexAttribArray(0);
-
-			glUniformMatrix4fv(s->graph_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
-
 			glEnable(GL_DEPTH_TEST);
 			glEnable(GL_BLEND);
 
+			if (s->set.lighting) {
+				s->graph_s_light.use();
+
+				glBindBuffer(GL_ARRAY_BUFFER, VBO);
+				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+				glEnableVertexAttribArray(0);
+
+				glBindBuffer(GL_ARRAY_BUFFER, normVBO);
+				glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+				glEnableVertexAttribArray(1);
+
+				glUniformMatrix4fv(s->graph_s_light.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
+
+				glUniform4f(s->graph_s_light.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, s->set.graphopacity);
+				glUniform3f(s->graph_s_light.getUniform("lightColor"), 1.0f, 1.0f, 1.0f);
+				if (s->set.camtype == cam_3d)
+					glUniform3f(s->graph_s_light.getUniform("lightPos"), s->c_3d.pos.x + s->c_3d.front.x, s->c_3d.pos.x + s->c_3d.front.y, s->c_3d.pos.x + s->c_3d.front.z);
+				else
+					glUniform3f(s->graph_s_light.getUniform("lightPos"), s->c_3d_static.pos.x, s->c_3d_static.pos.y, s->c_3d_static.pos.z);
+			}
+			else {
+				s->graph_s.use();
+
+				glBindBuffer(GL_ARRAY_BUFFER, VBO);
+				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+				glEnableVertexAttribArray(0);
+
+				glUniformMatrix4fv(s->graph_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
+
+				glUniform4f(s->graph_s.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, s->set.graphopacity);
+			}
+
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			glPolygonOffset(1.0f, 0.0f);
-
-			glUniform4f(s->graph_s.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, s->set.graphopacity);
 			glDrawElements(GL_TRIANGLES, (int)indicies.size(), GL_UNSIGNED_INT, (void*)0);
 
 			if (s->set.wireframe) {
@@ -108,11 +133,16 @@ void graph::draw(state* s, mat4& modelviewproj) {
 				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 				glPolygonOffset(0.0f, 0.0f);
 
-				glUniform4f(s->graph_s.getUniform("vcolor"), 0.2f, 0.2f, 0.2f, s->set.graphopacity);
+				if (s->set.lighting)
+					glUniform4f(s->graph_s_light.getUniform("vcolor"), 0.0f, 0.0f, 0.0f, s->set.graphopacity);
+				else
+					glUniform4f(s->graph_s.getUniform("vcolor"), 0.0f, 0.0f, 0.0f, s->set.graphopacity);
+
 				glDrawElements(GL_TRIANGLES, (int)indicies.size(), GL_UNSIGNED_INT, (void*)0);
 			}
 
 			glDisableVertexAttribArray(0);
+			glDisableVertexAttribArray(1);
 		}
 		glBindVertexArray(0);
 	}
@@ -236,6 +266,7 @@ void fxy_graph::generate(state* s) {
 		data[i]->ret.clear();
 	}
 
+	vec3 norm;
 	for (int x = 0; x < s->set.rdom.xrez; x++) {
 		for (int y = 0; y < s->set.rdom.yrez; y++) {
 			GLuint i_index = x * (s->set.rdom.yrez + 1) + y;
@@ -245,13 +276,31 @@ void fxy_graph::generate(state* s) {
 				indicies.push_back(i_index);
 				indicies.push_back(i_index + 1);
 				indicies.push_back(i_index + s->set.rdom.yrez + 1);
-
+	
 				indicies.push_back(i_index + 1);
 				indicies.push_back(i_index + s->set.rdom.yrez + 1);
 				indicies.push_back(i_index + s->set.rdom.yrez + 2);
+
+				float x1 = verticies[i_index * 3];
+				float y1 = verticies[i_index * 3 + 1];
+				float z1 = verticies[i_index * 3 + 2];
+				float x2 = verticies[(i_index + 1) * 3];
+				float y2 = verticies[(i_index + 1) * 3 + 1];
+				float z2 = verticies[(i_index + 1) * 3 + 2];
+				float x3 = verticies[(i_index + s->set.rdom.yrez + 1) * 3];
+				float y3 = verticies[(i_index + s->set.rdom.yrez + 1) * 3 + 1];
+				float z3 = verticies[(i_index + s->set.rdom.yrez + 1) * 3 + 2];
+				vec3 one(x2 - x1, y2 - y1, z2 - z1);
+				vec3 two(x3 - x1, y3 - y1, z3 - z1);
+				norm = glm::normalize(cross(one, two));
 			}
+			normals.push_back(norm);
+			if(x == 0)
+				normals.push_back(norm);
 		}
+		normals.push_back(norm);
 	}
+	normals.push_back(norm);
 
 	float gzmin = FLT_MAX, gzmax = -FLT_MAX;
 	for (unsigned int i = 0; i < threads.size(); i++) {

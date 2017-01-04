@@ -44,13 +44,14 @@ struct graph {
 	graph(int id, string s = " ");
 	virtual void generate(state* s) = 0;
 	virtual ~graph();
-	void draw(state* s, mat4& modelveiwproj);
+	void draw(state* s, mat4 modelveiwproj);
 	void gen();
 	void send();
 	void normalize(state* s);
 	vector<GLfloat> verticies;
 	vector<GLuint> indicies;
-	GLuint VAO, VBO, EBO;
+	vector<vec3> normals;
+	GLuint VAO, VBO, EBO, normVBO;
 	dimension dim;
 	graph_type type;
 	vector<op> eq;

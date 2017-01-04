@@ -24,7 +24,7 @@ struct state {
 	bool running;
 
 	GLuint axisVAO, axisVBO;
-	shader graph_s, axis_s, UI_s, rect_s;
+	shader graph_s, axis_s, UI_s, rect_s, graph_s_light;
 	
 	vector<graph*> graphs;
 	_cam_3d c_3d;

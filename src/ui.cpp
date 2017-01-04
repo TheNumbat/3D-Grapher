@@ -58,8 +58,8 @@ UI::UI(state* s) {
 	uistate = ui_funcs;
 	domain = graph_func;
 
-	settings.push_back(new toggle_text("Wirefame", true, [](state* s) -> void {s->set.wireframe = !s->set.wireframe;}));
-	settings.push_back(new toggle_text("Lighting", false, [](state* s) -> void {s->set.lighting = !s->set.lighting; }));
+	settings.push_back(new toggle_text("Wirefame", false, [](state* s) -> void {s->set.wireframe = !s->set.wireframe;}));
+	settings.push_back(new toggle_text("Lighting", true, [](state* s) -> void {s->set.lighting = !s->set.lighting; }));
 	settings.push_back(new toggle_text("Axis Normalization", false, [](state* s) -> void {s->set.axisnormalization = !s->set.axisnormalization; regenall(s); }));
 	settings.push_back(new toggle_text("Antialiasing", true, [](state* s) -> void {
 		if (s->set.antialiasing)
@@ -539,7 +539,10 @@ bool edit_text::update(state* s, SDL_Event* ev) {
 		}
 		else if(active) {
 			active = false;
-			s->ev.current = in_funcs;
+			if (s->ui->active)
+				s->ev.current = in_settings;
+			else
+				s->ev.current = in_funcs;
 			return true;
 		}
 	}
@@ -638,7 +641,7 @@ int static_text::render(state* s, int ui_w, int x, int y) {
 }
 
 bool static_text::update(state* s, SDL_Event* ev) {
-	if (ev->type == SDL_MOUSEBUTTONDOWN) {
+	if (ev->type == SDL_MOUSEBUTTONDOWN && s->ev.current != in_widget) {
 		if (ev->button.y > current_y - 3 && ev->button.y <= current_yh + 3
 			&& ev->button.x >= current_x && ev->button.x <= current_xw) {
 			clickCallback(s);
@@ -678,7 +681,7 @@ int toggle_text::render(state* s, int ui_w, int x, int y) {
 }
 
 bool toggle_text::update(state* s, SDL_Event* ev) {
-	if (ev->type == SDL_MOUSEBUTTONDOWN) {
+	if (ev->type == SDL_MOUSEBUTTONDOWN && s->ev.current != in_widget) {
 		if (ev->button.y > current_y - 3 && ev->button.y <= current_yh + 3
 			&& ev->button.x >= current_x && ev->button.x <= current_xw) {
 			on = !on;
@@ -713,7 +716,7 @@ int multi_text::render(state* s, int ui_w, int x, int y) {
 }
 
 bool multi_text::update(state* s, SDL_Event* ev) {
-	if (ev->type == SDL_MOUSEBUTTONDOWN) {
+	if (ev->type == SDL_MOUSEBUTTONDOWN && s->ev.current != in_widget) {
 		if (ev->button.y > current_y - 3 && ev->button.y <= current_yh + 3
 			&& ev->button.x >= current_x && ev->button.x <= current_xw) {
 			if (ev->button.button == SDL_BUTTON_LEFT)
@@ -775,7 +778,7 @@ bool slider::update(state* s, SDL_Event* ev) {
 		}
 	}
 	else if (ev->type == SDL_MOUSEBUTTONDOWN && ev->button.y > current_y - 3 && ev->button.y <= current_yh + 3
-			 && ev->button.x >= current_x && ev->button.x <= current_xw) {
+			 && ev->button.x >= current_x && ev->button.x <= current_xw && s->ev.current != in_widget) {
 		active = true;
 		return true;
 	}

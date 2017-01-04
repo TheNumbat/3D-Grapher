@@ -11,8 +11,8 @@ state::state() {
 	next_graph_id = 0;
 	last_mx = last_my = 0;
 
-	set.wireframe = true;
-	set.lighting = false;
+	set.wireframe = false;
+	set.lighting = true;
 	set.axisnormalization = false;
 	set.graphopacity = 1.0f;
 	set.antialiasing = true;
@@ -55,6 +55,7 @@ state::state() {
 	axis_s.load(axis_vertex, axis_fragment);
 	UI_s.load(ui_vertex, ui_fragment);
 	rect_s.load(rect_vertex, rect_fragment);
+	graph_s_light.load(graph_vertex_lighting, graph_fragment_lighting);
 
 	TTF_Init();
 	font = TTF_OpenFontRW(SDL_RWFromConstMem((const void*)DroidSans_ttf, DroidSans_ttf_len), 1, 24);
@@ -88,7 +89,7 @@ void state::run() {
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		mat4 model, view, proj, modelviewproj;
+		mat4 view, proj, modelviewproj;
 		if (set.camtype == cam_3d) {
 			view = c_3d.getView();
 			proj = perspective(radians(c_3d.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
@@ -97,7 +98,7 @@ void state::run() {
 			view = c_3d_static.getView();
 			proj = perspective(radians(c_3d_static.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
 		}
-		modelviewproj = proj * view * model;
+		modelviewproj = proj * view;
 
 		for (graph* g : graphs) {
 			g->draw(this, modelviewproj);
