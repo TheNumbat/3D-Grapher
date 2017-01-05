@@ -335,7 +335,7 @@ void cyl_graph::generate(state* s) {
 	float dt = (s->set.cdom.tmax - s->set.cdom.tmin) / s->set.cdom.trez;
 	float zmin = s->set.cdom.zmin;
 	unsigned int tzDelta = s->set.cdom.zrez / numthreads;
-	unsigned int trLast = s->set.cdom.zrez - (numthreads - 1) * tzDelta + 1;
+	unsigned int tzLast = s->set.cdom.zrez - (numthreads - 1) * tzDelta + 1;
 
 	vector<thread> threads;
 	vector<gendata*> data;
@@ -344,14 +344,14 @@ void cyl_graph::generate(state* s) {
 			gendata* d = new gendata;
 
 			if (i == numthreads - 1)
-				d->tzrez = trLast;
+				d->tzrez = tzLast;
 			else
 				d->tzrez = tzDelta;
 
 			d->s = s;
 			d->dz = dz;
 			d->dt = dt;
-			d->rmin = zmin;
+			d->zmin = zmin;
 			d->ID = ID;
 
 			data.push_back(d);
