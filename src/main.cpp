@@ -1,7 +1,7 @@
 ﻿
 #include "state.h"
 
-// Must do before useable : error messages, static cam bug, low rez bug
+// Must do before useable : error messages, static cam bug, help menu
 
 // TODO:
 	// Bugs

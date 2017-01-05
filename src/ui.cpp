@@ -22,10 +22,9 @@ void graph_enter_callback::operator()(state* s, string e) const {
 		int g_ind = getIndex(s, g_id);
 		if (g_ind == -1) {
 			switch (gt) {
-			case graph_func: s->graphs.push_back(new fxy_graph(s->next_graph_id)); break;
-			case graph_cylindrical: s->graphs.push_back(new cyl_graph(s->next_graph_id)); break;
+			case graph_func:		s->graphs.push_back(new fxy_graph(g_id)); break;
+			case graph_cylindrical: s->graphs.push_back(new cyl_graph(g_id)); break;
 			}
-			s->next_graph_id++;
 			s->graphs.back()->gen();
 			g_ind = s->graphs.size() - 1;
 		}
@@ -118,6 +117,7 @@ UI::UI(state* s) {
 
 	funcs_add.push_back(new static_text("f(x,y)", [](state* s) -> void {
 		edit_text* w = new edit_text(s, " ", "f(x,y)= ", graph_enter_callback(s->next_graph_id, graph_func), graph_remove_callback(s->next_graph_id), true);
+		s->next_graph_id++;
 		s->ui->funcs.push_back(w);
 		s->ev.current = in_widget;
 		s->ui->uistate = ui_funcs;
@@ -126,6 +126,7 @@ UI::UI(state* s) {
 
 	funcs_add.push_back(new static_text("r(t,z)", [](state* s) -> void {
 		edit_text* w = new edit_text(s, " ", "r(t,z)= ", graph_enter_callback(s->next_graph_id, graph_cylindrical), graph_remove_callback(s->next_graph_id), true);
+		s->next_graph_id++;
 		s->ui->funcs.push_back(w);
 		s->ev.current = in_widget;
 		s->ui->uistate = ui_funcs;

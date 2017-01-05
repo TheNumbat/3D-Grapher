@@ -366,22 +366,41 @@ void cyl_graph::generate(state* s) {
 		data[i]->ret.clear();
 	}
 
-	for (int x = 0; x < s->set.rdom.xrez; x++) {
-		for (int y = 0; y < s->set.rdom.yrez; y++) {
-			GLuint i_index = x * (s->set.rdom.yrez + 1) + y;
+	vec3 norm;
+	for (int z = 0; z < s->set.cdom.zrez; z++) {
+		for (int t = 0; t < s->set.cdom.trez; t++) {
+			GLuint i_index = z * (s->set.cdom.trez + 1) + t;
 
 			if (!isnan(verticies[i_index * 3 + 2]) &&
 				!isinf(verticies[i_index * 3 + 2])) {
 				indicies.push_back(i_index);
 				indicies.push_back(i_index + 1);
-				indicies.push_back(i_index + s->set.rdom.yrez + 1);
+				indicies.push_back(i_index + s->set.cdom.trez + 1);
 
 				indicies.push_back(i_index + 1);
-				indicies.push_back(i_index + s->set.rdom.yrez + 1);
-				indicies.push_back(i_index + s->set.rdom.yrez + 2);
+				indicies.push_back(i_index + s->set.cdom.trez + 1);
+				indicies.push_back(i_index + s->set.cdom.trez + 2);
+
+				float x1 = verticies[i_index * 3];
+				float y1 = verticies[i_index * 3 + 1];
+				float z1 = verticies[i_index * 3 + 2];
+				float x2 = verticies[(i_index + 1) * 3];
+				float y2 = verticies[(i_index + 1) * 3 + 1];
+				float z2 = verticies[(i_index + 1) * 3 + 2];
+				float x3 = verticies[(i_index + s->set.cdom.trez + 1) * 3];
+				float y3 = verticies[(i_index + s->set.cdom.trez + 1) * 3 + 1];
+				float z3 = verticies[(i_index + s->set.cdom.trez + 1) * 3 + 2];
+				vec3 one(x2 - x1, y2 - y1, z2 - z1);
+				vec3 two(x3 - x1, y3 - y1, z3 - z1);
+				norm = glm::normalize(cross(two, one));
 			}
+			normals.push_back(norm);
+			if (z == 0)
+				normals.push_back(norm);
 		}
+		normals.push_back(norm);
 	}
+	normals.push_back(norm);
 
 	float grmin = FLT_MAX, grmax = -FLT_MAX;
 	for (unsigned int i = 0; i < threads.size(); i++) {
