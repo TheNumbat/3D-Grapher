@@ -201,8 +201,8 @@ const GLchar* graph_vertex_lighting = {
 
 	"void main() {\n"
 	"	gl_Position = modelviewproj * vec4(position, 1.0f);\n"
-	"	norm = normal;\n"
-	"   fragPos = position;\n"
+	"	norm = vec3(model * vec4(normal, 1.0f));;\n"
+	"   fragPos = vec3(model * vec4(position, 1.0f));\n"
 	"}\n"
 };
 
@@ -220,7 +220,7 @@ const GLchar* graph_fragment_lighting = {
 	"   float ambientStrength = 1.0f;\n"
 	"	vec3 ambient = ambientStrength * lightColor;\n"
 	"   vec3 lightDir = normalize(lightPos - fragPos);\n"
-	"   float diff = max(dot(norm, lightDir), 0.0f);\n"
+	"   float diff = max(abs(dot(norm, lightDir)), 0.0f);\n"
 	"   vec3 diffuse = diff * lightColor;\n"
 	"	color = vec4(ambient, 1.0f) * vec4(diffuse, 1.0f) * vcolor;\n"
 	"}\n"

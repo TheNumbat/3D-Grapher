@@ -44,7 +44,7 @@ struct graph {
 	graph(int id, string s = " ");
 	virtual void generate(state* s) = 0;
 	virtual ~graph();
-	void draw(state* s, mat4 modelveiwproj);
+	void draw(state* s, mat4 model, mat4 view, mat4 proj);
 	void gen();
 	void send();
 	void normalize(state* s);

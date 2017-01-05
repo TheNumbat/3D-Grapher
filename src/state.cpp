@@ -89,7 +89,8 @@ void state::run() {
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		mat4 view, proj, modelviewproj;
+		mat4 model, view, proj, modelviewproj;
+		model = rotate(model, radians(-90.0f), vec3(1, 0, 0));
 		if (set.camtype == cam_3d) {
 			view = c_3d.getView();
 			proj = perspective(radians(c_3d.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
@@ -98,10 +99,10 @@ void state::run() {
 			view = c_3d_static.getView();
 			proj = perspective(radians(c_3d_static.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
 		}
-		modelviewproj = proj * view;
+		modelviewproj = proj * view * model;
 
 		for (graph* g : graphs) {
-			g->draw(this, modelviewproj);
+			g->draw(this, model, view, proj);
 		}
 
 		glBindVertexArray(axisVAO);

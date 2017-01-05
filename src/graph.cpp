@@ -83,12 +83,14 @@ void graph::send() {
 	glBindVertexArray(0);
 }
 
-void graph::draw(state* s, mat4 modelviewproj) {
+void graph::draw(state* s, mat4 model, mat4 view, mat4 proj) {
 	if (dim == s->set.display) {
 		glBindVertexArray(VAO);
 		{
 			glEnable(GL_DEPTH_TEST);
 			glEnable(GL_BLEND);
+
+			mat4 modelviewproj = proj * view * model;
 
 			if (s->set.lighting) {
 				s->graph_s_light.use();
@@ -101,12 +103,14 @@ void graph::draw(state* s, mat4 modelviewproj) {
 				glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 				glEnableVertexAttribArray(1);
 
+				glUniformMatrix4fv(s->graph_s_light.getUniform("model"), 1, GL_FALSE, value_ptr(model));
 				glUniformMatrix4fv(s->graph_s_light.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
 
 				glUniform4f(s->graph_s_light.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, s->set.graphopacity);
 				glUniform3f(s->graph_s_light.getUniform("lightColor"), 1.0f, 1.0f, 1.0f);
+
 				if (s->set.camtype == cam_3d)
-					glUniform3f(s->graph_s_light.getUniform("lightPos"), s->c_3d.pos.x + s->c_3d.front.x, s->c_3d.pos.x + s->c_3d.front.y, s->c_3d.pos.x + s->c_3d.front.z);
+					glUniform3f(s->graph_s_light.getUniform("lightPos"), s->c_3d.pos.x, s->c_3d.pos.y, s->c_3d.pos.z);
 				else
 					glUniform3f(s->graph_s_light.getUniform("lightPos"), s->c_3d_static.pos.x, s->c_3d_static.pos.y, s->c_3d_static.pos.z);
 			}
@@ -292,7 +296,7 @@ void fxy_graph::generate(state* s) {
 				float z3 = verticies[(i_index + s->set.rdom.yrez + 1) * 3 + 2];
 				vec3 one(x2 - x1, y2 - y1, z2 - z1);
 				vec3 two(x3 - x1, y3 - y1, z3 - z1);
-				norm = glm::normalize(cross(one, two));
+				norm = glm::normalize(cross(two, one));
 			}
 			normals.push_back(norm);
 			if(x == 0)
@@ -301,6 +305,10 @@ void fxy_graph::generate(state* s) {
 		normals.push_back(norm);
 	}
 	normals.push_back(norm);
+
+	for (unsigned int i = 1; i < normals.size() - 1; i++) {
+		normals[i] = glm::normalize(normals[i - 1] + normals[i] + normals[i + 1]);
+	}
 
 	float gzmin = FLT_MAX, gzmax = -FLT_MAX;
 	for (unsigned int i = 0; i < threads.size(); i++) {
