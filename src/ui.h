@@ -39,6 +39,8 @@ struct widget {
 	bool active, should_remove;
 };
 
+struct edit_text;
+
 struct UI {
 	UI(state* s);
 	~UI();
@@ -47,7 +49,9 @@ struct UI {
 	void render(state* s);
 	void render_sidebar(state* s);
 	int render_widgets(state* s, vector<widget*>& v, int ui_w, int x, int y, bool fullborders);
-	vector<widget*> funcs, funcs_add, settings, dom_rect, dom_cyl;
+	void parseDoms(state* s);
+	vector<widget*> funcs, funcs_add, settings;
+	vector<widget*> dom_rect, dom_cyl; // ONLY EDIT_TEXT
 	GLuint VAO, VBO;
 	textured_rect in_r, out_r, gear_r, f_r;
 	ui_state uistate;

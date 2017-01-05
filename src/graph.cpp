@@ -406,6 +406,7 @@ void regengraph(state* s, int index) {
 	}
 	s->graphs[index]->indicies.clear();
 	s->graphs[index]->verticies.clear();
+	s->graphs[index]->normals.clear();
 	s->graphs[index]->eq = new_eq;
 
 	printeq(cout, s->graphs[index]->eq);

@@ -1,20 +1,21 @@
 ﻿
 #include "state.h"
 
+// Must do before useable : error messages, static cam bug, low rez bug
+
 // TODO:
 	// Bugs
 		// Rects have to be set every frame
 		// Something is wrong with static 3d cam when not at 0, 0, 0
 		// Lower resolution messes with cylindrical
-	// Implement
-		// Lighting
-		// Graph types
+	// Graph types
 	// UI
 		// Error messages
 			// Unknown function name
 			// Unused variable
 			// Unbalanced parenthesis
 			// Unable to parse value
+			// ANYWHERE in()/eval()
 	// Math Features
 		// Highlight curve along a set x/y
 		// Partials

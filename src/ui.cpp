@@ -30,6 +30,7 @@ void graph_enter_callback::operator()(state* s, string e) const {
 			g_ind = s->graphs.size() - 1;
 		}
 		s->graphs[g_ind]->eq_str = e;
+		s->ui->parseDoms(s);
 		regengraph(s, g_ind);
 		s->ev.current = in_funcs;
 		SDL_ShowCursor(1);
@@ -89,167 +90,31 @@ UI::UI(state* s) {
 		}
 	}));
 
-	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.xmin), "xmin: ", [](state* s, string exp) -> void {
-		if(exp.size() && exp != " ") {
-			vector<op> expv;
-			in(exp, expv);
-			float num = eval(expv);
-			if (num < s->set.rdom.xmax) {
-				s->set.rdom.xmin = num;
-				regenall(s);
-			}
-		}
-		s->ev.current = in_settings;
-	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
-
-	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.xmax), "xmax: ", [](state* s, string exp) -> void {
+	auto domsCallback = [](state* s, string exp) -> void {
 		if (exp.size() && exp != " ") {
-			vector<op> expv;
-			in(exp, expv);
-			float num = eval(expv);
-			if (num > s->set.rdom.xmin) {
-				s->set.rdom.xmax = num;
-				regenall(s);
-			}
+			s->ui->parseDoms(s);
+			regenall(s);
 		}
 		s->ev.current = in_settings;
-	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
+	};
+	auto domsRemoveCallback = [](state* s) -> bool {s->ev.current = in_settings; return false;};
+	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.xmin), "xmin: ", domsCallback, domsRemoveCallback, false));
+	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.xmax), "xmax: ", domsCallback, domsRemoveCallback, false));
+	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.ymin), "ymin: ", domsCallback, domsRemoveCallback, false));
+	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.ymax), "ymax: ", domsCallback, domsRemoveCallback, false));
+	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.zmin), "zmin: ", domsCallback, domsRemoveCallback, false));
+	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.zmax), "zmax: ", domsCallback, domsRemoveCallback, false));
+	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.xrez), "xrez: ", domsCallback, domsRemoveCallback, false));
+	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.yrez), "yrez: ", domsCallback, domsRemoveCallback, false));
 
-	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.ymin), "ymin: ", [](state* s, string exp) -> void {
-		if(exp.size() && exp != " ") {
-			vector<op> expv;
-			in(exp, expv);
-			float num = eval(expv);
-			if (num < s->set.rdom.ymax) {
-				s->set.rdom.ymin = num;
-				regenall(s);
-			}
-		}
-		s->ev.current = in_settings;
-	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
-
-	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.ymax), "ymax: ", [](state* s, string exp) -> void {
-		if(exp.size() && exp != " ") {
-			vector<op> expv;
-			in(exp, expv);
-			float num = eval(expv);
-			if (num > s->set.rdom.ymin) {
-				s->set.rdom.ymax = num;
-				regenall(s);
-			}
-		}
-		s->ev.current = in_settings;
-	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
-
-	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.xrez), "xrez: ", [](state* s, string exp) -> void {
-		if(exp.size() && exp != " ") {
-			try {
-				int num = stoi(exp);
-				s->set.rdom.xrez = num;
-				regenall(s);
-			}
-			catch (...) {
-				cout << "\terr: couldn't parse int" << endl;
-			}
-		}
-		s->ev.current = in_settings;
-	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
-
-	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.yrez), "yrez: ", [](state* s, string exp) -> void {
-		if(exp.size() && exp != " ") {
-			try {
-				int num = stoi(exp);
-				s->set.rdom.yrez = num;
-				regenall(s);
-			}
-			catch (...) {
-				cout << "\terr: couldn't parse int" << endl;
-			}
-		}
-		s->ev.current = in_settings;
-	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
-
-
-	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.zmax), "zmax: ", [](state* s, string exp) -> void {
-		if(exp.size() && exp != " ") {
-			vector<op> expv;
-			in(exp, expv);
-			float num = eval(expv);
-			if (num > s->set.cdom.zmin) {
-				s->set.cdom.zmax = num;
-				regenall(s);
-			}
-		}
-		s->ev.current = in_settings;
-	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
-
-	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.zmin), "zmin: ", [](state* s, string exp) -> void {
-		if(exp.size() && exp != " ") {
-			vector<op> expv;
-			in(exp, expv);
-			float num = eval(expv);
-			if (num < s->set.cdom.zmax) {
-				s->set.cdom.zmin = num;
-				regenall(s);
-			}
-		}
-		s->ev.current = in_settings;
-	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
-
-	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.tmax), "tmax: ", [](state* s, string exp) -> void {
-		if(exp.size() && exp != " ") {
-			vector<op> expv;
-			in(exp, expv);
-			float num = eval(expv);
-			if (num > s->set.cdom.tmin) {
-				s->set.cdom.tmax = num;
-				regenall(s);
-			}
-		}
-		s->ev.current = in_settings;
-	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
-
-	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.tmin), "tmin: ", [](state* s, string exp) -> void {
-		if(exp.size() && exp != " ") {
-			vector<op> expv;
-			in(exp, expv);
-			float num = eval(expv);
-			if (num > s->set.cdom.tmax) {
-				s->set.cdom.tmin = num;
-				regenall(s);
-			}
-		}
-		s->ev.current = in_settings;
-	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
-
-
-	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.zrez), "zrez: ", [](state* s, string exp) -> void {
-		if(exp.size() && exp != " ") {
-			try {
-				int num = stoi(exp);
-				s->set.cdom.zrez = num;
-				regenall(s);
-			}
-			catch (...) {
-				cout << "\terr: couldn't parse int" << endl;
-			}
-		}
-		s->ev.current = in_settings;
-	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
-
-	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.trez), "trez: ", [](state* s, string exp) -> void {
-		if(exp.size() && exp != " ") {
-			try {
-				int num = stoi(exp);
-				s->set.cdom.trez = num;
-				regenall(s);
-			}
-			catch (...) {
-				cout << "\terr: couldn't parse int" << endl;
-			}
-		}
-		s->ev.current = in_settings;
-	}, [](state* s) -> bool {s->ev.current = in_settings; return false; }, false));
+	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.tmin), "tmin: ", domsCallback, domsRemoveCallback, false));
+	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.tmax), "tmax: ", domsCallback, domsRemoveCallback, false));
+	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.zmin), "zmin: ", domsCallback, domsRemoveCallback, false));
+	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.zmax), "zmax: ", domsCallback, domsRemoveCallback, false));
+	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.rmin), "rmin: ", domsCallback, domsRemoveCallback, false));
+	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.rmax), "rmax: ", domsCallback, domsRemoveCallback, false));
+	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.trez), "trez: ", domsCallback, domsRemoveCallback, false));
+	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.zrez), "zrez: ", domsCallback, domsRemoveCallback, false));
 
 	funcs_add.push_back(new static_text("f(x,y)", [](state* s) -> void {
 		edit_text* w = new edit_text(s, " ", "f(x,y)= ", graph_enter_callback(s->next_graph_id, graph_func), graph_remove_callback(s->next_graph_id), true);
@@ -326,6 +191,53 @@ UI::~UI() {
 	settings.clear();
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
+}
+
+void UI::parseDoms(state* s) {
+	for (widget* w : dom_rect) {
+		edit_text* e = (edit_text*) w;
+		vector<op> exp;
+		in(e->exp, exp);
+		float val = eval(exp);
+		if (e->head == "xmin: ")
+			s->set.rdom.xmin = val;
+		else if (e->head == "xmax: ")
+			s->set.rdom.xmax = val;
+		else if (e->head == "ymin: ")
+			s->set.rdom.ymin = val;
+		else if (e->head == "ymax: ")
+			s->set.rdom.ymax = val;
+		else if (e->head == "zmin: ")
+			s->set.rdom.zmin = val;
+		else if (e->head == "zmax: ")
+			s->set.rdom.zmax = val;
+		else if (e->head == "xrez: ")
+			s->set.rdom.xrez = (int)round(val);
+		else if (e->head == "yrez: ")
+			s->set.rdom.yrez = (int)round(val);
+	}
+	for (widget* w : dom_cyl) {
+		edit_text* e = (edit_text*) w;
+		vector<op> exp;
+		in(e->exp, exp);
+		float val = eval(exp);
+		if (e->head == "tmin: ")
+			s->set.cdom.tmin = val;
+		else if (e->head == "tmax: ")
+			s->set.cdom.tmax = val;
+		else if (e->head == "zmin: ")
+			s->set.cdom.zmin = val;
+		else if (e->head == "zmax: ")
+			s->set.cdom.zmax = val;
+		else if (e->head == "rmin: ")
+			s->set.cdom.rmin = val;
+		else if (e->head == "rmax: ")
+			s->set.cdom.rmax = val;
+		else if (e->head == "trez: ")
+			s->set.cdom.trez = (int)round(val);
+		else if (e->head == "zrez: ")
+			s->set.cdom.zrez = (int)round(val);
+	}
 }
 
 void UI::remove_dead_widgets() {
@@ -515,7 +427,6 @@ bool edit_text::update(state* s, SDL_Event* ev) {
 			case SDLK_ESCAPE:
 				active = false;
 				SDL_StopTextInput();
-				SDL_ShowCursor(1);
 				if (s->ui->uistate == ui_funcs)
 					s->ev.current = in_funcs;
 				else
@@ -534,11 +445,13 @@ bool edit_text::update(state* s, SDL_Event* ev) {
 		if (!active && ev->button.x < (int)round(s->w * UI_SCREEN_RATIO) && ev->button.y > current_y && ev->button.y <= current_yh
 			&& ev->button.x >= current_x && ev->button.x <= current_xw && s->ev.current != in_widget) {
 			active = true;
+			SDL_StartTextInput();
 			s->ev.current = in_widget;
 			return true;
 		}
 		else if(active) {
 			active = false;
+			SDL_StopTextInput();
 			if (s->ui->active)
 				s->ev.current = in_settings;
 			else

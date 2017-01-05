@@ -217,13 +217,15 @@ const GLchar* graph_fragment_lighting = {
 	"out vec4 color;\n"
 
 	"void main() {\n"
-	"   float ambientStrength = 1.0f;\n"
+	"   float ambientStrength = 0.1f;\n"
 	"	vec3 ambient = ambientStrength * lightColor;\n"
 	"   vec3 lightDir = normalize(lightPos - fragPos);\n"
-	"   float diff = max(abs(dot(norm, lightDir)), 0.0f);\n"
-	"   vec3 diffuse = diff * lightColor;\n"
-	"	color = vec4(ambient, 1.0f) * vec4(diffuse, 1.0f) * vcolor;\n"
+	"   float diff = abs(dot(norm, lightDir));\n"
+	"   vec3 diffuse = diff * lightColor;\n"							
+	"	color = vec4(ambient + diffuse, 1.0f) * vcolor;\n"
 	"}\n"
+
+	// abs is not correct, but lights both sides
 };
 
 const GLchar* ui_vertex = {
