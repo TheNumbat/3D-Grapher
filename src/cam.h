@@ -76,7 +76,7 @@ struct _cam_3d_static {
 		pos.x = cos(radians(pitch)) * cos(radians(yaw));
 		pos.y = sin(radians(pitch));
 		pos.z = sin(radians(yaw)) * cos(radians(pitch));
-		pos = radius * normalize(pos);
+		pos = radius * normalize(pos) + lookingAt;
 	}
 
 	void move(int dx, int dy) {
