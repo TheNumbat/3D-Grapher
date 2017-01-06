@@ -19,6 +19,7 @@ struct settings {
 	bool lighting;
 	bool axisnormalization;
 	float graphopacity;
+	float ambientLighting;
 	rect_domain rdom;
 	cyl_domain cdom;
 	dimension display;
