@@ -2,13 +2,14 @@
 #include "ui.h"
 #include "state.h"
 
-#include <SDL_ttf.h>
-#include <SDL.h>
+#include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL.h>
 #include <algorithm>
-#include "data\tex_gear.data"
-#include "data\tex_in.data"
-#include "data\tex_out.data"
-#include "data\tex_f.data"
+#include "tex_gear.data"
+#include "tex_in.data"
+#include "tex_out.data"
+#include "tex_f.data"
+#include "tex_q.data"
 
 // the code in this file is p disorganized, good luck
 
@@ -32,7 +33,6 @@ void graph_enter_callback::operator()(state* s, string e) const {
 		s->ui->parseDoms(s);
 		regengraph(s, g_ind);
 		s->ev.current = in_funcs;
-		SDL_ShowCursor(1);
 	}
 }
 
@@ -54,20 +54,13 @@ bool graph_remove_callback::operator()(state* s) const {
 UI::UI(state* s) {
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
-	active = false;
+	active = true;
 	uistate = ui_funcs;
 	domain = graph_func;
 
 	settings.push_back(new toggle_text("Wirefame", false, [](state* s) -> void {s->set.wireframe = !s->set.wireframe;}));
 	settings.push_back(new toggle_text("Lighting", true, [](state* s) -> void {s->set.lighting = !s->set.lighting; }));
 	settings.push_back(new toggle_text("Axis Normalization", false, [](state* s) -> void {s->set.axisnormalization = !s->set.axisnormalization; regenall(s); }));
-	settings.push_back(new toggle_text("Antialiasing", true, [](state* s) -> void {
-		if (s->set.antialiasing)
-			glDisable(GL_MULTISAMPLE);
-		else
-			glEnable(GL_MULTISAMPLE);
-		s->set.antialiasing = !s->set.antialiasing;
-	}));
 
 	settings.push_back(new multi_text({ "Camera: Fixed 3D", "Camera: 3D" }, 0, [](state* s, string str) -> void {
 		if (str == "Camera: 3D") {
@@ -97,23 +90,27 @@ UI::UI(state* s) {
 		s->ev.current = in_settings;
 	};
 	auto domsRemoveCallback = [](state* s) -> bool {s->ev.current = in_settings; return false;};
-	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.xmin), "xmin: ", domsCallback, domsRemoveCallback, false));
-	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.xmax), "xmax: ", domsCallback, domsRemoveCallback, false));
-	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.ymin), "ymin: ", domsCallback, domsRemoveCallback, false));
-	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.ymax), "ymax: ", domsCallback, domsRemoveCallback, false));
-	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.zmin), "zmin: ", domsCallback, domsRemoveCallback, false));
-	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.zmax), "zmax: ", domsCallback, domsRemoveCallback, false));
-	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.xrez), "xrez: ", domsCallback, domsRemoveCallback, false));
-	dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.yrez), "yrez: ", domsCallback, domsRemoveCallback, false));
 
-	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.tmin), "tmin: ", domsCallback, domsRemoveCallback, false));
-	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.tmax), "tmax: ", domsCallback, domsRemoveCallback, false));
-	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.zmin), "zmin: ", domsCallback, domsRemoveCallback, false));
-	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.zmax), "zmax: ", domsCallback, domsRemoveCallback, false));
-	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.rmin), "rmin: ", domsCallback, domsRemoveCallback, false));
-	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.rmax), "rmax: ", domsCallback, domsRemoveCallback, false));
-	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.trez), "trez: ", domsCallback, domsRemoveCallback, false));
-	dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.zrez), "zrez: ", domsCallback, domsRemoveCallback, false));
+#define add(val) dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.val), string(#val) + ": ", domsCallback, domsRemoveCallback, false));
+	add(xmin);
+	add(xmax);
+	add(ymin);
+	add(ymax);
+	add(zmin);
+	add(zmax);
+	add(xrez);
+	add(yrez);
+#undef add
+#define add(val) dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.val), string(#val) + ": ", domsCallback, domsRemoveCallback, false));
+	add(tmin);
+	add(tmax);
+	add(zmin);
+	add(zmax);
+	add(rmin);
+	add(rmax);
+	add(trez);
+	add(zrez);
+#undef add
 
 	funcs_add.push_back(new static_text("f(x,y)", [](state* s) -> void {
 		edit_text* w = new edit_text(s, " ", "f(x,y)= ", graph_enter_callback(s->next_graph_id, graph_func), graph_remove_callback(s->next_graph_id), true);
@@ -177,10 +174,12 @@ UI::UI(state* s) {
 	out_r.gen();
 	gear_r.gen();
 	f_r.gen();
+	q_r.gen();
 	in_r.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(in_bmp, in_bmp_len), 1));
 	out_r.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(out_bmp, out_bmp_len), 1));
 	gear_r.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(gear_bmp, gear_bmp_len), 1));
 	f_r.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(f_bmp, f_bmp_len), 1));
+	q_r.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(q_bmp, q_bmp_len), 1));
 }
 
 UI::~UI() {
@@ -339,6 +338,8 @@ void UI::render_sidebar(state* s) {
 		f_r.render(s->w, s->h, s->UI_s);
 		gear_r.set((int)round(s->w * UI_SCREEN_RATIO) + 5.0f, 70, 32, 32);
 		gear_r.render(s->w, s->h, s->UI_s);
+		q_r.set((int)round(s->w * UI_SCREEN_RATIO) + 5.0f, 105, 32, 32);
+		q_r.render(s->w, s->h, s->UI_s);
 	}
 	else {
 		out_r.set(11, 0, 32, 32);

@@ -10,13 +10,13 @@ callback::callback(function<bool(state*, SDL_Event*)> f, inputstate s, SDL_Event
 }
 
 evts::evts() {
-	current = in_idle;
+	current = in_funcs;
 }
 
 void evts::run(state* s) {
 	const static unsigned char* keys = SDL_GetKeyboardState(NULL);
 	SDL_Event ev;
-	while (SDL_PollEvent(&ev) != 0) {
+	while (SDL_PollEvent(&ev)) {
 		Uint8 flags = 0;
 		switch (ev.type) {
 		case SDL_QUIT:

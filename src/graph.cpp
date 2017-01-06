@@ -10,7 +10,7 @@
 using namespace std;
 
 GLfloat axes[] = {
-	-10.0f,  0.0f ,  0.0f ,		1.0f, 0.0f, 0.0f,
+   -10.0f,  0.0f ,  0.0f ,		1.0f, 0.0f, 0.0f,
 	10.0f,  0.0f ,  0.0f ,		1.0f, 0.0f, 0.0f,
 
 	0.0f , -10.0f,  0.0f ,		0.0f, 1.0f, 0.0f,
@@ -184,18 +184,20 @@ void updateAxes(state* s) {
 	if (axes[y_max] < 0) axes[y_max] = 0;
 	if (axes[z_max] < 0) axes[z_max] = 0;
 
+	glBindVertexArray(s->axisVAO);
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, s->axisVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
+	}
+}
+
+void resetCam(state* s) {
 	s->c_3d_static.scale = std::max(s->set.rdom.ymax - s->set.rdom.ymin, s->set.rdom.xmax - s->set.rdom.xmin);
 	s->c_3d_static.pos.x = (s->set.rdom.xmax + s->set.rdom.xmin) / 2;
 	s->c_3d_static.pos.z = (s->set.rdom.ymax + s->set.rdom.ymin) / -2;
 
 	s->c_3d.pos.x = (s->set.rdom.xmax + s->set.rdom.xmin) / 2;
 	s->c_3d.pos.z = (s->set.rdom.ymax + s->set.rdom.ymin) / -2;
-
-	glBindVertexArray(s->axisVAO);
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, s->axisVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
-	}
 }
 
 void fxy_graph::genthread(gendata* g) {
@@ -230,10 +232,12 @@ void graph::normalize(state* s) {
 
 void fxy_graph::generate(state* s) {
 	unsigned int numthreads = thread::hardware_concurrency();
+#ifdef _WIN32
 	int cpuinfo[4];
 	__cpuid(cpuinfo, 1);
 	bool HT = (cpuinfo[3] & (1 << 28)) > 0;
 	if (HT) numthreads /= 2;
+#endif
 
 	float dx = (s->set.rdom.xmax - s->set.rdom.xmin) / s->set.rdom.xrez;
 	float dy = (s->set.rdom.ymax - s->set.rdom.ymin) / s->set.rdom.yrez;
@@ -326,10 +330,12 @@ void fxy_graph::generate(state* s) {
 
 void cyl_graph::generate(state* s) {
 	unsigned int numthreads = thread::hardware_concurrency();
+#ifdef _WIN32
 	int cpuinfo[4];
 	__cpuid(cpuinfo, 1);
 	bool HT = (cpuinfo[3] & (1 << 28)) > 0;
 	if (HT) numthreads /= 2;
+#endif
 
 	float dz = (s->set.cdom.zmax - s->set.cdom.zmin) / s->set.cdom.zrez;
 	float dt = (s->set.cdom.tmax - s->set.cdom.tmin) / s->set.cdom.trez;
@@ -458,6 +464,8 @@ void regenall(state* s) {
 			gen = true;
 		}
 	}
-	if (!gen)
+	if (gen) {
 		updateAxes(s);
+		resetCam(s);
+	}
 }

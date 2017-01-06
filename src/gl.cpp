@@ -138,31 +138,31 @@ void textured_rect::render(int wW, int wH, shader& s) {
 }
 
 void setupFuns() {
-	glBindVertexArray			= (PFNGLBINDVERTEXARRAYPROC)			wglGetProcAddress("glBindVertexArray");
-	glDeleteBuffers				= (PFNGLDELETEBUFFERSPROC)				wglGetProcAddress("glDeleteBuffers");
-	glBindBuffer				= (PFNGLBINDBUFFERPROC)					wglGetProcAddress("glBindBuffer");
-	glBufferData				= (PFNGLBUFFERDATAPROC)					wglGetProcAddress("glBufferData");
-	glUseProgram				= (PFNGLUSEPROGRAMPROC)					wglGetProcAddress("glUseProgram");
-	glEnableVertexAttribArray	= (PFNGLENABLEVERTEXATTRIBARRAYPROC)	wglGetProcAddress("glEnableVertexAttribArray");
-	glVertexAttribPointer		= (PFNGLVERTEXATTRIBPOINTERPROC)		wglGetProcAddress("glVertexAttribPointer");
-	glUniformMatrix4fv			= (PFNGLUNIFORMMATRIX4FVPROC)			wglGetProcAddress("glUniformMatrix4fv");
-	glGetUniformLocation		= (PFNGLGETUNIFORMLOCATIONPROC)			wglGetProcAddress("glGetUniformLocation");
-	glUniform4f					= (PFNGLUNIFORM4FPROC)					wglGetProcAddress("glUniform4f");
-	glUniform3f					= (PFNGLUNIFORM3FPROC)					wglGetProcAddress("glUniform3f");
-	glCreateShader				= (PFNGLCREATESHADERPROC)				wglGetProcAddress("glCreateShader");
-	glShaderSource				= (PFNGLSHADERSOURCEPROC)				wglGetProcAddress("glShaderSource");
-	glCompileShader				= (PFNGLCOMPILESHADERPROC)				wglGetProcAddress("glCompileShader");
-	glCreateProgram				= (PFNGLCREATEPROGRAMPROC)				wglGetProcAddress("glCreateProgram");
-	glDeleteShader				= (PFNGLDELETESHADERPROC)				wglGetProcAddress("glDeleteShader");
-	glAttachShader				= (PFNGLATTACHSHADERPROC)				wglGetProcAddress("glAttachShader");
-	glLinkProgram				= (PFNGLLINKPROGRAMPROC)				wglGetProcAddress("glLinkProgram");
-	glGenVertexArrays			= (PFNGLGENVERTEXARRAYSPROC)			wglGetProcAddress("glGenVertexArrays");
-	glGenBuffers				= (PFNGLGENBUFFERSPROC)					wglGetProcAddress("glGenBuffers");
-	glDeleteVertexArrays		= (PFNGLDELETEVERTEXARRAYSPROC)			wglGetProcAddress("glDeleteVertexArrays");
-	glDeleteProgram				= (PFNGLDELETEPROGRAMPROC)				wglGetProcAddress("glDeleteProgram");
-	_glActiveTexture			= (PFNGLACTIVETEXTUREPROC)				wglGetProcAddress("glActiveTexture");
-	glUniform1i					= (PFNGLUNIFORM1IPROC)					wglGetProcAddress("glUniform1i");
-	glDisableVertexAttribArray  = (PFNGLDISABLEVERTEXATTRIBARRAYPROC)   wglGetProcAddress("glDisableVertexAttribArray");
+	glBindVertexArray			= (PFNGLBINDVERTEXARRAYPROC)			SDL_GL_GetProcAddress("glBindVertexArray");
+	glDeleteBuffers				= (PFNGLDELETEBUFFERSPROC)				SDL_GL_GetProcAddress("glDeleteBuffers");
+	glBindBuffer				= (PFNGLBINDBUFFERPROC)					SDL_GL_GetProcAddress("glBindBuffer");
+	glBufferData				= (PFNGLBUFFERDATAPROC)					SDL_GL_GetProcAddress("glBufferData");
+	glUseProgram				= (PFNGLUSEPROGRAMPROC)					SDL_GL_GetProcAddress("glUseProgram");
+	glEnableVertexAttribArray	= (PFNGLENABLEVERTEXATTRIBARRAYPROC)	SDL_GL_GetProcAddress("glEnableVertexAttribArray");
+	glVertexAttribPointer		= (PFNGLVERTEXATTRIBPOINTERPROC)		SDL_GL_GetProcAddress("glVertexAttribPointer");
+	glUniformMatrix4fv			= (PFNGLUNIFORMMATRIX4FVPROC)			SDL_GL_GetProcAddress("glUniformMatrix4fv");
+	glGetUniformLocation		= (PFNGLGETUNIFORMLOCATIONPROC)			SDL_GL_GetProcAddress("glGetUniformLocation");
+	glUniform4f					= (PFNGLUNIFORM4FPROC)					SDL_GL_GetProcAddress("glUniform4f");
+	glUniform3f					= (PFNGLUNIFORM3FPROC)					SDL_GL_GetProcAddress("glUniform3f");
+	glCreateShader				= (PFNGLCREATESHADERPROC)				SDL_GL_GetProcAddress("glCreateShader");
+	glShaderSource				= (PFNGLSHADERSOURCEPROC)				SDL_GL_GetProcAddress("glShaderSource");
+	glCompileShader				= (PFNGLCOMPILESHADERPROC)				SDL_GL_GetProcAddress("glCompileShader");
+	glCreateProgram				= (PFNGLCREATEPROGRAMPROC)				SDL_GL_GetProcAddress("glCreateProgram");
+	glDeleteShader				= (PFNGLDELETESHADERPROC)				SDL_GL_GetProcAddress("glDeleteShader");
+	glAttachShader				= (PFNGLATTACHSHADERPROC)				SDL_GL_GetProcAddress("glAttachShader");
+	glLinkProgram				= (PFNGLLINKPROGRAMPROC)				SDL_GL_GetProcAddress("glLinkProgram");
+	glGenVertexArrays			= (PFNGLGENVERTEXARRAYSPROC)			SDL_GL_GetProcAddress("glGenVertexArrays");
+	glGenBuffers				= (PFNGLGENBUFFERSPROC)					SDL_GL_GetProcAddress("glGenBuffers");
+	glDeleteVertexArrays		= (PFNGLDELETEVERTEXARRAYSPROC)			SDL_GL_GetProcAddress("glDeleteVertexArrays");
+	glDeleteProgram				= (PFNGLDELETEPROGRAMPROC)				SDL_GL_GetProcAddress("glDeleteProgram");
+	_glActiveTexture			= (PFNGLACTIVETEXTUREPROC)				SDL_GL_GetProcAddress("glActiveTexture");
+	glUniform1i					= (PFNGLUNIFORM1IPROC)					SDL_GL_GetProcAddress("glUniform1i");
+	glDisableVertexAttribArray  = (PFNGLDISABLEVERTEXATTRIBARRAYPROC)   SDL_GL_GetProcAddress("glDisableVertexAttribArray");
 }
 
 const GLchar* graph_vertex = {

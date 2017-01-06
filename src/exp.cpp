@@ -3,6 +3,10 @@
 #include <string>
 #include <stack>
 #include <queue>
+#include <algorithm>
+#include <math.h>
+
+using namespace std;
 
 bool isop(char c) {
 	return c == open_p || c == add || c == subtract || c == op_neg ||
@@ -99,7 +103,7 @@ float eval(const vector<op>& EQ, vector<pair<char, float>> vars) {
 			break;
 		case op_abs:
 			get1();
-			result = abs(one);
+			result = fabs(one);
 			s.push(result);
 			break;
 		case op_exp:

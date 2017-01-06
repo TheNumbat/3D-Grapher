@@ -31,7 +31,7 @@ struct _cam_3d {
 		up = normalize(cross(right, front));
 	}
 
-	void default() {
+	void reset() {
 		pitch = -45.0f;
 		yaw = 225.0f;
 		speed = 5.0f;
@@ -60,8 +60,8 @@ struct _cam_3d_static : _cam_3d {
 		return ret;
 	}
 
-	void default(float s) {
-		_cam_3d::default();
+	void reset(float s) {
+		_cam_3d::reset();
 		pitch = 45.0f;
 		scale = s;
 		fov = 60.0f;

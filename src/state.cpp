@@ -1,6 +1,6 @@
 
 #include "state.h"
-#include "data/font.data"
+#include "font.data"
 #include <algorithm>
 
 state::state() {
@@ -15,25 +15,22 @@ state::state() {
 	set.lighting = true;
 	set.axisnormalization = false;
 	set.graphopacity = 1.0f;
-	set.antialiasing = true;
 	set.display = dim_3d;
 	set.camtype = cam_3d_static;
 	set.rdom = { -10, 10, -10, 10, -10, 10, 200, 200 };
-	set.cdom = { -10, 10, 0, 2 * val_pi, 0, 10, 200, 200 };
+	set.cdom = { 0, 1, 0, 2 * val_pi, 0, 10, 200, 200 };
 
 	assert(SDL_Init(SDL_INIT_EVERYTHING) == 0);
-
-	window = SDL_CreateWindow("3D Grapher", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-		screen_w, screen_h, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
-	assert(window);
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
+	window = SDL_CreateWindow("3D Grapher", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+		screen_w, screen_h, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
+	assert(window);
 
 	context = SDL_GL_CreateContext(window);
 	assert(context);
@@ -65,8 +62,8 @@ state::state() {
 
 	ui = new UI(this);
 
-	c_3d.default();
-	c_3d_static.default(std::max(set.rdom.ymax - set.rdom.ymin, set.rdom.xmax - set.rdom.xmin));
+	c_3d.reset();
+	c_3d_static.reset(std::max(set.rdom.ymax - set.rdom.ymin, set.rdom.xmax - set.rdom.xmin));
 	running = true;
 }
 

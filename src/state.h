@@ -4,7 +4,7 @@
 const float UI_SCREEN_RATIO = 0.2f;
 const int screen_w = 1280, screen_h = 720;
 
-#include <SDL_ttf.h>
+#include <SDL2/SDL_ttf.h>
 #include "graph.h"
 #include "cam.h"
 #include "ui.h"

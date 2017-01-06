@@ -75,11 +75,11 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(ProjectDir)..\deps\glm\include;$(ProjectDir)..\deps\SDL2\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\deps\glm\include;$(ProjectDir)..\deps\;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)..\deps\SDL2\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(ProjectDir)..\deps\glm\include;$(ProjectDir)..\deps\SDL2\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\deps\glm\include;$(ProjectDir)..\deps\;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)..\deps\SDL2\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

@@ -18,7 +18,6 @@ struct settings {
 	bool wireframe;
 	bool lighting;
 	bool axisnormalization;
-	bool antialiasing;
 	float graphopacity;
 	rect_domain rdom;
 	cyl_domain cdom;

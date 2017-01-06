@@ -95,6 +95,7 @@ struct fxy_graph : public graph {
 };
 
 void updateAxes(state* s);
+void resetCam(state* s);
 void regengraph(state* s, int index);
 void regenall(state* s);
 int getIndex(state* s, int ID);
