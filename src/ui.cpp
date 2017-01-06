@@ -243,15 +243,15 @@ UI::UI(state* s) {
 		"3D Grapher Help",
 		"=====================",
 		"Interface:",
-		"   the f and gear icons will allow you to add functions and",
+		"   The f and gear icons will allow you to add functions and",
 		"   change settings respectively. The arrrow icon will",
 		"   hide/show the side panel.",
 		"Functions:",
-		"   click on a function to edit it, or below the current",
+		"   Click on a function to edit it, or below the current",
 		"   functions to add a new one. Pressing enter will generate",
-		"   the current function.",
+		"   the current function. '*' is needed for multiplication.",
 		"Settings:",
-		"   click on the buttons/text to change/edit them."
+		"   Click on the buttons/text to change/edit them."
 	};
 
 	for (string l : help) {
@@ -281,14 +281,17 @@ bool UI::parseDoms(state* s) {
 	for (widget* w : dom_rect) {
 		edit_text* e = (edit_text*) w;
 		vector<op> exp;
-		try { in(e->exp, exp); }
+		float val;
+		try { 
+			in(e->exp, exp);
+			val = eval(exp);
+		}
 		catch (runtime_error e) {
 			s->ui->error = e.what();
 			s->ui->errorShown = true;
 			s->ev.current = in_help_or_err;
 			return false;
 		}
-		float val = eval(exp);
 		if (e->head == "xmin: ")
 			s->set.rdom.xmin = val;
 		else if (e->head == "xmax: ")
@@ -305,14 +308,17 @@ bool UI::parseDoms(state* s) {
 	for (widget* w : dom_cyl) {
 		edit_text* e = (edit_text*) w;
 		vector<op> exp;
-		try { in(e->exp, exp); }
+		float val;
+		try { 
+			in(e->exp, exp);
+			val = eval(exp);
+		}
 		catch (runtime_error e) {
 			s->ui->error = e.what();
 			s->ui->errorShown = true;
 			s->ev.current = in_help_or_err;
 			return false;
 		}
-		float val = eval(exp);
 		if (e->head == "tmin: ")
 			s->set.cdom.tmin = val;
 		else if (e->head == "tmax: ")

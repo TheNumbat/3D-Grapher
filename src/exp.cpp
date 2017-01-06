@@ -23,11 +23,11 @@ bool num(char c) {
 	return c >= '0' && c <= '9' || c == '.';
 }
 
-#define get2() try{two = s.top();s.pop();one = s.top();s.pop();} \
-			   catch(runtime_error e) {throw runtime_error("ERROR: expression malformed!");}
+#define get2() if(s.size() > 1) {two = s.top();s.pop();one = s.top();s.pop();} \
+			   else {throw runtime_error("ERROR: expression malformed!");}
 
-#define get1() try{one = s.top();s.pop();} \
-			   catch(runtime_error e) {throw runtime_error("ERROR: expression malformed!");}
+#define get1() if(s.size()) {one = s.top();s.pop();} \
+			   else {throw runtime_error("ERROR: expression malformed!");}
 
 float eval(const vector<op>& EQ, vector<pair<char, float>> vars) {
 	stack<float> s;
