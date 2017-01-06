@@ -172,6 +172,10 @@ void updateAxes(state* s) {
 		for (graph* g : s->graphs) {
 			if (g->zmin < zmin) zmin = g->zmin;
 			if (g->zmax > zmax) zmax = g->zmax;
+			if (!g->verticies.size()) {
+				zmin = -10;
+				zmax = 10;
+			}
 		}
 		if (zmin > 0) zmin = 0;
 		if (zmax < 0) zmax = 0;

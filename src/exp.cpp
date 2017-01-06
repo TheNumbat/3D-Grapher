@@ -32,8 +32,7 @@ bool num(char c) {
 float eval(const vector<op>& EQ, vector<pair<char, float>> vars) {
 	stack<float> s;
 	float one = 0, two = 0, result = 0;
-	size_t size = EQ.size();
-	for (unsigned int index = 0; index < size; index++) {
+	for (unsigned int index = 0; index < EQ.size(); index++) {
 		switch (EQ[index]) {
 		case add:
 			get2();
@@ -204,7 +203,10 @@ float eval(const vector<op>& EQ, vector<pair<char, float>> vars) {
 			break;
 		}
 	}
-	return s.top();
+	result = s.top();
+	s.pop();
+	if (s.size()) throw runtime_error("ERROR: malformed expression!");
+	return result;
 }
 
 int precedence(char c) {
