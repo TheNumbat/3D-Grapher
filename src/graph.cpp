@@ -27,7 +27,6 @@ graph::graph(int id, string s) {
 }
 
 cyl_graph::cyl_graph(int id, string s) : graph(id, s) {
-	dim = dim_3d;
 	type = graph_cylindrical;
 }
 
@@ -59,7 +58,6 @@ void cyl_graph::genthread(gendata* g) {
 }
 
 fxy_graph::fxy_graph(int id, string s) : graph(id, s) {
-	dim = dim_3d;
 	type = graph_func;
 }
 
@@ -93,76 +91,74 @@ void graph::send() {
 }
 
 void graph::draw(state* s, mat4 model, mat4 view, mat4 proj) {
-	if (dim == s->set.display) {
-		glBindVertexArray(VAO);
-		{
-			glEnable(GL_DEPTH_TEST);
-			glEnable(GL_BLEND);
+	glBindVertexArray(VAO);
+	{
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
 
-			mat4 modelviewproj = proj * view * model;
+		mat4 modelviewproj = proj * view * model;
 
-			if (s->set.lighting) {
-				s->graph_s_light.use();
+		if (s->set.lighting) {
+			s->graph_s_light.use();
 
-				glBindBuffer(GL_ARRAY_BUFFER, VBO);
-				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-				glEnableVertexAttribArray(0);
+			glBindBuffer(GL_ARRAY_BUFFER, VBO);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+			glEnableVertexAttribArray(0);
 
-				glBindBuffer(GL_ARRAY_BUFFER, normVBO);
-				glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-				glEnableVertexAttribArray(1);
+			glBindBuffer(GL_ARRAY_BUFFER, normVBO);
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+			glEnableVertexAttribArray(1);
 
-				glUniformMatrix4fv(s->graph_s_light.getUniform("model"), 1, GL_FALSE, value_ptr(model));
-				glUniformMatrix4fv(s->graph_s_light.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
+			glUniformMatrix4fv(s->graph_s_light.getUniform("model"), 1, GL_FALSE, value_ptr(model));
+			glUniformMatrix4fv(s->graph_s_light.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
 
-				glUniform4f(s->graph_s_light.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, s->set.graphopacity);
-				glUniform3f(s->graph_s_light.getUniform("lightColor"), 1.0f, 1.0f, 1.0f);
-				glUniform1f(s->graph_s_light.getUniform("ambientStrength"), s->set.ambientLighting);
+			glUniform4f(s->graph_s_light.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, s->set.graphopacity);
+			glUniform3f(s->graph_s_light.getUniform("lightColor"), 1.0f, 1.0f, 1.0f);
+			glUniform1f(s->graph_s_light.getUniform("ambientStrength"), s->set.ambientLighting);
 
-				if (s->set.camtype == cam_3d) {
-					
-					glUniform3f(s->graph_s_light.getUniform("lightPos"), s->c_3d.pos.x, s->c_3d.pos.y, s->c_3d.pos.z);
-				}
-				else {
-					glUniform3f(s->graph_s_light.getUniform("lightPos"), s->c_3d_static.pos.x, s->c_3d_static.pos.y, s->c_3d_static.pos.z);
-				}
+			if (s->set.camtype == cam_3d) {
+
+				glUniform3f(s->graph_s_light.getUniform("lightPos"), s->c_3d.pos.x, s->c_3d.pos.y, s->c_3d.pos.z);
 			}
 			else {
-				s->graph_s.use();
-
-				glBindBuffer(GL_ARRAY_BUFFER, VBO);
-				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-				glEnableVertexAttribArray(0);
-
-				glUniformMatrix4fv(s->graph_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
-
-				glUniform4f(s->graph_s.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, s->set.graphopacity);
+				glUniform3f(s->graph_s_light.getUniform("lightPos"), s->c_3d_static.pos.x, s->c_3d_static.pos.y, s->c_3d_static.pos.z);
 			}
-
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			glPolygonOffset(1.0f, 0.0f);
-			glDrawElements(GL_TRIANGLES, (int)indicies.size(), GL_UNSIGNED_INT, (void*)0);
-
-			if (s->set.wireframe) {
-				glDisable(GL_BLEND);
-
-				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-				glPolygonOffset(0.0f, 0.0f);
-
-				if (s->set.lighting)
-					glUniform4f(s->graph_s_light.getUniform("vcolor"), 0.0f, 0.0f, 0.0f, s->set.graphopacity);
-				else
-					glUniform4f(s->graph_s.getUniform("vcolor"), 0.0f, 0.0f, 0.0f, s->set.graphopacity);
-
-				glDrawElements(GL_TRIANGLES, (int)indicies.size(), GL_UNSIGNED_INT, (void*)0);
-			}
-
-			glDisableVertexAttribArray(0);
-			glDisableVertexAttribArray(1);
 		}
-		glBindVertexArray(0);
+		else {
+			s->graph_s.use();
+
+			glBindBuffer(GL_ARRAY_BUFFER, VBO);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+			glEnableVertexAttribArray(0);
+
+			glUniformMatrix4fv(s->graph_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
+
+			glUniform4f(s->graph_s.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, s->set.graphopacity);
+		}
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glPolygonOffset(1.0f, 0.0f);
+		glDrawElements(GL_TRIANGLES, (int)indicies.size(), GL_UNSIGNED_INT, (void*)0);
+
+		if (s->set.wireframe) {
+			glDisable(GL_BLEND);
+
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			glPolygonOffset(0.0f, 0.0f);
+
+			if (s->set.lighting)
+				glUniform4f(s->graph_s_light.getUniform("vcolor"), 0.0f, 0.0f, 0.0f, s->set.graphopacity);
+			else
+				glUniform4f(s->graph_s.getUniform("vcolor"), 0.0f, 0.0f, 0.0f, s->set.graphopacity);
+
+			glDrawElements(GL_TRIANGLES, (int)indicies.size(), GL_UNSIGNED_INT, (void*)0);
+		}
+
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
 	}
+	glBindVertexArray(0);
 }
 
 void updateAxes(state* s) {
@@ -209,12 +205,14 @@ void updateAxes(state* s) {
 }
 
 void resetCam(state* s) {
-	s->c_3d_static.scale = std::max(s->set.rdom.ymax - s->set.rdom.ymin, s->set.rdom.xmax - s->set.rdom.xmin);
-	s->c_3d_static.pos.x = (s->set.rdom.xmax + s->set.rdom.xmin) / 2;
-	s->c_3d_static.pos.z = (s->set.rdom.ymax + s->set.rdom.ymin) / -2;
+	s->c_3d_static.radius = std::max(s->set.rdom.ymax - s->set.rdom.ymin, s->set.rdom.xmax - s->set.rdom.xmin);
+	s->c_3d_static.lookingAt.x = (s->set.rdom.xmax + s->set.rdom.xmin) / 2;
+	s->c_3d_static.lookingAt.z = (s->set.rdom.ymax + s->set.rdom.ymin) / -2;
+	s->c_3d_static.updatePos();
 
 	s->c_3d.pos.x = (s->set.rdom.xmax + s->set.rdom.xmin) / 2;
 	s->c_3d.pos.z = (s->set.rdom.ymax + s->set.rdom.ymin) / -2;
+	s->c_3d.updateFront();
 }
 
 void fxy_graph::genthread(gendata* g) {

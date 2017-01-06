@@ -22,6 +22,5 @@ struct settings {
 	float ambientLighting;
 	rect_domain rdom;
 	cyl_domain cdom;
-	dimension display;
 	cam_type camtype;
 };

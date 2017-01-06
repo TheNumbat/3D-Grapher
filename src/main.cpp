@@ -6,7 +6,7 @@
 		// Rects have to be set every frame
 		// Something is wrong with static 3d cam when not at 0, 0, 0
 	// Math Features
-		// Graph types
+		// Graph types (see enum)
 		// Highlight curve along a set x/y
 		// Partials
 		// Graph intersections

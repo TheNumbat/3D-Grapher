@@ -54,21 +54,40 @@ struct _cam_3d {
 	}
 };
 
-struct _cam_3d_static : _cam_3d {
+struct _cam_3d_static {
+	vec3 pos, lookingAt, up;
+	float pitch, yaw, fov, radius;
+
 	mat4 getView() {
-		mat4 ret = lookAt(scale * front, pos, globalUp);
+		mat4 ret = lookAt(pos, lookingAt, up);
 		return ret;
 	}
 
-	void reset(float s) {
-		_cam_3d::reset();
+	void reset() {
 		pitch = 45.0f;
-		scale = s;
 		fov = 60.0f;
-		pos = vec3(0, 0, 0);
-		updateFront();
+		radius = 20.0f;
+		lookingAt = vec3(0, 0, 0);
+		up = vec3(0, 1, 0);
+		updatePos();
 	}
 
-	float scale;
+	void updatePos() {
+		pos.x = cos(radians(pitch)) * cos(radians(yaw));
+		pos.y = sin(radians(pitch));
+		pos.z = sin(radians(yaw)) * cos(radians(pitch));
+		pos = radius * normalize(pos);
+	}
+
+	void move(int dx, int dy) {
+		const float sens = 0.1f;
+		yaw += dx * sens;
+		pitch -= dy * sens;
+		if (yaw > 360.0f) yaw = 0.0f;
+		else if (yaw < 0.0f) yaw = 360.0f;
+		if (pitch > 89.0f) pitch = 89.0f;
+		else if (pitch < -89.0f) pitch = -89.0f;
+		updatePos();
+	}
 };
 

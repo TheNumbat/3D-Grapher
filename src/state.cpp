@@ -16,7 +16,6 @@ state::state() {
 	set.axisnormalization = false;
 	set.graphopacity = 1.0f;
 	set.ambientLighting = 0.0f;
-	set.display = dim_3d;
 	set.camtype = cam_3d_static;
 	set.rdom = { -10, 10, -10, 10, -10, 10, 200, 200 };
 	set.cdom = { 0, 1, 0, 2 * val_pi, 0, 10, 200, 200 };
@@ -64,7 +63,7 @@ state::state() {
 	ui = new UI(this);
 
 	c_3d.reset();
-	c_3d_static.reset(std::max(set.rdom.ymax - set.rdom.ymin, set.rdom.xmax - set.rdom.xmin));
+	c_3d_static.reset();
 	running = true;
 }
 

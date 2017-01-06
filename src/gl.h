@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include <SDL2/SDL_opengl.h>
 #include <string>
+#include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL.h>
 
 using namespace std;

@@ -98,8 +98,6 @@ UI::UI(state* s) {
 	add(xmax);
 	add(ymin);
 	add(ymax);
-	add(zmin);
-	add(zmax);
 	add(xrez);
 	add(yrez);
 #undef add
@@ -108,8 +106,6 @@ UI::UI(state* s) {
 	add(tmax);
 	add(zmin);
 	add(zmax);
-	add(rmin);
-	add(rmax);
 	add(trez);
 	add(zrez);
 #undef add
@@ -297,10 +293,6 @@ void UI::parseDoms(state* s) {
 			s->set.rdom.ymin = val;
 		else if (e->head == "ymax: ")
 			s->set.rdom.ymax = val;
-		else if (e->head == "zmin: ")
-			s->set.rdom.zmin = val;
-		else if (e->head == "zmax: ")
-			s->set.rdom.zmax = val;
 		else if (e->head == "xrez: ")
 			s->set.rdom.xrez = (int)round(val);
 		else if (e->head == "yrez: ")
@@ -325,15 +317,13 @@ void UI::parseDoms(state* s) {
 			s->set.cdom.zmin = val;
 		else if (e->head == "zmax: ")
 			s->set.cdom.zmax = val;
-		else if (e->head == "rmin: ")
-			s->set.cdom.rmin = val;
-		else if (e->head == "rmax: ")
-			s->set.cdom.rmax = val;
 		else if (e->head == "trez: ")
 			s->set.cdom.trez = (int)round(val);
 		else if (e->head == "zrez: ")
 			s->set.cdom.zrez = (int)round(val);
 	}
+	updateAxes(s);
+	resetCam(s);
 }
 
 void UI::remove_dead_widgets() {

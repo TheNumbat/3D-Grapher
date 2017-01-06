@@ -13,18 +13,10 @@ using namespace glm;
 
 struct state;
 
-enum dimension {
-	dim_2d,
-	dim_3d,
-	dim_4d
-};
-
 enum graph_type {
-	graph_func,
-	graph_cylindrical,
+	graph_func,				// done
+	graph_cylindrical,		// done
 	graph_spherical,
-	graph_partial,
-	graph_integral,
 	graph_surface,
 	graph_para_curve,
 	graph_para_surface,
@@ -53,7 +45,6 @@ struct graph {
 	vector<GLuint> indicies;
 	vector<vec3> normals;
 	GLuint VAO, VBO, EBO, normVBO;
-	dimension dim;
 	graph_type type;
 	vector<op> eq;
 	string eq_str;
