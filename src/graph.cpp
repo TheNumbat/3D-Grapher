@@ -38,7 +38,7 @@ void cyl_graph::genthread(gendata* g) {
 		for (int tt = 0; tt <= g->s->set.cdom.trez; tt++, t += g->dt) {
 			float r;
 			try { r = eval(g->s->graphs[index]->eq, { { 'z',z },{ 't',t } }); }
-			catch (exception e) {
+			catch (runtime_error e) {
 				g->s->ui->error = e.what();
 				g->s->ui->errorShown = true;
 				g->s->ev.current = in_help_or_err;
@@ -223,7 +223,7 @@ void fxy_graph::genthread(gendata* g) {
 		for (int ty = 0; ty <= g->s->set.rdom.yrez; ty++, y += g->dy) {
 			float z;
 			try { z = eval(g->s->graphs[index]->eq, { { 'x',x },{ 'y',y } }); }
-			catch (exception e) {
+			catch (runtime_error e) {
 				g->s->ui->error = e.what();
 				g->s->ui->errorShown = true;
 				g->s->ev.current = in_help_or_err;

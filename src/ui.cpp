@@ -278,7 +278,7 @@ void UI::parseDoms(state* s) {
 		edit_text* e = (edit_text*) w;
 		vector<op> exp;
 		try { in(e->exp, exp); }
-		catch (exception e) {
+		catch (runtime_error e) {
 			s->ui->error = e.what();
 			s->ui->errorShown = true;
 			s->ev.current = in_help_or_err;
@@ -302,7 +302,7 @@ void UI::parseDoms(state* s) {
 		edit_text* e = (edit_text*) w;
 		vector<op> exp;
 		try { in(e->exp, exp); }
-		catch (exception e) {
+		catch (runtime_error e) {
 			s->ui->error = e.what();
 			s->ui->errorShown = true;
 			s->ev.current = in_help_or_err;
