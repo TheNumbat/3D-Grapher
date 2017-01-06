@@ -4,6 +4,7 @@
 // TODO:
 	// Bugs
 		// Rects have to be set every frame
+		// Low rez breaks cylindrical
 	// Math Features
 		// Graph types (see enum)
 		// Highlight curve along a set x/y

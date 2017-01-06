@@ -224,6 +224,8 @@ int precedence(char c) {
 }
 
 void in(string str, vector<op>& EQ) {
+	if (str == " " || !str.size()) throw runtime_error("ERROR: blank string!");
+
 	for (int ind = 0; ind < (int)str.size(); ind++) {
 		if (str[ind] == '-' && (ind == 0 || isop(str[ind - 1]))) str[ind] = op_neg;
 	}

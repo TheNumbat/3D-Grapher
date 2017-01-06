@@ -29,7 +29,6 @@ void graph_enter_callback::operator()(state* s, string e) const {
 		}
 		s->graphs[g_ind]->eq_str = e;
 		s->ui->parseDoms(s);
-		regengraph(s, g_ind);
 		if(s->ev.current == in_widget)
 			s->ev.current = in_funcs;
 	}
@@ -74,7 +73,12 @@ UI::UI(state* s) {
 
 	settings.push_back(new slider("Ambient Light", s->set.ambientLighting, [](state* s, float f) -> void {s->set.ambientLighting = f; }));
 	settings.push_back(new slider("Opacity", s->set.graphopacity, [](state* s, float f) -> void {s->set.graphopacity = f; }));
-	
+	settings.push_back(new slider("FOV", (s->set.fov - 20.0f) / 140.0f, [](state* s, float f) -> void {
+		s->set.fov = 20.0f + f * 140.0f;
+		if (s->set.fov > 179.0f) s->set.fov = 179.0f;
+		else if (s->set.fov < 1.0f) s->set.fov = 1.0f;
+	}));
+
 	settings.push_back(new multi_text({ "Domain: Rectangluar", "Domain: Cylindrical" }, 0, [](state* s, string o) -> void {
 		if (o == "Domain: Rectangluar") {
 			s->ui->domain = graph_func;
@@ -87,9 +91,9 @@ UI::UI(state* s) {
 	auto domsCallback = [](state* s, string exp) -> void {
 		if (exp.size() && exp != " ") {
 			s->ui->parseDoms(s);
-			regenall(s);
 		}
-		s->ev.current = in_settings;
+		if(s->ev.current == in_widget)
+			s->ev.current = in_settings;
 	};
 	auto domsRemoveCallback = [](state* s) -> bool {s->ev.current = in_settings; return false;};
 
@@ -273,7 +277,7 @@ UI::~UI() {
 	glDeleteBuffers(1, &VBO);
 }
 
-void UI::parseDoms(state* s) {
+bool UI::parseDoms(state* s) {
 	for (widget* w : dom_rect) {
 		edit_text* e = (edit_text*) w;
 		vector<op> exp;
@@ -282,7 +286,7 @@ void UI::parseDoms(state* s) {
 			s->ui->error = e.what();
 			s->ui->errorShown = true;
 			s->ev.current = in_help_or_err;
-			return;
+			return false;
 		}
 		float val = eval(exp);
 		if (e->head == "xmin: ")
@@ -306,7 +310,7 @@ void UI::parseDoms(state* s) {
 			s->ui->error = e.what();
 			s->ui->errorShown = true;
 			s->ev.current = in_help_or_err;
-			return;
+			return false;
 		}
 		float val = eval(exp);
 		if (e->head == "tmin: ")
@@ -322,8 +326,8 @@ void UI::parseDoms(state* s) {
 		else if (e->head == "zrez: ")
 			s->set.cdom.zrez = (int)round(val);
 	}
-	updateAxes(s);
-	resetCam(s);
+	regenall(s);
+	return true;
 }
 
 void UI::remove_dead_widgets() {

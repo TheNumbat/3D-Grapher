@@ -73,20 +73,6 @@ void add_default_callbacks(state* s) {
 	}, in_cam, SDL_MOUSEMOTION));
 
 	s->ev.callbacks.push_back(callback([](state* s, SDL_Event* ev) -> bool {
-		if (s->set.camtype == cam_3d) {
-			s->c_3d.fov -= ev->wheel.y;
-			if (s->c_3d.fov > 179.0f) s->c_3d.fov = 179.0f;
-			else if (s->c_3d.fov < 1.0f) s->c_3d.fov = 1.0f;
-		}
-		else if (s->set.camtype == cam_3d_static) {
-			s->c_3d_static.fov -= ev->wheel.y;
-			if (s->c_3d_static.fov > 179.0f) s->c_3d_static.fov = 179.0f;
-			else if (s->c_3d_static.fov < 1.0f) s->c_3d_static.fov = 1.0f;
-		}
-		return true;
-	}, in_cam, SDL_MOUSEWHEEL));
-
-	s->ev.callbacks.push_back(callback([](state* s, SDL_Event* ev) -> bool {
 		if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO) && ev->button.y >(s->ui->funcs.size() ? s->ui->funcs.back()->current_yh : 0)) {
 			s->ui->uistate = ui_funcs_adding;
 			s->ui->adding_x = ev->button.x;

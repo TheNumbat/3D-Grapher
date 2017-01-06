@@ -40,7 +40,6 @@ struct graph {
 	void gen();
 	void send();
 	void normalize(state* s);
-	void generateIndiciesAndNormals(state* s);
 	vector<GLfloat> verticies;
 	vector<GLuint> indicies;
 	vector<vec3> normals;
@@ -68,6 +67,7 @@ struct cyl_graph : public graph {
 	cyl_graph(int id, string s = " ");
 	void generate(state* s);
 	static void genthread(gendata* g);
+	void generateIndiciesAndNormals(state* s);
 };
 
 struct fxy_graph : public graph {
@@ -86,6 +86,7 @@ struct fxy_graph : public graph {
 	fxy_graph(int id, string s = " ");
 	void generate(state* s);
 	static void genthread(gendata* g);
+	void generateIndiciesAndNormals(state* s);
 };
 
 void updateAxes(state* s);

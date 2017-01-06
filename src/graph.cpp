@@ -242,7 +242,45 @@ void fxy_graph::genthread(gendata* g) {
 	g->success = true;
 }
 
-void graph::generateIndiciesAndNormals(state* s) {
+void cyl_graph::generateIndiciesAndNormals(state* s) {
+	vec3 norm;
+	for (int z = 0; z < s->set.cdom.zrez; z++) {
+		for (int t = 0; t < s->set.cdom.trez; t++) {
+			GLuint i_index = z * (s->set.cdom.trez + 1) + t;
+
+			if (!isnan(verticies[i_index * 3]) && !isnan(verticies[i_index * 3 + 1]) &&
+				!isinf(verticies[i_index * 3]) && !isinf(verticies[i_index * 3 + 1])) {
+				indicies.push_back(i_index);
+				indicies.push_back(i_index + 1);
+				indicies.push_back(i_index + s->set.cdom.trez + 1);
+
+				indicies.push_back(i_index + 1);
+				indicies.push_back(i_index + s->set.cdom.trez + 1);
+				indicies.push_back(i_index + s->set.cdom.trez + 2);
+
+				float x1 = verticies[i_index * 3];
+				float y1 = verticies[i_index * 3 + 1];
+				float z1 = verticies[i_index * 3 + 2];
+				float x2 = verticies[(i_index + 1) * 3];
+				float y2 = verticies[(i_index + 1) * 3 + 1];
+				float z2 = verticies[(i_index + 1) * 3 + 2];
+				float x3 = verticies[(i_index + s->set.cdom.trez + 1) * 3];
+				float y3 = verticies[(i_index + s->set.cdom.trez + 1) * 3 + 1];
+				float z3 = verticies[(i_index + s->set.cdom.trez + 1) * 3 + 2];
+				vec3 one(x2 - x1, y2 - y1, z2 - z1);
+				vec3 two(x3 - x1, y3 - y1, z3 - z1);
+				norm = glm::normalize(cross(two, one));
+			}
+			normals.push_back(norm);
+			if (z == 0)
+				normals.push_back(norm);
+		}
+		normals.push_back(norm);
+		}
+	normals.push_back(norm);
+}
+
+void fxy_graph::generateIndiciesAndNormals(state* s) {
 	indicies.clear();
 	normals.clear();
 	
@@ -297,7 +335,6 @@ void graph::normalize(state* s) {
 		zmin = -10;
 		zmax = 10;
 	}
-	generateIndiciesAndNormals(s);
 }
 
 void fxy_graph::generate(state* s) {
@@ -360,6 +397,7 @@ void fxy_graph::generate(state* s) {
 		zmax = gzmax;
 
 		normalize(s);
+		generateIndiciesAndNormals(s);
 	}
 
 	for (gendata* g : data)
@@ -426,6 +464,7 @@ void cyl_graph::generate(state* s) {
 		zmax = grmax;
 
 		normalize(s);
+		generateIndiciesAndNormals(s);
 	}
 
 	for (gendata* g : data)
@@ -470,8 +509,8 @@ int getIndex(state* s, int ID) {
 void regenall(state* s) {
 	bool gen = false;
 	for (int i = 0; i < (int)s->graphs.size(); i++) {
+		regengraph(s, i);
 		if (s->graphs[i]->verticies.size()) {
-			regengraph(s, i);
 			gen = true;
 		}
 	}

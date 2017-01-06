@@ -20,6 +20,7 @@ struct settings {
 	bool axisnormalization;
 	float graphopacity;
 	float ambientLighting;
+	float fov;
 	rect_domain rdom;
 	cyl_domain cdom;
 	cam_type camtype;

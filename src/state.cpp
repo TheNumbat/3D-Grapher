@@ -16,6 +16,7 @@ state::state() {
 	set.axisnormalization = false;
 	set.graphopacity = 1.0f;
 	set.ambientLighting = 0.0f;
+	set.fov = 60.0f;
 	set.camtype = cam_3d_static;
 	set.rdom = { -10, 10, -10, 10, -10, 10, 200, 200 };
 	set.cdom = { 0, 1, 0, 2 * val_pi, 0, 10, 200, 200 };
@@ -92,11 +93,11 @@ void state::run() {
 		model = rotate(model, radians(-90.0f), vec3(1, 0, 0));
 		if (set.camtype == cam_3d) {
 			view = c_3d.getView();
-			proj = perspective(radians(c_3d.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
+			proj = perspective(radians(set.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
 		}
 		else {
 			view = c_3d_static.getView();
-			proj = perspective(radians(c_3d_static.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
+			proj = perspective(radians(set.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
 		}
 		modelviewproj = proj * view * model;
 
