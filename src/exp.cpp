@@ -4,6 +4,7 @@
 #include <stack>
 #include <queue>
 #include <algorithm>
+#include <exception>
 #include <math.h>
 
 using namespace std;
@@ -22,13 +23,11 @@ bool num(char c) {
 	return c >= '0' && c <= '9' || c == '.';
 }
 
-#define get2() two = s.top(); \
-			   s.pop(); \
-			   one = s.top(); \
-			   s.pop();
+#define get2() try{two = s.top();s.pop();one = s.top();s.pop();} \
+			   catch(exception e) {throw runtime_error("ERROR: expression malformed!");}
 
-#define get1() one = s.top(); \
-			   s.pop();
+#define get1() try{one = s.top();s.pop();} \
+			   catch(exception e) {throw runtime_error("ERROR: expression malformed!");}
 
 float eval(const vector<op>& EQ, vector<pair<char, float>> vars) {
 	stack<float> s;
@@ -179,8 +178,7 @@ float eval(const vector<op>& EQ, vector<pair<char, float>> vars) {
 			char v = EQ[index + 1];
 			auto entry = find_if(vars.begin(), vars.end(), [v](const pair<char, float>& var) -> bool { return var.first == v; });
 			if (entry == vars.end()) {
-				//cout << "\terr: unkown variable " << v << endl;
-				return 0;
+				throw runtime_error((string)"ERROR: variable " + v + " not recognized!");
 			}
 			else {
 				s.push(entry->second);
@@ -223,7 +221,7 @@ int precedence(char c) {
 	}
 }
 
-bool in(string str, vector<op>& EQ) {
+void in(string str, vector<op>& EQ) {
 	for (int ind = 0; ind < (int)str.size(); ind++) {
 		if (str[ind] == '-' && (ind == 0 || isop(str[ind - 1]))) str[ind] = op_neg;
 	}
@@ -334,10 +332,9 @@ bool in(string str, vector<op>& EQ) {
 							s.push(op_acot);
 						else {
 							if (!in.good())
-								cout << "\terr: unkown name '" << str << "'" << endl;
+								throw runtime_error("ERROR: unkown name '" + str + "'");
 							else
-								cout << "\terr: unkown function '" << str << "()'" << endl;
-							return false;
+								throw runtime_error("ERROR: unkown function '" + str + "()'");
 						}
 					}
 					s.push('(');
@@ -361,13 +358,11 @@ bool in(string str, vector<op>& EQ) {
 	}
 	while (s.size()) {
 		if (s.top() == '(' || s.top() == ')') {
-			cout << "\terr: unbalanced parenthesis" << endl;
-			return false;
+			throw runtime_error("ERROR: unbalanced parenthesis!");
 		}
 		EQ.push_back(s.top());
 		s.pop();
 	}
-	return true;
 }
 
 void printeq(ostream& out, vector<op> eq) {

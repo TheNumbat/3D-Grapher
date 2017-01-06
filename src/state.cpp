@@ -15,6 +15,7 @@ state::state() {
 	set.lighting = true;
 	set.axisnormalization = false;
 	set.graphopacity = 1.0f;
+	set.ambientLighting = 0.0f;
 	set.display = dim_3d;
 	set.camtype = cam_3d_static;
 	set.rdom = { -10, 10, -10, 10, -10, 10, 200, 200 };
@@ -69,6 +70,8 @@ state::state() {
 
 state::~state() {
 	delete ui;
+	for (graph* g : graphs)
+		delete g;
 	TTF_CloseFont(font);
 	glDeleteBuffers(1, &axisVBO);
 	glDeleteVertexArrays(1, &axisVAO);

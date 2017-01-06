@@ -98,62 +98,6 @@ void add_default_callbacks(state* s) {
 	}, in_funcs, SDL_MOUSEBUTTONDOWN));
 
 	s->ev.callbacks.push_back(callback([](state* s, SDL_Event* ev) -> bool {
-		if (ev->button.x > (int)round(s->w * UI_SCREEN_RATIO)) {
-			if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO) + 37) {
-				if (ev->button.y >= 0 && ev->button.y <= 32) {
-					s->ui->active = false;
-					s->ev.current = in_idle;
-					return true;
-				}
-				else if (ev->button.y >= 70 && ev->button.y <= 70 + 32) {
-					if (s->ui->uistate == ui_funcs) {
-						s->ui->uistate = ui_settings;
-						s->ev.current = in_settings;
-					}
-					return true;
-				}
-			}
-			s->ev.current = in_cam;
-			SDL_CaptureMouse(SDL_TRUE);
-			SDL_SetRelativeMouseMode(SDL_TRUE);
-			s->mx = ev->button.x;
-			s->my = ev->button.y;
-			s->last_mx = ev->button.x;
-			s->last_my = ev->button.y;
-			return true;
-		}
-		return false;
-	}, in_funcs, SDL_MOUSEBUTTONDOWN));
-
-	s->ev.callbacks.push_back(callback([](state* s, SDL_Event* ev) -> bool {
-		if (ev->button.x > (int)round(s->w * UI_SCREEN_RATIO)) {
-			if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO) + 37) {
-				if (ev->button.y >= 0 && ev->button.y <= 32) {
-					s->ui->active = false;
-					s->ev.current = in_idle;
-					return true;
-				}
-				else if (ev->button.y >= 35 && ev->button.y <= 35 + 32) {
-					if (s->ui->uistate == ui_settings) {
-						s->ui->uistate = ui_funcs;
-						s->ev.current = in_funcs;
-					}
-					return true;
-				}
-			}
-			s->ev.current = in_cam;
-			SDL_CaptureMouse(SDL_TRUE);
-			SDL_SetRelativeMouseMode(SDL_TRUE);
-			s->mx = ev->button.x;
-			s->my = ev->button.y;
-			s->last_mx = ev->button.x;
-			s->last_my = ev->button.y;
-			return true;
-		}
-		return false;
-	}, in_settings, SDL_MOUSEBUTTONDOWN));
-
-	s->ev.callbacks.push_back(callback([](state* s, SDL_Event* ev) -> bool {
 		if (ev->button.x <= 43 && ev->button.y <= 32) {
 			s->ui->active = true;
 			if (s->ui->uistate == ui_funcs)

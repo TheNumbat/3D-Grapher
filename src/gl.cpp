@@ -26,9 +26,11 @@ PFNGLDELETEPROGRAMPROC				glDeleteProgram;
 PFNGLACTIVETEXTUREPROC				_glActiveTexture;
 PFNGLUNIFORM1IPROC					glUniform1i;
 PFNGLDISABLEVERTEXATTRIBARRAYPROC	glDisableVertexAttribArray;
+PFNGLUNIFORM1FPROC					glUniform1f;
 
 texture::texture() {
 	glGenTextures(1, &tex);
+	sW = sH = 0;
 }
 
 texture::~texture() {
@@ -38,6 +40,8 @@ texture::~texture() {
 void texture::load(SDL_Surface* surf) {
 	use();
 	SDL_Surface* temp = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_ARGB8888, 0);
+	sW = temp->w;
+	sH = temp->h;
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, temp->w, temp->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, temp->pixels);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -98,6 +102,8 @@ void textured_rect::gen() {
 
 void textured_rect::set(float _x, float _y, float _w, float _h) {
 	x = _x; y = _y; w = _w; h = _h;
+	if (w == 0) w = (float)tex.sW;
+	if (h == 0) h = (float)tex.sH;
 	needsupdate = true;
 }
 
@@ -163,6 +169,7 @@ void setupFuns() {
 	_glActiveTexture			= (PFNGLACTIVETEXTUREPROC)				SDL_GL_GetProcAddress("glActiveTexture");
 	glUniform1i					= (PFNGLUNIFORM1IPROC)					SDL_GL_GetProcAddress("glUniform1i");
 	glDisableVertexAttribArray  = (PFNGLDISABLEVERTEXATTRIBARRAYPROC)   SDL_GL_GetProcAddress("glDisableVertexAttribArray");
+	glUniform1f					= (PFNGLUNIFORM1FPROC)					SDL_GL_GetProcAddress("glUniform1f");
 }
 
 const GLchar* graph_vertex = {
@@ -212,12 +219,12 @@ const GLchar* graph_fragment_lighting = {
 	"uniform vec4 vcolor;\n"
 	"uniform vec3 lightColor;\n"
 	"uniform vec3 lightPos;\n"
+	"uniform float ambientStrength;\n"
 	"in vec3 norm;\n"
 	"in vec3 fragPos;\n"
 	"out vec4 color;\n"
 
 	"void main() {\n"
-	"   float ambientStrength = 0.1f;\n"
 	"	vec3 ambient = ambientStrength * lightColor;\n"
 	"   vec3 lightDir = normalize(lightPos - fragPos);\n"
 	"   float diff = abs(dot(norm, lightDir));\n"

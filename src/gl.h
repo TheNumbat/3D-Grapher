@@ -33,6 +33,7 @@ extern PFNGLDELETEPROGRAMPROC				glDeleteProgram;
 extern PFNGLACTIVETEXTUREPROC				_glActiveTexture; 
 extern PFNGLUNIFORM1IPROC					glUniform1i;
 extern PFNGLDISABLEVERTEXATTRIBARRAYPROC	glDisableVertexAttribArray;
+extern PFNGLUNIFORM1FPROC					glUniform1f;
 
 extern const GLchar* graph_vertex;
 extern const GLchar* graph_fragment;
@@ -55,6 +56,7 @@ struct texture {
 	void load(SDL_Surface* surf);
 	void use();
 	GLuint tex;
+	int sW, sH;
 };
 
 struct shader {

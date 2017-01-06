@@ -16,6 +16,7 @@ enum inputstate {
 	in_widget,
 	in_settings,
 	in_funcs_adding,
+	in_help_or_err,
 	in_any
 };
 

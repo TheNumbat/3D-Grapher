@@ -12,9 +12,7 @@ using namespace std;
 enum ui_state {
 	ui_funcs,
 	ui_settings,
-	ui_funcs_adding,
-	ui_help,
-	ui_error
+	ui_funcs_adding
 };
 
 struct state;
@@ -55,10 +53,15 @@ struct UI {
 	vector<widget*> funcs, funcs_add, settings;
 	vector<widget*> dom_rect, dom_cyl; // ONLY EDIT_TEXT
 	GLuint VAO, VBO;
-	textured_rect in_r, out_r, gear_r, f_r, q_r;
+	textured_rect in_r, out_r, gear_r, f_r, q_r, error_r;
+	string error;
+	vector<textured_rect*> helpText;
+	vector<string> help;
 	ui_state uistate;
 	graph_type domain;
 	bool active;
+	bool helpShown;
+	bool errorShown;
 	int adding_x, adding_y;
 };
 

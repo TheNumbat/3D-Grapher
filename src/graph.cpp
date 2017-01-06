@@ -37,7 +37,15 @@ void cyl_graph::genthread(gendata* g) {
 	for (int tz = 0; tz < g->tzrez; tz++, z += g->dz) {
 		float t = g->s->set.cdom.tmin;
 		for (int tt = 0; tt <= g->s->set.cdom.trez; tt++, t += g->dt) {
-			float r = eval(g->s->graphs[index]->eq, { { 'z',z },{ 't',t } });
+			float r;
+			try { r = eval(g->s->graphs[index]->eq, { { 'z',z },{ 't',t } }); }
+			catch (exception e) {
+				g->s->ui->error = e.what();
+				g->s->ui->errorShown = true;
+				g->s->ev.current = in_help_or_err;
+				g->success = false;
+				return;
+			}
 
 			if (z < g->rmin) g->rmin = r;
 			else if (z > g->rmax) g->rmax = r;
@@ -47,6 +55,7 @@ void cyl_graph::genthread(gendata* g) {
 			g->ret.push_back(z);
 		}
 	}
+	g->success = true;
 }
 
 fxy_graph::fxy_graph(int id, string s) : graph(id, s) {
@@ -108,11 +117,15 @@ void graph::draw(state* s, mat4 model, mat4 view, mat4 proj) {
 
 				glUniform4f(s->graph_s_light.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, s->set.graphopacity);
 				glUniform3f(s->graph_s_light.getUniform("lightColor"), 1.0f, 1.0f, 1.0f);
+				glUniform1f(s->graph_s_light.getUniform("ambientStrength"), s->set.ambientLighting);
 
-				if (s->set.camtype == cam_3d)
+				if (s->set.camtype == cam_3d) {
+					
 					glUniform3f(s->graph_s_light.getUniform("lightPos"), s->c_3d.pos.x, s->c_3d.pos.y, s->c_3d.pos.z);
-				else
+				}
+				else {
 					glUniform3f(s->graph_s_light.getUniform("lightPos"), s->c_3d_static.pos.x, s->c_3d_static.pos.y, s->c_3d_static.pos.z);
+				}
 			}
 			else {
 				s->graph_s.use();
@@ -206,7 +219,15 @@ void fxy_graph::genthread(gendata* g) {
 	for (int tx = 0; tx < g->txrez; tx++, x += g->dx) {
 		float y = g->s->set.rdom.ymin;
 		for (int ty = 0; ty <= g->s->set.rdom.yrez; ty++, y += g->dy) {
-			float z = eval(g->s->graphs[index]->eq, { { 'x',x },{ 'y',y } });
+			float z;
+			try { z = eval(g->s->graphs[index]->eq, { { 'x',x },{ 'y',y } }); }
+			catch (exception e) {
+				g->s->ui->error = e.what();
+				g->s->ui->errorShown = true;
+				g->s->ev.current = in_help_or_err;
+				g->success = false;
+				return;
+			}
 
 			if (z < g->zmin) g->zmin = z;
 			else if (z > g->zmax) g->zmax = z;
@@ -215,6 +236,52 @@ void fxy_graph::genthread(gendata* g) {
 			g->ret.push_back(y);
 			g->ret.push_back(z);
 		}
+	}
+	g->success = true;
+}
+
+void graph::generateIndiciesAndNormals(state* s) {
+	indicies.clear();
+	normals.clear();
+	
+	vec3 norm;
+	for (int x = 0; x < s->set.rdom.xrez; x++) {
+		for (int y = 0; y < s->set.rdom.yrez; y++) {
+			GLuint i_index = x * (s->set.rdom.yrez + 1) + y;
+
+			if (!isnan(verticies[i_index * 3 + 2]) &&
+				!isinf(verticies[i_index * 3 + 2])) {
+				indicies.push_back(i_index);
+				indicies.push_back(i_index + 1);
+				indicies.push_back(i_index + s->set.rdom.yrez + 1);
+
+				indicies.push_back(i_index + 1);
+				indicies.push_back(i_index + s->set.rdom.yrez + 1);
+				indicies.push_back(i_index + s->set.rdom.yrez + 2);
+
+				float x1 = verticies[i_index * 3];
+				float y1 = verticies[i_index * 3 + 1];
+				float z1 = verticies[i_index * 3 + 2];
+				float x2 = verticies[(i_index + 1) * 3];
+				float y2 = verticies[(i_index + 1) * 3 + 1];
+				float z2 = verticies[(i_index + 1) * 3 + 2];
+				float x3 = verticies[(i_index + s->set.rdom.yrez + 1) * 3];
+				float y3 = verticies[(i_index + s->set.rdom.yrez + 1) * 3 + 1];
+				float z3 = verticies[(i_index + s->set.rdom.yrez + 1) * 3 + 2];
+				vec3 one(x2 - x1, y2 - y1, z2 - z1);
+				vec3 two(x3 - x1, y3 - y1, z3 - z1);
+				norm = glm::normalize(cross(two, one));
+			}
+			normals.push_back(norm);
+			if (x == 0)
+				normals.push_back(norm);
+		}
+		normals.push_back(norm);
+	}
+	normals.push_back(norm);
+
+	for (unsigned int i = 1; i < normals.size() - 1; i++) {
+		normals[i] = glm::normalize(normals[i - 1] + normals[i] + normals[i + 1]);
 	}
 }
 
@@ -228,6 +295,7 @@ void graph::normalize(state* s) {
 		zmin = -10;
 		zmax = 10;
 	}
+	generateIndiciesAndNormals(s);
 }
 
 void fxy_graph::generate(state* s) {
@@ -244,6 +312,8 @@ void fxy_graph::generate(state* s) {
 	float xmin = s->set.rdom.xmin;
 	unsigned int txDelta = s->set.rdom.xrez / numthreads;
 	unsigned int txLast = s->set.rdom.xrez - (numthreads - 1) * txDelta + 1;
+
+	verticies.clear();
 
 	vector<thread> threads;
 	vector<gendata*> data;
@@ -268,61 +338,27 @@ void fxy_graph::generate(state* s) {
 			xmin += txDelta * dx;
 		}
 	}
+	bool success = true;
 	for (unsigned int i = 0; i < threads.size(); i++) {
 		threads[i].join();
-		verticies.insert(verticies.end(), data[i]->ret.begin(), data[i]->ret.end());
-		data[i]->ret.clear();
-	}
-
-	vec3 norm;
-	for (int x = 0; x < s->set.rdom.xrez; x++) {
-		for (int y = 0; y < s->set.rdom.yrez; y++) {
-			GLuint i_index = x * (s->set.rdom.yrez + 1) + y;
-
-			if (!isnan(verticies[i_index * 3 + 2]) &&
-				!isinf(verticies[i_index * 3 + 2])) {
-				indicies.push_back(i_index);
-				indicies.push_back(i_index + 1);
-				indicies.push_back(i_index + s->set.rdom.yrez + 1);
-	
-				indicies.push_back(i_index + 1);
-				indicies.push_back(i_index + s->set.rdom.yrez + 1);
-				indicies.push_back(i_index + s->set.rdom.yrez + 2);
-
-				float x1 = verticies[i_index * 3];
-				float y1 = verticies[i_index * 3 + 1];
-				float z1 = verticies[i_index * 3 + 2];
-				float x2 = verticies[(i_index + 1) * 3];
-				float y2 = verticies[(i_index + 1) * 3 + 1];
-				float z2 = verticies[(i_index + 1) * 3 + 2];
-				float x3 = verticies[(i_index + s->set.rdom.yrez + 1) * 3];
-				float y3 = verticies[(i_index + s->set.rdom.yrez + 1) * 3 + 1];
-				float z3 = verticies[(i_index + s->set.rdom.yrez + 1) * 3 + 2];
-				vec3 one(x2 - x1, y2 - y1, z2 - z1);
-				vec3 two(x3 - x1, y3 - y1, z3 - z1);
-				norm = glm::normalize(cross(two, one));
-			}
-			normals.push_back(norm);
-			if(x == 0)
-				normals.push_back(norm);
+		if (success) {
+			success = data[i]->success;
+			verticies.insert(verticies.end(), data[i]->ret.begin(), data[i]->ret.end());
+			data[i]->ret.clear();
 		}
-		normals.push_back(norm);
-	}
-	normals.push_back(norm);
-
-	for (unsigned int i = 1; i < normals.size() - 1; i++) {
-		normals[i] = glm::normalize(normals[i - 1] + normals[i] + normals[i + 1]);
 	}
 
-	float gzmin = FLT_MAX, gzmax = -FLT_MAX;
-	for (unsigned int i = 0; i < threads.size(); i++) {
-		if (data[i]->zmin < gzmin) gzmin = data[i]->zmin;
-		if (data[i]->zmax > gzmax) gzmax = data[i]->zmax;
-	}
-	zmin = gzmin;
-	zmax = gzmax;
+	if (success) {
+		float gzmin = FLT_MAX, gzmax = -FLT_MAX;
+		for (unsigned int i = 0; i < threads.size(); i++) {
+			if (data[i]->zmin < gzmin) gzmin = data[i]->zmin;
+			if (data[i]->zmax > gzmax) gzmax = data[i]->zmax;
+		}
+		zmin = gzmin;
+		zmax = gzmax;
 
-	normalize(s);
+		normalize(s);
+	}
 
 	for (gendata* g : data)
 		delete g;
@@ -342,6 +378,8 @@ void cyl_graph::generate(state* s) {
 	float zmin = s->set.cdom.zmin;
 	unsigned int tzDelta = s->set.cdom.zrez / numthreads;
 	unsigned int tzLast = s->set.cdom.zrez - (numthreads - 1) * tzDelta + 1;
+
+	verticies.clear();
 
 	vector<thread> threads;
 	vector<gendata*> data;
@@ -366,57 +404,27 @@ void cyl_graph::generate(state* s) {
 			zmin += tzDelta * dz;
 		}
 	}
+	bool success = true;
 	for (unsigned int i = 0; i < threads.size(); i++) {
 		threads[i].join();
-		verticies.insert(verticies.end(), data[i]->ret.begin(), data[i]->ret.end());
-		data[i]->ret.clear();
-	}
-
-	vec3 norm;
-	for (int z = 0; z < s->set.cdom.zrez; z++) {
-		for (int t = 0; t < s->set.cdom.trez; t++) {
-			GLuint i_index = z * (s->set.cdom.trez + 1) + t;
-
-			if (!isnan(verticies[i_index * 3 + 2]) &&
-				!isinf(verticies[i_index * 3 + 2])) {
-				indicies.push_back(i_index);
-				indicies.push_back(i_index + 1);
-				indicies.push_back(i_index + s->set.cdom.trez + 1);
-
-				indicies.push_back(i_index + 1);
-				indicies.push_back(i_index + s->set.cdom.trez + 1);
-				indicies.push_back(i_index + s->set.cdom.trez + 2);
-
-				float x1 = verticies[i_index * 3];
-				float y1 = verticies[i_index * 3 + 1];
-				float z1 = verticies[i_index * 3 + 2];
-				float x2 = verticies[(i_index + 1) * 3];
-				float y2 = verticies[(i_index + 1) * 3 + 1];
-				float z2 = verticies[(i_index + 1) * 3 + 2];
-				float x3 = verticies[(i_index + s->set.cdom.trez + 1) * 3];
-				float y3 = verticies[(i_index + s->set.cdom.trez + 1) * 3 + 1];
-				float z3 = verticies[(i_index + s->set.cdom.trez + 1) * 3 + 2];
-				vec3 one(x2 - x1, y2 - y1, z2 - z1);
-				vec3 two(x3 - x1, y3 - y1, z3 - z1);
-				norm = glm::normalize(cross(two, one));
-			}
-			normals.push_back(norm);
-			if (z == 0)
-				normals.push_back(norm);
+		if (success) {
+			success = data[i]->success;
+			verticies.insert(verticies.end(), data[i]->ret.begin(), data[i]->ret.end());
+			data[i]->ret.clear();
 		}
-		normals.push_back(norm);
 	}
-	normals.push_back(norm);
 
-	float grmin = FLT_MAX, grmax = -FLT_MAX;
-	for (unsigned int i = 0; i < threads.size(); i++) {
-		if (data[i]->rmin < grmin) grmin = data[i]->rmin;
-		if (data[i]->rmax > grmax) grmax = data[i]->rmax;
+	if (success) {
+		float grmin = FLT_MAX, grmax = -FLT_MAX;
+		for (unsigned int i = 0; i < threads.size(); i++) {
+			if (data[i]->rmin < grmin) grmin = data[i]->rmin;
+			if (data[i]->rmax > grmax) grmax = data[i]->rmax;
+		}
+		zmin = grmin;
+		zmax = grmax;
+
+		normalize(s);
 	}
-	zmin = grmin;
-	zmax = grmax;
-
-	normalize(s);
 
 	for (gendata* g : data)
 		delete g;
@@ -426,14 +434,15 @@ void regengraph(state* s, int index) {
 	
 	vector<op> new_eq;
 
-	if (!in(s->graphs[index]->eq_str, new_eq)) {
+	try { in(s->graphs[index]->eq_str, new_eq); }
+	catch (exception e) {
+		s->ui->error = e.what();
+		s->ui->errorShown = true;
+		s->ev.current = in_help_or_err;
 		return;
 	}
-	s->graphs[index]->indicies.clear();
-	s->graphs[index]->verticies.clear();
-	s->graphs[index]->normals.clear();
-	s->graphs[index]->eq = new_eq;
 
+	s->graphs[index]->eq = new_eq;
 	printeq(cout, s->graphs[index]->eq);
 
 	Uint64 start = SDL_GetPerformanceCounter();

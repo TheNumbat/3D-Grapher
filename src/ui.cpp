@@ -11,8 +11,6 @@
 #include "tex_f.data"
 #include "tex_q.data"
 
-// the code in this file is p disorganized, good luck
-
 graph_enter_callback::graph_enter_callback(int i, graph_type g) {
 	g_id = i;
 	gt = g;
@@ -32,7 +30,8 @@ void graph_enter_callback::operator()(state* s, string e) const {
 		s->graphs[g_ind]->eq_str = e;
 		s->ui->parseDoms(s);
 		regengraph(s, g_ind);
-		s->ev.current = in_funcs;
+		if(s->ev.current == in_widget)
+			s->ev.current = in_funcs;
 	}
 }
 
@@ -55,6 +54,8 @@ UI::UI(state* s) {
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 	active = true;
+	helpShown = false;
+	errorShown = false;
 	uistate = ui_funcs;
 	domain = graph_func;
 
@@ -71,7 +72,8 @@ UI::UI(state* s) {
 		}
 	}));
 
-	settings.push_back(new slider("Opacity", 1.0f, [](state* s, float f) -> void {s->set.graphopacity = f; }));
+	settings.push_back(new slider("Ambient Light", s->set.ambientLighting, [](state* s, float f) -> void {s->set.ambientLighting = f; }));
+	settings.push_back(new slider("Opacity", s->set.graphopacity, [](state* s, float f) -> void {s->set.graphopacity = f; }));
 	
 	settings.push_back(new multi_text({ "Domain: Rectangluar", "Domain: Cylindrical" }, 0, [](state* s, string o) -> void {
 		if (o == "Domain: Rectangluar") {
@@ -131,34 +133,47 @@ UI::UI(state* s) {
 	}));
 
 	auto widgetsCallback = [](state* s, SDL_Event* ev) -> bool {
-		if (s->ui->uistate == ui_funcs) {
-			for (widget* w : s->ui->funcs) {
-				if (w->update(s, ev)) return true;
-			}
-		}
-		else if (s->ui->uistate == ui_settings) {
-			for (widget* w : s->ui->settings) {
-				if (w->update(s, ev)) return true;
-			}
-			if (s->ui->domain == graph_func) {
-				for (widget* w : s->ui->dom_rect) {
-					if (w->update(s, ev)) return true;
-				}
-			}
-			else if (s->ui->domain == graph_cylindrical) {
-				for (widget* w : s->ui->dom_cyl) {
-					if (w->update(s, ev)) return true;
-				}
+		if (s->ev.current == in_help_or_err) {
+			if (ev->type == SDL_MOUSEBUTTONDOWN || (ev->type == SDL_KEYDOWN && ev->key.keysym.sym == SDLK_ESCAPE)) {
+				if (s->ui->uistate == ui_funcs)
+					s->ev.current = in_funcs;
+				else
+					s->ev.current = in_settings;
+				s->ui->helpShown = false;
+				s->ui->errorShown = false;
+				return true;
 			}
 		}
 		else {
-			for (widget* w : s->ui->funcs_add) {
-				if (w->update(s, ev)) return true;
+			if (s->ui->uistate == ui_funcs) {
+				for (widget* w : s->ui->funcs) {
+					if (w->update(s, ev)) return true;
+				}
 			}
-			if (ev->type == SDL_MOUSEBUTTONDOWN || (ev->type == SDL_KEYDOWN && ev->key.keysym.sym == SDLK_ESCAPE)) {
-				s->ev.current = in_funcs;
-				s->ui->uistate = ui_funcs;
-				return true;
+			else if (s->ui->uistate == ui_settings) {
+				for (widget* w : s->ui->settings) {
+					if (w->update(s, ev)) return true;
+				}
+				if (s->ui->domain == graph_func) {
+					for (widget* w : s->ui->dom_rect) {
+						if (w->update(s, ev)) return true;
+					}
+				}
+				else if (s->ui->domain == graph_cylindrical) {
+					for (widget* w : s->ui->dom_cyl) {
+						if (w->update(s, ev)) return true;
+					}
+				}
+			}
+			else if (s->ui->uistate == ui_funcs_adding) {
+				for (widget* w : s->ui->funcs_add) {
+					if (w->update(s, ev)) return true;
+				}
+				if (ev->type == SDL_MOUSEBUTTONDOWN || (ev->type == SDL_KEYDOWN && ev->key.keysym.sym == SDLK_ESCAPE)) {
+					s->ev.current = in_funcs;
+					s->ui->uistate = ui_funcs;
+					return true;
+				}
 			}
 		}
 		return false;
@@ -170,16 +185,83 @@ UI::UI(state* s) {
 	s->ev.callbacks.push_back(callback(widgetsCallback, in_any, SDL_MOUSEBUTTONUP));
 	s->ev.callbacks.push_back(callback(widgetsCallback, in_any, SDL_MOUSEMOTION));
 
+	auto sidebar = [](state* s, SDL_Event* ev) -> bool {
+		if (ev->button.x > (int)round(s->w * UI_SCREEN_RATIO)) {
+			if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO) + 37) {
+				if (ev->button.y >= 0 && ev->button.y <= 35) {
+					s->ui->active = false;
+					s->ev.current = in_idle;
+					return true;
+				}
+				else if (ev->button.y >= 35 && ev->button.y <= 70) {
+					if (s->ui->uistate == ui_settings) {
+						s->ui->uistate = ui_funcs;
+						s->ev.current = in_funcs;
+					}
+					return true;
+				}
+				else if (ev->button.y >= 70 && ev->button.y <= 105) {
+					if (s->ui->uistate == ui_funcs) {
+						s->ui->uistate = ui_settings;
+						s->ev.current = in_settings;
+					}
+					return true;
+				}
+				else if (ev->button.y >= 105 && ev->button.y <= 140) {
+					s->ui->helpShown = true;
+					s->ev.current = in_help_or_err;
+					return true;
+				}
+			}
+			s->ev.current = in_cam;
+			SDL_CaptureMouse(SDL_TRUE);
+			SDL_SetRelativeMouseMode(SDL_TRUE);
+			s->mx = ev->button.x;
+			s->my = ev->button.y;
+			s->last_mx = ev->button.x;
+			s->last_my = ev->button.y;
+			return true;
+		}
+		return false;
+	};
+	s->ev.callbacks.push_back(callback(sidebar, in_funcs, SDL_MOUSEBUTTONDOWN));
+	s->ev.callbacks.push_back(callback(sidebar, in_settings, SDL_MOUSEBUTTONDOWN));
+
 	in_r.gen();
 	out_r.gen();
 	gear_r.gen();
 	f_r.gen();
 	q_r.gen();
+	error_r.gen();
 	in_r.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(in_bmp, in_bmp_len), 1));
 	out_r.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(out_bmp, out_bmp_len), 1));
 	gear_r.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(gear_bmp, gear_bmp_len), 1));
 	f_r.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(f_bmp, f_bmp_len), 1));
 	q_r.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(q_bmp, q_bmp_len), 1));
+
+	help = {
+		"3D Grapher Help",
+		"=====================",
+		"Interface:",
+		"   the f and gear icons will allow you to add functions and",
+		"   change settings respectively. The arrrow icon will",
+		"   hide/show the side panel.",
+		"Functions:",
+		"   click on a function to edit it, or below the current",
+		"   functions to add a new one. Pressing enter will generate",
+		"   the current function.",
+		"Settings:",
+		"   click on the buttons/text to change/edit them."
+	};
+
+	for (string l : help) {
+		textured_rect* r = new textured_rect();
+		SDL_Surface* surf = TTF_RenderText_Shaded(s->font, l.c_str(), { 0, 0, 0 }, { 255, 255, 255 });
+		r->gen();
+		r->tex.load(surf);
+		SDL_FreeSurface(surf);
+		helpText.push_back(r);
+	}
 }
 
 UI::~UI() {
@@ -187,6 +269,8 @@ UI::~UI() {
 		delete w;
 	for (widget* w : settings)
 		delete w;
+	for (textured_rect* r : helpText)
+		delete r;
 	funcs.clear();
 	settings.clear();
 	glDeleteVertexArrays(1, &VAO);
@@ -197,7 +281,13 @@ void UI::parseDoms(state* s) {
 	for (widget* w : dom_rect) {
 		edit_text* e = (edit_text*) w;
 		vector<op> exp;
-		in(e->exp, exp);
+		try { in(e->exp, exp); }
+		catch (exception e) {
+			s->ui->error = e.what();
+			s->ui->errorShown = true;
+			s->ev.current = in_help_or_err;
+			return;
+		}
 		float val = eval(exp);
 		if (e->head == "xmin: ")
 			s->set.rdom.xmin = val;
@@ -219,7 +309,13 @@ void UI::parseDoms(state* s) {
 	for (widget* w : dom_cyl) {
 		edit_text* e = (edit_text*) w;
 		vector<op> exp;
-		in(e->exp, exp);
+		try { in(e->exp, exp); }
+		catch (exception e) {
+			s->ui->error = e.what();
+			s->ui->errorShown = true;
+			s->ev.current = in_help_or_err;
+			return;
+		}
 		float val = eval(exp);
 		if (e->head == "tmin: ")
 			s->set.cdom.tmin = val;
@@ -291,7 +387,7 @@ void UI::render(state* s) {
 	if (uistate == ui_funcs || uistate == ui_funcs_adding) {
 		render_widgets(s, funcs, ui_w, x, y, true);
 	}
-	else if (uistate == ui_settings) {
+	if(uistate == ui_settings) {
 		y = render_widgets(s, settings, ui_w, x, y, true) - 3;
 		if (domain == graph_func)
 			render_widgets(s, dom_rect, ui_w, x, y, false);
@@ -302,6 +398,28 @@ void UI::render(state* s) {
 	if (uistate == ui_funcs_adding) {
 		y = render_widgets(s, funcs_add, ui_w / 2, adding_x, adding_y, false);
 		drawRect(s->rect_s, adding_x, adding_y, 3, y - adding_y, 0.0f, 0.0f, 0.0f, 1.0f, (float)s->w, (float)s->h); // right black strip
+	}
+	if (helpShown) {
+		int help_w;
+		TTF_SizeText(s->font, help[8].c_str(), &help_w, NULL);
+		drawRect(s->rect_s, s->w / 4 - 5, s->h / 4 - 5, help_w + 20, 360 + 10, 0.0f, 0.0f, 0.0f, 1.0f, (float)s->w, (float)s->h);
+		drawRect(s->rect_s, s->w / 4, s->h / 4, help_w + 10, 360, 1.0f, 1.0f, 1.0f, 1.0f, (float)s->w, (float)s->h);
+		float help_y = s->h / 4 + 5.0f;
+		for (textured_rect* r : helpText) {
+			r->set(s->w / 4 + 5.0f, help_y, 0.0f, 0.0f);
+			r->render(s->w, s->h, s->UI_s);
+			help_y += r->h;
+		}
+	}
+	else if (errorShown) {
+		SDL_Surface* text = TTF_RenderText_Shaded(s->font, error.c_str(), { 0, 0, 0 }, { 255, 255, 255 });
+		int err_w = text->w, err_h = text->h;
+		error_r.tex.load(text);
+		SDL_FreeSurface(text);
+		drawRect(s->rect_s, s->w / 4 - 10, s->h / 4 - 10, err_w + 20, err_h + 20, 0.0f, 0.0f, 0.0f, 1.0f, (float)s->w, (float)s->h);
+		drawRect(s->rect_s, s->w / 4 - 5, s->h / 4 - 5, err_w + 10, err_h + 10, 1.0f, 1.0f, 1.0f, 1.0f, (float)s->w, (float)s->h);
+		error_r.set(s->w / 4.0f, s->h / 4.0f, 0.0f, 0.0f);
+		error_r.render(s->w, s->h, s->UI_s);
 	}
 }
 

@@ -1,19 +1,10 @@
 ﻿
 #include "state.h"
 
-// Must do before useable : error messages, static cam bug, help menu
-
 // TODO:
 	// Bugs
 		// Rects have to be set every frame
 		// Something is wrong with static 3d cam when not at 0, 0, 0
-	// UI
-		// Error messages
-			// Unknown function name
-			// Unused variable
-			// Unbalanced parenthesis
-			// Unable to parse value
-			// ANYWHERE in()/eval()
 	// Math Features
 		// Graph types
 		// Highlight curve along a set x/y
