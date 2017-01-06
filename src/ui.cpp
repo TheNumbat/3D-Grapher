@@ -267,12 +267,16 @@ UI::UI(state* s) {
 UI::~UI() {
 	for (widget* w : funcs)
 		delete w;
+	for (widget* w : funcs_add)
+		delete w;
 	for (widget* w : settings)
+		delete w;
+	for (widget* w : dom_rect)
+		delete w;
+	for (widget* w : dom_cyl)
 		delete w;
 	for (textured_rect* r : helpText)
 		delete r;
-	funcs.clear();
-	settings.clear();
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
 }
