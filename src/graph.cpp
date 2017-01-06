@@ -243,6 +243,9 @@ void fxy_graph::genthread(gendata* g) {
 }
 
 void cyl_graph::generateIndiciesAndNormals(state* s) {
+	indicies.clear();
+	normals.clear();
+
 	vec3 norm;
 	for (int z = 0; z < s->set.cdom.zrez; z++) {
 		for (int t = 0; t < s->set.cdom.trez; t++) {
