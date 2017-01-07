@@ -591,7 +591,6 @@ void edit_text::remove(state* s) {
 		should_remove = true;
 		s->ui->remove_dead_widgets(); // basically 'delete this' ... quesitonable practice
 	}
-	SDL_ShowCursor(1);
 }
 
 int edit_text::render(state* s, int ui_w, int x, int y) {

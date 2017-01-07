@@ -479,7 +479,7 @@ void regengraph(state* s, int index) {
 	vector<op> new_eq;
 
 	try { in(s->graphs[index]->eq_str, new_eq); }
-	catch (exception e) {
+	catch (runtime_error e) {
 		s->ui->error = e.what();
 		s->ui->errorShown = true;
 		s->ev.current = in_help_or_err;
