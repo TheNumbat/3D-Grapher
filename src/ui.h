@@ -51,7 +51,7 @@ struct UI {
 	int render_widgets(state* s, vector<widget*>& v, int ui_w, int x, int y, bool fullborders);
 	bool parseDoms(state* s);
 	vector<widget*> funcs, funcs_add, settings;
-	vector<widget*> dom_rect, dom_cyl; // ONLY EDIT_TEXT
+	vector<widget*> dom_rect, dom_cyl, dom_spr; // ONLY EDIT_TEXT
 	GLuint VAO, VBO;
 	textured_rect in_r, out_r, gear_r, f_r, q_r, error_r;
 	string error;

@@ -54,17 +54,36 @@ struct graph {
 struct cyl_graph : public graph {
 	struct gendata {
 		gendata() {
-			rmin = FLT_MAX;
-			rmax = -FLT_MAX;
+			gzmin = FLT_MAX;
+			zmax = -FLT_MAX;
 		};
 		state* s;
 		vector<float> ret;
-		float rmin, rmax, zmin, dz, dt;
+		float gzmin, zmax, zmin, dz, dt;
 		int tzrez, ID;
 		bool success;
 	};
 
 	cyl_graph(int id, string s = " ");
+	void generate(state* s);
+	static void genthread(gendata* g);
+	void generateIndiciesAndNormals(state* s);
+};
+
+struct spr_graph : public graph {
+	struct gendata {
+		gendata() {
+			zmin = FLT_MAX;
+			zmax = -FLT_MAX;
+		};
+		state* s;
+		vector<float> ret;
+		float zmin, zmax, pmin, dt, dp;
+		int tprez, ID;
+		bool success;
+	};
+
+	spr_graph(int id, string s = " ");
 	void generate(state* s);
 	static void genthread(gendata* g);
 	void generateIndiciesAndNormals(state* s);

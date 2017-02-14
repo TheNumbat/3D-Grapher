@@ -23,6 +23,7 @@ void graph_enter_callback::operator()(state* s, string e) const {
 			switch (gt) {
 			case graph_func:		s->graphs.push_back(new fxy_graph(g_id)); break;
 			case graph_cylindrical: s->graphs.push_back(new cyl_graph(g_id)); break;
+			case graph_spherical:	s->graphs.push_back(new spr_graph(g_id)); break;
 			}
 			s->graphs.back()->gen();
 			g_ind = s->graphs.size() - 1;
@@ -79,12 +80,15 @@ UI::UI(state* s) {
 		else if (s->set.fov < 1.0f) s->set.fov = 1.0f;
 	}));
 
-	settings.push_back(new multi_text({ "Domain: Rectangluar", "Domain: Cylindrical" }, 0, [](state* s, string o) -> void {
+	settings.push_back(new multi_text({ "Domain: Rectangluar", "Domain: Cylindrical", "Domain: Spherical" }, 0, [](state* s, string o) -> void {
 		if (o == "Domain: Rectangluar") {
 			s->ui->domain = graph_func;
 		}
 		else if(o == "Domain: Cylindrical") {
 			s->ui->domain = graph_cylindrical;
+		}
+		else if (o == "Domain: Spherical") {
+			s->ui->domain = graph_spherical;
 		}
 	}));
 
@@ -113,6 +117,14 @@ UI::UI(state* s) {
 	add(trez);
 	add(zrez);
 #undef add
+#define add(val) dom_spr.push_back(new edit_text(s, to_string(s->set.sdom.val), string(#val) + ": ", domsCallback, domsRemoveCallback, false));
+	add(tmin);
+	add(tmax);
+	add(pmin);
+	add(pmax);
+	add(trez);
+	add(prez);
+#undef add
 
 	funcs_add.push_back(new static_text("f(x,y)", [](state* s) -> void {
 		edit_text* w = new edit_text(s, " ", "f(x,y)= ", graph_enter_callback(s->next_graph_id, graph_func), graph_remove_callback(s->next_graph_id), true);
@@ -125,6 +137,15 @@ UI::UI(state* s) {
 
 	funcs_add.push_back(new static_text("r(t,z)", [](state* s) -> void {
 		edit_text* w = new edit_text(s, " ", "r(t,z)= ", graph_enter_callback(s->next_graph_id, graph_cylindrical), graph_remove_callback(s->next_graph_id), true);
+		s->next_graph_id++;
+		s->ui->funcs.push_back(w);
+		s->ev.current = in_widget;
+		s->ui->uistate = ui_funcs;
+		SDL_StartTextInput();
+	}));
+
+	funcs_add.push_back(new static_text("p(t,p)", [](state* s) -> void {
+		edit_text* w = new edit_text(s, " ", "p(t,p)= ", graph_enter_callback(s->next_graph_id, graph_spherical), graph_remove_callback(s->next_graph_id), true);
 		s->next_graph_id++;
 		s->ui->funcs.push_back(w);
 		s->ev.current = in_widget;
@@ -161,6 +182,11 @@ UI::UI(state* s) {
 				}
 				else if (s->ui->domain == graph_cylindrical) {
 					for (widget* w : s->ui->dom_cyl) {
+						if (w->update(s, ev)) return true;
+					}
+				}
+				else if (s->ui->domain == graph_spherical) {
+					for (widget* w : s->ui->dom_spr) {
 						if (w->update(s, ev)) return true;
 					}
 				}
@@ -275,6 +301,8 @@ UI::~UI() {
 		delete w;
 	for (widget* w : dom_cyl)
 		delete w;
+	for (widget* w : dom_spr)
+		delete w;
 	for (textured_rect* r : helpText)
 		delete r;
 	glDeleteVertexArrays(1, &VAO);
@@ -335,6 +363,33 @@ bool UI::parseDoms(state* s) {
 			s->set.cdom.trez = (int)round(val);
 		else if (e->head == "zrez: ")
 			s->set.cdom.zrez = (int)round(val);
+	}
+	for (widget* w : dom_spr) {
+		edit_text* e = (edit_text*)w;
+		vector<op> exp;
+		float val;
+		try {
+			in(e->exp, exp);
+			val = eval(exp);
+		}
+		catch (runtime_error e) {
+			s->ui->error = e.what();
+			s->ui->errorShown = true;
+			s->ev.current = in_help_or_err;
+			return false;
+		}
+		if (e->head == "tmin: ")
+			s->set.sdom.tmin = val;
+		else if (e->head == "tmax: ")
+			s->set.sdom.tmax = val;
+		else if (e->head == "pmin: ")
+			s->set.sdom.pmin = val;
+		else if (e->head == "pmax: ")
+			s->set.sdom.pmax = val;
+		else if (e->head == "trez: ")
+			s->set.sdom.trez = (int)round(val);
+		else if (e->head == "prez: ")
+			s->set.sdom.prez = (int)round(val);
 	}
 	regenall(s);
 	return true;
@@ -397,6 +452,8 @@ void UI::render(state* s) {
 			render_widgets(s, dom_rect, ui_w, x, y, false);
 		else if (domain == graph_cylindrical)
 			render_widgets(s, dom_cyl, ui_w, x, y, false);
+		else if (domain == graph_spherical)
+			render_widgets(s, dom_spr, ui_w, x, y, false);
 	}
 	render_sidebar(s);
 	if (uistate == ui_funcs_adding) {

@@ -20,6 +20,7 @@ state::state() {
 	set.camtype = cam_3d_static;
 	set.rdom = { -10, 10, -10, 10, -10, 10, 200, 200 };
 	set.cdom = { 0, 1, 0, 2 * val_pi, 0, 10, 200, 200 };
+	set.sdom = { 0, 2 * val_pi, 0, 2 * val_pi, 0, 10, 200, 200 };
 
 	assert(SDL_Init(SDL_INIT_EVERYTHING) == 0);
 

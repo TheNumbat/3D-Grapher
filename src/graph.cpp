@@ -26,6 +26,149 @@ graph::graph(int id, string s) {
 	zmin = zmax = 0;
 }
 
+spr_graph::spr_graph(int id, string s) : graph(id, s) {
+	type = graph_cylindrical;
+}
+
+void spr_graph::genthread(gendata* g) {
+	int index = getIndex(g->s, g->ID);
+	float p = g->pmin;
+	for (int tp = 0; tp < g->tprez; tp++, p += g->dp) {
+		float t = g->s->set.sdom.tmin;
+		for (int tt = 0; tt <= g->s->set.sdom.trez; tt++, t += g->dt) {
+			float r;
+			try { r = eval(g->s->graphs[index]->eq, { { 't',t },{ 'p',p } }); }
+			catch (runtime_error e) {
+				g->s->ui->error = e.what();
+				g->s->ui->errorShown = true;
+				g->s->ev.current = in_help_or_err;
+				g->success = false;
+				return;
+			}
+
+			if (r * cos(p) < g->zmin) g->zmin = r * cos(p);
+			else if (r * cos(p) > g->zmax) g->zmax = r * cos(p);
+
+			g->ret.push_back(r * cos(t) * sin(p));
+			g->ret.push_back(r * sin(t) * sin(p));
+			g->ret.push_back(r * cos(p));
+		}
+	}
+	g->success = true;
+}
+
+void spr_graph::generate(state* s) {
+	unsigned int numthreads = thread::hardware_concurrency();
+#ifdef _WIN32
+	int cpuinfo[4];
+	__cpuid(cpuinfo, 1);
+	bool HT = (cpuinfo[3] & (1 << 28)) > 0;
+	if (HT) numthreads /= 2;
+#endif
+
+	float dt = (s->set.sdom.tmax - s->set.sdom.tmin) / s->set.sdom.trez;
+	float dp = (s->set.sdom.pmax - s->set.sdom.pmin) / s->set.sdom.prez;
+	float pmin = s->set.sdom.pmin;
+	unsigned int tpDelta = s->set.sdom.prez / numthreads;
+	unsigned int tpLast = s->set.sdom.prez - (numthreads - 1) * tpDelta + 1;
+
+	verticies.clear();
+
+	vector<thread> threads;
+	vector<gendata*> data;
+	for (unsigned int i = 0; i < numthreads; i++) {
+		if (tpDelta || i == numthreads - 1) {
+			gendata* d = new gendata;
+
+			if (i == numthreads - 1)
+				d->tprez = tpLast;
+			else
+				d->tprez = tpDelta;
+
+			d->s = s;
+			d->dt = dt;
+			d->dp = dp;
+			d->pmin = pmin;
+			d->ID = ID;
+
+			data.push_back(d);
+			threads.push_back(thread(genthread, data.back()));
+
+			pmin += tpDelta * dp;
+		}
+	}
+	bool success = true;
+	for (unsigned int i = 0; i < threads.size(); i++) {
+		threads[i].join();
+		if (success) {
+			success = data[i]->success;
+			verticies.insert(verticies.end(), data[i]->ret.begin(), data[i]->ret.end());
+			data[i]->ret.clear();
+		}
+	}
+
+	if (success) {
+		float gzmin = FLT_MAX, gzmax = -FLT_MAX;
+		for (unsigned int i = 0; i < threads.size(); i++) {
+			if (data[i]->zmin < gzmin) gzmin = data[i]->zmin;
+			if (data[i]->zmax > gzmax) gzmax = data[i]->zmax;
+		}
+		zmin = gzmin;
+		zmax = gzmax;
+
+		normalize(s);
+		generateIndiciesAndNormals(s);
+	}
+
+	for (gendata* g : data)
+		delete g;
+}
+
+void spr_graph::generateIndiciesAndNormals(state* s) {
+	indicies.clear();
+	normals.clear();
+
+	vec3 norm;
+	for (int p = 0; p < s->set.sdom.prez; p++) {
+		for (int t = 0; t < s->set.sdom.trez; t++) {
+			GLuint i_index = p * (s->set.sdom.prez + 1) + t;
+
+			if (!isnan(verticies[i_index * 3 + 2]) &&
+				!isinf(verticies[i_index * 3 + 2])) {
+				indicies.push_back(i_index);
+				indicies.push_back(i_index + 1);
+				indicies.push_back(i_index + s->set.sdom.prez + 1);
+
+				indicies.push_back(i_index + 1);
+				indicies.push_back(i_index + s->set.sdom.prez + 1);
+				indicies.push_back(i_index + s->set.sdom.prez + 2);
+
+				float x1 = verticies[i_index * 3];
+				float y1 = verticies[i_index * 3 + 1];
+				float z1 = verticies[i_index * 3 + 2];
+				float x2 = verticies[(i_index + 1) * 3];
+				float y2 = verticies[(i_index + 1) * 3 + 1];
+				float z2 = verticies[(i_index + 1) * 3 + 2];
+				float x3 = verticies[(i_index + s->set.sdom.prez + 1) * 3];
+				float y3 = verticies[(i_index + s->set.sdom.prez + 1) * 3 + 1];
+				float z3 = verticies[(i_index + s->set.sdom.prez + 1) * 3 + 2];
+				vec3 one(x2 - x1, y2 - y1, z2 - z1);
+				vec3 two(x3 - x1, y3 - y1, z3 - z1);
+				norm = glm::normalize(cross(two, one));
+			}
+			normals.push_back(norm);
+			if (p == 0)
+				normals.push_back(norm);
+		}
+		normals.push_back(norm);
+	}
+	normals.push_back(norm);
+
+	for (unsigned int i = 1; i < normals.size() - 1; i++) {
+		normals[i] = glm::normalize(normals[i - 1] + normals[i] + normals[i + 1]);
+	}
+}
+
 cyl_graph::cyl_graph(int id, string s) : graph(id, s) {
 	type = graph_cylindrical;
 }
@@ -46,8 +189,8 @@ void cyl_graph::genthread(gendata* g) {
 				return;
 			}
 
-			if (z < g->rmin) g->rmin = r;
-			else if (z > g->rmax) g->rmax = r;
+			if (z < g->gzmin) g->gzmin = z;
+			else if (z > g->zmax) g->zmax = z;
 
 			g->ret.push_back(r * cos(t));
 			g->ret.push_back(r * sin(t));
@@ -458,13 +601,13 @@ void cyl_graph::generate(state* s) {
 	}
 
 	if (success) {
-		float grmin = FLT_MAX, grmax = -FLT_MAX;
+		float gzmin = FLT_MAX, gzmax = -FLT_MAX;
 		for (unsigned int i = 0; i < threads.size(); i++) {
-			if (data[i]->rmin < grmin) grmin = data[i]->rmin;
-			if (data[i]->rmax > grmax) grmax = data[i]->rmax;
+			if (data[i]->gzmin < gzmin) gzmin = data[i]->gzmin;
+			if (data[i]->zmax > gzmax) gzmax = data[i]->zmax;
 		}
-		zmin = grmin;
-		zmax = grmax;
+		zmin = gzmin;
+		zmax = gzmax;
 
 		normalize(s);
 		generateIndiciesAndNormals(s);

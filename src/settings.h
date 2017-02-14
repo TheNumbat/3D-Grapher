@@ -14,6 +14,11 @@ struct cyl_domain {
 	int zrez, trez;
 };
 
+struct spr_domain {
+	float tmin, tmax, pmin, pmax, rmin, rmax;
+	int trez, prez;
+};
+
 struct settings {
 	bool wireframe;
 	bool lighting;
@@ -23,5 +28,6 @@ struct settings {
 	float fov;
 	rect_domain rdom;
 	cyl_domain cdom;
+	spr_domain sdom;
 	cam_type camtype;
 };
