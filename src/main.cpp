@@ -7,8 +7,9 @@
 		// One strip of polygons is too dark on cyl/spr
 	// Math Features
 		// Graph types (see enum)
+		// Plot evolution of 3D graph over time (4D) (animated)
 		// Highlight curve along a set x/y
-		// Partials
+		// Partial Derivatives
 		// Graph intersections
 		// Level Curves
 		// E Regions
