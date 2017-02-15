@@ -37,7 +37,6 @@ void regengraph(state* s, int index) {
 
 	Uint64 start = SDL_GetPerformanceCounter();
 	s->graphs[index]->generate(s);
-	//s->graphs[index]->generateIndiciesAndNormals(s);
 	Uint64 end = SDL_GetPerformanceCounter();
 	cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << endl;
 
