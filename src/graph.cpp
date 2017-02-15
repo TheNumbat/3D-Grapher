@@ -127,6 +127,7 @@ graph::graph(int id, string s) {
 	eq_str = s;
 	ID = id;
 	zmin = zmax = 0;
+	rel_opactiy = 1.0f;
 }
 
 graph::~graph() {
@@ -180,7 +181,7 @@ void graph::draw(state* s, mat4 model, mat4 view, mat4 proj) {
 			glUniformMatrix4fv(s->graph_s_light.getUniform("model"), 1, GL_FALSE, value_ptr(model));
 			glUniformMatrix4fv(s->graph_s_light.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
 
-			glUniform4f(s->graph_s_light.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, s->set.graphopacity);
+			glUniform4f(s->graph_s_light.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, s->set.graphopacity * rel_opactiy);
 			glUniform3f(s->graph_s_light.getUniform("lightColor"), 1.0f, 1.0f, 1.0f);
 			glUniform1f(s->graph_s_light.getUniform("ambientStrength"), s->set.ambientLighting);
 
@@ -201,7 +202,7 @@ void graph::draw(state* s, mat4 model, mat4 view, mat4 proj) {
 
 			glUniformMatrix4fv(s->graph_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
 
-			glUniform4f(s->graph_s.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, s->set.graphopacity);
+			glUniform4f(s->graph_s.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, s->set.graphopacity * rel_opactiy);
 		}
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);

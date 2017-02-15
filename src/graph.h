@@ -52,7 +52,7 @@ struct graph {
 	string eq_str;
 	vector<op> eq;
 	graph_type type;
-	float zmin, zmax;
+	float zmin, zmax, rel_opactiy;
 	GLuint VAO, VBO, EBO, normVBO;
 };
 
