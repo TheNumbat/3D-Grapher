@@ -24,10 +24,10 @@ bool num(char c) {
 }
 
 #define get2() if(s.size() > 1) {two = s.top();s.pop();one = s.top();s.pop();} \
-			   else {throw runtime_error("ERROR: expression malformed!");}
+			   else {throw runtime_error("ERROR: malformed expression!");}
 
 #define get1() if(s.size()) {one = s.top();s.pop();} \
-			   else {throw runtime_error("ERROR: expression malformed!");}
+			   else {throw runtime_error("ERROR: malformed expression!");}
 
 float eval(const vector<op>& EQ, vector<pair<char, float>> vars) {
 	stack<float> s;

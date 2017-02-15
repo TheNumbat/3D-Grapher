@@ -59,7 +59,7 @@ void spr_graph::genthread(gendata* g) {
 
 void spr_graph::generate(state* s) {
 	unsigned int numthreads = thread::hardware_concurrency();
-#ifdef _WIN32
+#ifdef _MSC_VER
 	int cpuinfo[4];
 	__cpuid(cpuinfo, 1);
 	bool HT = (cpuinfo[3] & (1 << 28)) > 0;
@@ -485,7 +485,7 @@ void graph::normalize(state* s) {
 
 void fxy_graph::generate(state* s) {
 	unsigned int numthreads = thread::hardware_concurrency();
-#ifdef _WIN32
+#ifdef _MSC_VER
 	int cpuinfo[4];
 	__cpuid(cpuinfo, 1);
 	bool HT = (cpuinfo[3] & (1 << 28)) > 0;
@@ -552,7 +552,7 @@ void fxy_graph::generate(state* s) {
 
 void cyl_graph::generate(state* s) {
 	unsigned int numthreads = thread::hardware_concurrency();
-#ifdef _WIN32
+#ifdef _MSC_VER
 	int cpuinfo[4];
 	__cpuid(cpuinfo, 1);
 	bool HT = (cpuinfo[3] & (1 << 28)) > 0;
@@ -662,6 +662,6 @@ void regenall(state* s) {
 	}
 	if (gen) {
 		updateAxes(s);
-		resetCam(s);
+		//resetCam(s);
 	}
 }
