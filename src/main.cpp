@@ -4,6 +4,7 @@
 // TODO:
 	// Bugs
 		// Rects have to be set every frame
+		// One strip of polygons is too dark on cyl/spr
 	// Math Features
 		// Graph types (see enum)
 		// Highlight curve along a set x/y

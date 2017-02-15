@@ -37,6 +37,7 @@ void regengraph(state* s, int index) {
 
 	Uint64 start = SDL_GetPerformanceCounter();
 	s->graphs[index]->generate(s);
+	//s->graphs[index]->generateIndiciesAndNormals(s);
 	Uint64 end = SDL_GetPerformanceCounter();
 	cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << endl;
 
@@ -241,6 +242,62 @@ void graph::normalize(state* s) {
 	}
 }
 
+void graph::generateIndiciesAndNormals(state* s) {
+	indicies.clear();
+	normals.clear();
+
+	vec3 norm;
+	int x_max;
+	int y_max;
+	if (type == graph_func) {
+		x_max = s->set.rdom.xrez;
+		y_max = s->set.rdom.yrez;
+	}
+	else if (type == graph_cylindrical) {
+		x_max = s->set.cdom.trez;
+		y_max = s->set.cdom.zrez;
+	}
+	else if (type == graph_spherical) {
+		x_max = s->set.sdom.prez;
+		y_max = s->set.sdom.trez;
+	}
+
+	for (int x = 0; x < x_max; x++) {
+		for (int y = 0; y < y_max; y++) {
+			GLuint i_index = x * (y_max + 1) + y;
+
+			if (!isnan(verticies[i_index * 3 + 2]) &&
+				!isinf(verticies[i_index * 3 + 2])) {
+				indicies.push_back(i_index);
+				indicies.push_back(i_index + 1);
+				indicies.push_back(i_index + y_max + 1);
+
+				indicies.push_back(i_index + 1);
+				indicies.push_back(i_index + y_max + 1);
+				indicies.push_back(i_index + y_max + 2);
+
+				float x1 = verticies[i_index * 3];
+				float y1 = verticies[i_index * 3 + 1];
+				float z1 = verticies[i_index * 3 + 2];
+				float x2 = verticies[(i_index + 1) * 3];
+				float y2 = verticies[(i_index + 1) * 3 + 1];
+				float z2 = verticies[(i_index + 1) * 3 + 2];
+				float x3 = verticies[(i_index + y_max + 1) * 3];
+				float y3 = verticies[(i_index + y_max + 1) * 3 + 1];
+				float z3 = verticies[(i_index + y_max + 1) * 3 + 2];
+				vec3 one(x2 - x1, y2 - y1, z2 - z1);
+				vec3 two(x3 - x1, y3 - y1, z3 - z1);
+				norm = glm::normalize(cross(two, one));
+			}
+			normals.push_back(norm);
+			if (x == 0)
+				normals.push_back(norm);
+		}
+		normals.push_back(norm);
+	}
+	normals.push_back(norm);
+}
+
 fxy_graph::fxy_graph(int id, string s) : graph(id, s) {
 	type = graph_func;
 }
@@ -339,51 +396,6 @@ void fxy_graph::generate(state* s) {
 		delete g;
 }
 
-void fxy_graph::generateIndiciesAndNormals(state* s) {
-	indicies.clear();
-	normals.clear();
-	
-	vec3 norm;
-	for (int x = 0; x < s->set.rdom.xrez; x++) {
-		for (int y = 0; y < s->set.rdom.yrez; y++) {
-			GLuint i_index = x * (s->set.rdom.yrez + 1) + y;
-
-			if (!isnan(verticies[i_index * 3 + 2]) &&
-				!isinf(verticies[i_index * 3 + 2])) {
-				indicies.push_back(i_index);
-				indicies.push_back(i_index + 1);
-				indicies.push_back(i_index + s->set.rdom.yrez + 1);
-
-				indicies.push_back(i_index + 1);
-				indicies.push_back(i_index + s->set.rdom.yrez + 1);
-				indicies.push_back(i_index + s->set.rdom.yrez + 2);
-
-				float x1 = verticies[i_index * 3];
-				float y1 = verticies[i_index * 3 + 1];
-				float z1 = verticies[i_index * 3 + 2];
-				float x2 = verticies[(i_index + 1) * 3];
-				float y2 = verticies[(i_index + 1) * 3 + 1];
-				float z2 = verticies[(i_index + 1) * 3 + 2];
-				float x3 = verticies[(i_index + s->set.rdom.yrez + 1) * 3];
-				float y3 = verticies[(i_index + s->set.rdom.yrez + 1) * 3 + 1];
-				float z3 = verticies[(i_index + s->set.rdom.yrez + 1) * 3 + 2];
-				vec3 one(x2 - x1, y2 - y1, z2 - z1);
-				vec3 two(x3 - x1, y3 - y1, z3 - z1);
-				norm = glm::normalize(cross(two, one));
-			}
-			normals.push_back(norm);
-			if (x == 0)
-				normals.push_back(norm);
-		}
-		normals.push_back(norm);
-	}
-	normals.push_back(norm);
-
-	for (unsigned int i = 1; i < normals.size() - 1; i++) {
-		normals[i] = glm::normalize(normals[i - 1] + normals[i] + normals[i + 1]);
-	}
-}
-
 cyl_graph::cyl_graph(int id, string s) : graph(id, s) {
 	type = graph_cylindrical;
 }
@@ -405,7 +417,7 @@ void cyl_graph::genthread(gendata* g) {
 			}
 
 			if (z < g->gzmin) g->gzmin = z;
-			else if (z > g->zmax) g->zmax = z;
+			else if (z > g->gzmax) g->gzmax = z;
 
 			g->ret.push_back(r * cos(t));
 			g->ret.push_back(r * sin(t));
@@ -469,7 +481,7 @@ void cyl_graph::generate(state* s) {
 		float gzmin = FLT_MAX, gzmax = -FLT_MAX;
 		for (unsigned int i = 0; i < threads.size(); i++) {
 			if (data[i]->gzmin < gzmin) gzmin = data[i]->gzmin;
-			if (data[i]->zmax > gzmax) gzmax = data[i]->zmax;
+			if (data[i]->gzmax > gzmax) gzmax = data[i]->gzmax;
 		}
 		zmin = gzmin;
 		zmax = gzmax;
@@ -482,49 +494,8 @@ void cyl_graph::generate(state* s) {
 		delete g;
 }
 
-void cyl_graph::generateIndiciesAndNormals(state* s) {
-	indicies.clear();
-	normals.clear();
-
-	vec3 norm;
-	for (int z = 0; z < s->set.cdom.zrez; z++) {
-		for (int t = 0; t < s->set.cdom.trez; t++) {
-			GLuint i_index = z * (s->set.cdom.trez + 1) + t;
-
-			if (!isnan(verticies[i_index * 3]) && !isnan(verticies[i_index * 3 + 1]) &&
-				!isinf(verticies[i_index * 3]) && !isinf(verticies[i_index * 3 + 1])) {
-				indicies.push_back(i_index);
-				indicies.push_back(i_index + 1);
-				indicies.push_back(i_index + s->set.cdom.trez + 1);
-
-				indicies.push_back(i_index + 1);
-				indicies.push_back(i_index + s->set.cdom.trez + 1);
-				indicies.push_back(i_index + s->set.cdom.trez + 2);
-
-				float x1 = verticies[i_index * 3];
-				float y1 = verticies[i_index * 3 + 1];
-				float z1 = verticies[i_index * 3 + 2];
-				float x2 = verticies[(i_index + 1) * 3];
-				float y2 = verticies[(i_index + 1) * 3 + 1];
-				float z2 = verticies[(i_index + 1) * 3 + 2];
-				float x3 = verticies[(i_index + s->set.cdom.trez + 1) * 3];
-				float y3 = verticies[(i_index + s->set.cdom.trez + 1) * 3 + 1];
-				float z3 = verticies[(i_index + s->set.cdom.trez + 1) * 3 + 2];
-				vec3 one(x2 - x1, y2 - y1, z2 - z1);
-				vec3 two(x3 - x1, y3 - y1, z3 - z1);
-				norm = glm::normalize(cross(two, one));
-			}
-			normals.push_back(norm);
-			if (z == 0)
-				normals.push_back(norm);
-		}
-		normals.push_back(norm);
-	}
-	normals.push_back(norm);
-}
-
 spr_graph::spr_graph(int id, string s) : graph(id, s) {
-	type = graph_cylindrical;
+	type = graph_spherical;
 }
 
 void spr_graph::genthread(gendata* g) {
@@ -619,49 +590,4 @@ void spr_graph::generate(state* s) {
 
 	for (gendata* g : data)
 		delete g;
-}
-
-void spr_graph::generateIndiciesAndNormals(state* s) {
-	indicies.clear();
-	normals.clear();
-
-	vec3 norm;
-	for (int p = 0; p < s->set.sdom.prez; p++) {
-		for (int t = 0; t < s->set.sdom.trez; t++) {
-			GLuint i_index = p * (s->set.sdom.prez + 1) + t;
-
-			if (!isnan(verticies[i_index * 3 + 2]) &&
-				!isinf(verticies[i_index * 3 + 2])) {
-				indicies.push_back(i_index);
-				indicies.push_back(i_index + 1);
-				indicies.push_back(i_index + s->set.sdom.prez + 1);
-
-				indicies.push_back(i_index + 1);
-				indicies.push_back(i_index + s->set.sdom.prez + 1);
-				indicies.push_back(i_index + s->set.sdom.prez + 2);
-
-				float x1 = verticies[i_index * 3];
-				float y1 = verticies[i_index * 3 + 1];
-				float z1 = verticies[i_index * 3 + 2];
-				float x2 = verticies[(i_index + 1) * 3];
-				float y2 = verticies[(i_index + 1) * 3 + 1];
-				float z2 = verticies[(i_index + 1) * 3 + 2];
-				float x3 = verticies[(i_index + s->set.sdom.prez + 1) * 3];
-				float y3 = verticies[(i_index + s->set.sdom.prez + 1) * 3 + 1];
-				float z3 = verticies[(i_index + s->set.sdom.prez + 1) * 3 + 2];
-				vec3 one(x2 - x1, y2 - y1, z2 - z1);
-				vec3 two(x3 - x1, y3 - y1, z3 - z1);
-				norm = glm::normalize(cross(two, one));
-			}
-			normals.push_back(norm);
-			if (p == 0)
-				normals.push_back(norm);
-		}
-		normals.push_back(norm);
-	}
-	normals.push_back(norm);
-
-	for (unsigned int i = 1; i < normals.size() - 1; i++) {
-		normals[i] = glm::normalize(normals[i - 1] + normals[i] + normals[i + 1]);
-	}
 }
