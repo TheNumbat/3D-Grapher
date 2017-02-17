@@ -367,6 +367,9 @@ void in(string str, vector<op>& EQ) {
 		EQ.push_back(s.top());
 		s.pop();
 	}
+	if (!EQ.size()) {
+		throw runtime_error("ERROR: empty expression!");
+	}
 }
 
 void printeq(ostream& out, vector<op> eq) {
