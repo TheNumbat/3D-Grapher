@@ -59,7 +59,7 @@ UI::UI(state* s) {
 	uistate = ui_funcs;
 	domain = graph_func;
 
-	settings.push_back(new toggle_text("Wirefame", false, [](state* s) -> void {s->set.wireframe = !s->set.wireframe;}));
+	settings.push_back(new toggle_text("Wireframe", false, [](state* s) -> void {s->set.wireframe = !s->set.wireframe;}));
 	settings.push_back(new toggle_text("Lighting", true, [](state* s) -> void {s->set.lighting = !s->set.lighting; }));
 	settings.push_back(new toggle_text("Axis Normalization", false, [](state* s) -> void {s->set.axisnormalization = !s->set.axisnormalization; regenall(s); }));
 
@@ -80,8 +80,8 @@ UI::UI(state* s) {
 		else if (s->set.fov < 1.0f) s->set.fov = 1.0f;
 	}));
 
-	settings.push_back(new multi_text({ "Domain: Rectangluar", "Domain: Cylindrical", "Domain: Spherical" }, 0, [](state* s, string o) -> void {
-		if (o == "Domain: Rectangluar") {
+	settings.push_back(new multi_text({ "Domain: Rectangular", "Domain: Cylindrical", "Domain: Spherical" }, 0, [](state* s, string o) -> void {
+		if (o == "Domain: Rectangular") {
 			s->ui->domain = graph_func;
 		}
 		else if(o == "Domain: Cylindrical") {
