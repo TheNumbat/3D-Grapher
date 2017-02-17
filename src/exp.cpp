@@ -336,9 +336,9 @@ void in(string str, vector<op>& EQ) {
 							s.push(op_acot);
 						else {
 							if (!in.good())
-								throw runtime_error("ERROR: unkown name '" + str + "'");
+								throw runtime_error("ERROR: unknown name '" + str + "'");
 							else
-								throw runtime_error("ERROR: unkown function '" + str + "()'");
+								throw runtime_error("ERROR: unknown function '" + str + "()'");
 						}
 					}
 					s.push('(');
