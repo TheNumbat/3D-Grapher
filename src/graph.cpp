@@ -33,12 +33,12 @@ void regengraph(state* s, int index) {
 	}
 
 	s->graphs[index]->eq = new_eq;
-	printeq(cout, s->graphs[index]->eq);
+	//printeq(cout, s->graphs[index]->eq);
 
 	Uint64 start = SDL_GetPerformanceCounter();
 	s->graphs[index]->generate(s);
 	Uint64 end = SDL_GetPerformanceCounter();
-	cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << endl;
+	//cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << endl;
 
 	updateAxes(s);
 	s->graphs[index]->send();
