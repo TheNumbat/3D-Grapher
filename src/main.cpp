@@ -17,6 +17,8 @@
 		// More than urnary functions (e.g. max, min)
 		// Maxs & mins (abs and rel)
 		// Line/Surface/Flux integrals
+	// Input
+		// Picking
 
 int main(int argc, char** args) {
 

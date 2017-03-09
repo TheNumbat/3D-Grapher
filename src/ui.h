@@ -24,6 +24,12 @@ struct graph_enter_callback {
 	graph_type gt;
 };
 
+struct para_enter_callback {
+	para_enter_callback(int i);
+	void operator()(state* s, string ex, string ey, string ez) const;
+	int g_id;
+};
+
 struct graph_remove_callback {
 	graph_remove_callback(int i);
 	bool operator()(state* s) const;
@@ -66,20 +72,38 @@ struct UI {
 };
 
 struct edit_text : public widget {
-	edit_text(state* s, string e, string h, function<void(state*, string)> c, function<bool(state*)> rm, bool a = true);
-	int render(state* s, int ui_w, int x, int y);
-	bool update(state* s, SDL_Event* ev);
+	edit_text(state* s, string e, string h, function<bool(state*)> rm, bool a);
+	
+	virtual int render(state* s, int ui_w, int x, int y) = 0;
+	virtual bool update(state* s, SDL_Event* ev) = 0;
+
 	void break_str(state* s);
 	void update_cursor(state* s);
 	void remove(state* s);
 	int currentLine();
 	int currentPos();
-	function<void(state*, string)> enterCallback;
-	function<bool(state*)> removeCallback;
+
 	string head, exp;
 	vector<string> lines;
 	textured_rect r;
 	int cursor_pos, cursor_x, cursor_y; // updated by update()
+	function<bool(state*)> removeCallback;
+};
+
+struct single_edit_text : public edit_text {
+	single_edit_text(state* s, string e, string h, function<void(state*, string)> c, function<bool(state*)> rm, bool a = true);
+	int render(state* s, int ui_w, int x, int y);
+	bool update(state* s, SDL_Event* ev);
+	function<void(state*, string)> enterCallback;
+};
+
+struct triple_edit_text : public edit_text {
+	triple_edit_text(state* s, function<void(state*, string, string, string)> c, function<bool(state*)> rm, string h1, string h2, string h3);
+	int render(state* s, int ui_w, int x, int y);
+	bool update(state* s, SDL_Event* ev);
+	function<void(state*, string, string, string)> enterCallback;
+	single_edit_text one, two, three;
+	string e1, e2, e3;
 };
 
 struct toggle_text : public widget {

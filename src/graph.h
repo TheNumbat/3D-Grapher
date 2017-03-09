@@ -13,6 +13,11 @@ using namespace glm;
 
 struct state;
 
+struct t_range {
+	float tmin, tmax;
+	int trez;
+};
+
 enum graph_type {
 	graph_func,				// done
 	graph_cylindrical,		// done
@@ -40,6 +45,7 @@ struct graph {
 	virtual void generate(state* s) = 0;
 	virtual void generateIndiciesAndNormals(state* s);
 	virtual void draw(state* s, mat4 model, mat4 view, mat4 proj);
+	virtual void update_eq(state* s);
 
 	void gen();
 	void send();
@@ -54,6 +60,17 @@ struct graph {
 	graph_type type;
 	float zmin, zmax, rel_opactiy;
 	GLuint VAO, VBO, EBO, normVBO;
+};
+
+struct para_curve : public graph {
+	para_curve(int id, string sx = " ", string sy = " ", string sz = " ");
+	void generate(state* s);
+	void draw(state* s, mat4 model, mat4 view, mat4 proj);
+	void generateIndiciesAndNormals(state* s);
+	void update_eq(state* s);
+	string sx, sy, sz;
+	vector<op> eqx, eqy, eqz;
+	t_range range;
 };
 
 struct fxy_graph : public graph {

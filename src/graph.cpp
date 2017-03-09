@@ -22,17 +22,7 @@ GLfloat axes[] = {
 
 void regengraph(state* s, int index) {
 
-	vector<op> new_eq;
-
-	try { in(s->graphs[index]->eq_str, new_eq); }
-	catch (runtime_error e) {
-		s->ui->error = e.what();
-		s->ui->errorShown = true;
-		s->ev.current = in_help_or_err;
-		return;
-	}
-
-	s->graphs[index]->eq = new_eq;
+	s->graphs[index]->update_eq(s);
 	//printeq(cout, s->graphs[index]->eq);
 
 	Uint64 start = SDL_GetPerformanceCounter();
@@ -157,6 +147,20 @@ void graph::send() {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * indicies.size(), indicies.size() ? &indicies[0] : NULL, GL_STATIC_DRAW);
 
 	glBindVertexArray(0);
+}
+
+void graph::update_eq(state* s) {
+	vector<op> new_eq;
+
+	try { in(eq_str, new_eq); }
+	catch (runtime_error e) {
+		s->ui->error = e.what();
+		s->ui->errorShown = true;
+		s->ev.current = in_help_or_err;
+		return;
+	}
+
+	eq = new_eq;
 }
 
 void graph::draw(state* s, mat4 model, mat4 view, mat4 proj) {
@@ -590,4 +594,93 @@ void spr_graph::generate(state* s) {
 
 	for (gendata* g : data)
 		delete g;
+}
+
+para_curve::para_curve(int id, string _sx, string _sy, string _sz) : graph(id) {
+	type = graph_para_curve;
+	sx = _sx;
+	sy = _sy;
+	sz = _sz;
+	range = { 0, 10, 100 }; // TODO: fix
+}
+
+void para_curve::update_eq(state* s) {
+	vector<op> new_eqx, new_eqy, new_eqz;
+
+	try {
+		in(sx, new_eqx);
+		in(sy, new_eqy);
+		in(sz, new_eqz);
+	}
+	catch (runtime_error e) {
+		s->ui->error = e.what();
+		s->ui->errorShown = true;
+		s->ev.current = in_help_or_err;
+		return;
+	}
+
+	eqx = new_eqx;
+	eqy = new_eqy;
+	eqz = new_eqz;
+}
+
+void para_curve::generate(state* s) {
+	verticies.clear();
+	float t = range.tmin;
+	for (int tstep = 0; tstep < range.trez; tstep++, t += (range.tmax - range.tmin) / range.trez) {
+		float x, y, z;
+		try { 
+			x = eval(eqx, { { 't',t } });
+			y = eval(eqy, { { 't',t } });
+			z = eval(eqz, { { 't',t } });
+		}
+		catch (runtime_error e) {
+			s->ui->error = e.what();
+			s->ui->errorShown = true;
+			s->ev.current = in_help_or_err;
+			return;
+		}
+
+		if (z < zmin) zmin = z;
+		else if (z > zmax) zmax = z;
+
+		verticies.push_back(x);
+		verticies.push_back(y);
+		verticies.push_back(z);
+	}
+	generateIndiciesAndNormals(s);
+}
+
+void para_curve::generateIndiciesAndNormals(state* s) {
+	indicies.clear();
+	indicies.push_back(0);
+	for (int i = 1; i < range.trez - 1; i++) {
+		indicies.push_back(i);
+		indicies.push_back(i);
+	}
+	indicies.push_back(range.trez - 1);
+}
+
+void para_curve::draw(state* s, mat4 model, mat4 view, mat4 proj) {
+	glBindVertexArray(VAO);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+
+	mat4 modelviewproj = proj * view * model;
+
+	s->graph_s.use();
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
+
+	glUniformMatrix4fv(s->graph_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
+	glUniform4f(s->graph_s.getUniform("vcolor"), 0.0f, 0.0f, 0.0f, s->set.graphopacity * rel_opactiy);
+	
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glPolygonOffset(1.0f, 0.0f);
+	glDrawElements(GL_LINES, (int)indicies.size(), GL_UNSIGNED_INT, (void*)0);
+
+	glBindVertexArray(0);
 }

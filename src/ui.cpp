@@ -30,9 +30,9 @@ void graph_enter_callback::operator()(state* s, string e) const {
 		}
 		s->graphs[g_ind]->eq_str = e;
 		s->ui->parseDoms(s);
-		if(s->ev.current == in_widget)
-			s->ev.current = in_funcs;
 	}
+	if (s->ev.current == in_widget)
+		s->ev.current = in_funcs;
 }
 
 graph_remove_callback::graph_remove_callback(int i) {
@@ -48,6 +48,28 @@ bool graph_remove_callback::operator()(state* s) const {
 	}
 	s->ev.current = in_funcs;
 	return true;
+}
+
+para_enter_callback::para_enter_callback(int i) {
+	g_id = i;
+}
+
+void para_enter_callback::operator()(state* s, string ex, string ey, string ez) const {
+	if (ex.size() && ex != " " && ey.size() && ey != " " && ez.size() && ez != " ") {
+		int g_ind = getIndex(s, g_id);
+		if (g_ind == -1) {
+			s->graphs.push_back(new para_curve(g_id));
+			s->graphs.back()->gen();
+			g_ind = s->graphs.size() - 1; 
+		}
+		static_cast<para_curve*>(s->graphs.back())->sx = ex;
+		static_cast<para_curve*>(s->graphs.back())->sy = ey;
+		static_cast<para_curve*>(s->graphs.back())->sz = ez;
+		regengraph(s, g_ind);
+		//s->ui->parseDoms(s); // TODO: t_range
+	}
+	if (s->ev.current == in_widget)
+		s->ev.current = in_funcs;
 }
 
 UI::UI(state* s) {
@@ -101,7 +123,7 @@ UI::UI(state* s) {
 	};
 	auto domsRemoveCallback = [](state* s) -> bool {s->ev.current = in_settings; return false;};
 
-#define add(val) dom_rect.push_back(new edit_text(s, to_string(s->set.rdom.val), string(#val) + ": ", domsCallback, domsRemoveCallback, false));
+#define add(val) dom_rect.push_back(new single_edit_text(s, to_string(s->set.rdom.val), string(#val) + ": ", domsCallback, domsRemoveCallback, false));
 	add(xmin);
 	add(xmax);
 	add(ymin);
@@ -109,7 +131,7 @@ UI::UI(state* s) {
 	add(xrez);
 	add(yrez);
 #undef add
-#define add(val) dom_cyl.push_back(new edit_text(s, to_string(s->set.cdom.val), string(#val) + ": ", domsCallback, domsRemoveCallback, false));
+#define add(val) dom_cyl.push_back(new single_edit_text(s, to_string(s->set.cdom.val), string(#val) + ": ", domsCallback, domsRemoveCallback, false));
 	add(tmin);
 	add(tmax);
 	add(zmin);
@@ -117,7 +139,7 @@ UI::UI(state* s) {
 	add(trez);
 	add(zrez);
 #undef add
-#define add(val) dom_spr.push_back(new edit_text(s, to_string(s->set.sdom.val), string(#val) + ": ", domsCallback, domsRemoveCallback, false));
+#define add(val) dom_spr.push_back(new single_edit_text(s, to_string(s->set.sdom.val), string(#val) + ": ", domsCallback, domsRemoveCallback, false));
 	add(tmin);
 	add(tmax);
 	add(pmin);
@@ -127,7 +149,7 @@ UI::UI(state* s) {
 #undef add
 
 	funcs_add.push_back(new static_text("f(x,y)", [](state* s) -> void {
-		edit_text* w = new edit_text(s, " ", "f(x,y)= ", graph_enter_callback(s->next_graph_id, graph_func), graph_remove_callback(s->next_graph_id), true);
+		single_edit_text* w = new single_edit_text(s, " ", "f(x,y)= ", graph_enter_callback(s->next_graph_id, graph_func), graph_remove_callback(s->next_graph_id), true);
 		s->next_graph_id++;
 		s->ui->funcs.push_back(w);
 		s->ev.current = in_widget;
@@ -136,7 +158,7 @@ UI::UI(state* s) {
 	}));
 
 	funcs_add.push_back(new static_text("r(t,z)", [](state* s) -> void {
-		edit_text* w = new edit_text(s, " ", "r(t,z)= ", graph_enter_callback(s->next_graph_id, graph_cylindrical), graph_remove_callback(s->next_graph_id), true);
+		single_edit_text* w = new single_edit_text(s, " ", "r(t,z)= ", graph_enter_callback(s->next_graph_id, graph_cylindrical), graph_remove_callback(s->next_graph_id), true);
 		s->next_graph_id++;
 		s->ui->funcs.push_back(w);
 		s->ev.current = in_widget;
@@ -145,10 +167,19 @@ UI::UI(state* s) {
 	}));
 
 	funcs_add.push_back(new static_text("p(t,p)", [](state* s) -> void {
-		edit_text* w = new edit_text(s, " ", "p(t,p)= ", graph_enter_callback(s->next_graph_id, graph_spherical), graph_remove_callback(s->next_graph_id), true);
+		single_edit_text* w = new single_edit_text(s, " ", "p(t,p)= ", graph_enter_callback(s->next_graph_id, graph_spherical), graph_remove_callback(s->next_graph_id), true);
 		s->next_graph_id++;
 		s->ui->funcs.push_back(w);
 		s->ev.current = in_widget;
+		s->ui->uistate = ui_funcs;
+		SDL_StartTextInput();
+	}));
+
+	funcs_add.push_back(new static_text("r(t)", [](state* s) -> void {
+		triple_edit_text* w = new triple_edit_text(s, para_enter_callback(s->next_graph_id), graph_remove_callback(s->next_graph_id), "x(t)= ", "y(t)= ", "z(t)= ");
+		s->next_graph_id++;
+		s->ui->funcs.push_back(w);
+		s->ev.current = in_funcs;
 		s->ui->uistate = ui_funcs;
 		SDL_StartTextInput();
 	}));
@@ -526,8 +557,9 @@ void UI::render_sidebar(state* s) {
 	}
 }
 
-edit_text::edit_text(state* s, string e, string h, function<void(state*, string)> c, function<bool(state*)> rm, bool a) {
+edit_text::edit_text(state* s, string e, string h, function<bool(state*)> rm, bool a) {
 	r.gen();
+	removeCallback = rm;
 	active = a;
 	exp = e;
 	head = h;
@@ -535,8 +567,6 @@ edit_text::edit_text(state* s, string e, string h, function<void(state*, string)
 	cursor_x = 0;
 	cursor_y = 0;
 	cursor_pos = e == " " ? 0 : e.size();
-	enterCallback = c;
-	removeCallback = rm;
 	break_str(s);
 }
 
@@ -550,7 +580,62 @@ void edit_text::update_cursor(state* s) {
 	if (exp == "") exp = " ";
 }
 
-bool edit_text::update(state* s, SDL_Event* ev) {
+void edit_text::remove(state* s) {
+	if (removeCallback(s)) {
+		should_remove = true;
+		s->ui->remove_dead_widgets(); // basically 'delete this' ... quesitonable practice
+	}
+}
+
+int edit_text::currentPos() {
+	int line = currentLine() - 1, cpos = cursor_pos;
+	cpos += head.size();
+	while (line >= 0) {
+		cpos -= lines[line--].size();
+	}
+	return cpos;
+}
+
+int edit_text::currentLine() {
+	int line = 0, cpos = cursor_pos;
+	cpos += head.size();
+	while (cpos >= 0 && line < (int)lines.size()) {
+		cpos -= lines[line++].size();
+	}
+	return line - 1;
+}
+
+void edit_text::break_str(state* s) {
+	lines.clear();
+	string total = head + exp;
+	int w = (int)round(s->w * UI_SCREEN_RATIO) - 5;
+	int e_pos = 0, tw;
+	TTF_SizeText(s->font, total.c_str(), &tw, NULL);
+	do {
+		unsigned int end = e_pos;
+		int newtw;
+		do {
+			end++;
+			TTF_SizeText(s->font, total.substr(e_pos, end - e_pos).c_str(), &newtw, NULL);
+		} while (end < total.size() && newtw < w);
+		if (newtw > w) {
+			end--;
+			TTF_SizeText(s->font, total.substr(e_pos, end - e_pos).c_str(), &newtw, NULL);
+		}
+		if (end == e_pos) break;
+		lines.push_back(total.substr(e_pos, end - e_pos));
+		e_pos = end;
+		tw -= newtw;
+	} while (tw > 0);
+	cursor_y = currentLine() * 29;
+}
+
+single_edit_text::single_edit_text(state* s, string e, string h, function<void(state*, string)> c, function<bool(state*)> rm, bool a)
+	: edit_text(s, e, h, rm, a) {
+	enterCallback = c;
+}
+
+bool single_edit_text::update(state* s, SDL_Event* ev) {
 	if (ev->type == SDL_WINDOWEVENT) {
 		break_str(s);
 	}
@@ -630,10 +715,10 @@ bool edit_text::update(state* s, SDL_Event* ev) {
 			s->ev.current = in_widget;
 			return true;
 		}
-		else if(active) {
+		else if (active) {
 			active = false;
 			SDL_StopTextInput();
-			if (s->ui->active)
+			if (s->ui->uistate == ui_settings)
 				s->ev.current = in_settings;
 			else
 				s->ev.current = in_funcs;
@@ -643,14 +728,7 @@ bool edit_text::update(state* s, SDL_Event* ev) {
 	return false;
 }
 
-void edit_text::remove(state* s) {
-	if (removeCallback(s)) {
-		should_remove = true;
-		s->ui->remove_dead_widgets(); // basically 'delete this' ... quesitonable practice
-	}
-}
-
-int edit_text::render(state* s, int ui_w, int x, int y) {
+int single_edit_text::render(state* s, int ui_w, int x, int y) {
 	current_y = y;
 	current_x = x;
 	for (string l : lines) {
@@ -670,47 +748,31 @@ int edit_text::render(state* s, int ui_w, int x, int y) {
 	return y;
 }
 
-int edit_text::currentPos() {
-	int line = currentLine() - 1, cpos = cursor_pos;
-	cpos += head.size();
-	while (line >= 0) {
-		cpos -= lines[line--].size();
-	}
-	return cpos;
+triple_edit_text::triple_edit_text(state* s, function<void(state*, string, string, string)> c, function<bool(state*)> rm, string h1, string h2, string h3)
+	: edit_text(s, "", "", rm, false),
+	one(s, string(""), h1, [this](state* s, string st) -> void {e1 = st; enterCallback(s, e1, e2, e3); }, [this](state* s) -> bool {remove(s); return false;}, false),
+	two(s, string(""), h2, [this](state* s, string st) -> void {e2 = st; enterCallback(s, e1, e2, e3); }, [this](state* s) -> bool {remove(s); return false;}, false),
+	three(s, string(""), h3, [this](state* s, string st) -> void {e3 = st; enterCallback(s, e1, e2, e3); }, [this](state* s) -> bool {remove(s); return false;}, false) {
+	enterCallback = c;
+	removeCallback = rm;
 }
 
-int edit_text::currentLine() {
-	int line = 0, cpos = cursor_pos;
-	cpos += head.size();
-	while (cpos >= 0 && line < (int)lines.size()) {
-		cpos -= lines[line++].size();
-	}
-	return line - 1;
+int triple_edit_text::render(state* s, int ui_w, int x, int y) {
+	current_y = y;
+	y = one.render(s, ui_w, x, y);
+	y = two.render(s, ui_w, x, y);
+	y = three.render(s, ui_w, x, y);
+	current_yh = y;
+	current_x = three.current_x;
+	current_xw = three.current_xw;
+	return y;
 }
 
-void edit_text::break_str(state* s) {
-	lines.clear();
-	string total = head + exp;
-	int w = (int)round(s->w * UI_SCREEN_RATIO) - 5;
-	int e_pos = 0, tw;
-	TTF_SizeText(s->font, total.c_str(), &tw, NULL);
-	do {
-		unsigned int end = e_pos;
-		int newtw;
-		do {
-			end++;
-			TTF_SizeText(s->font, total.substr(e_pos, end - e_pos).c_str(), &newtw, NULL);
-		} while (end < total.size() && newtw < w);
-		if (newtw > w) {
-			end--;
-			TTF_SizeText(s->font, total.substr(e_pos, end - e_pos).c_str(), &newtw, NULL);
-		}
-		if (end == e_pos) break;
-		lines.push_back(total.substr(e_pos, end - e_pos));
-		e_pos = end;
-		tw -= newtw;
-	} while (tw > 0);
-	cursor_y = currentLine() * 29;
+bool triple_edit_text::update(state* s, SDL_Event* ev) {
+	if (one.update(s, ev)) return true;
+	if (two.update(s, ev)) return true;
+	if (three.update(s, ev)) return true;
+	return false;
 }
 
 static_text::static_text(string t, function<void(state*)> c) {
@@ -852,6 +914,7 @@ int slider::render(state* s, int ui_w, int x, int y) {
 	SDL_FreeSurface(surf);
 	return y;
 }
+
 
 bool slider::update(state* s, SDL_Event* ev) {
 	if (active) {
