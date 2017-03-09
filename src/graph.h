@@ -45,7 +45,7 @@ struct graph {
 	virtual void generate(state* s) = 0;
 	virtual void generateIndiciesAndNormals(state* s);
 	virtual void draw(state* s, mat4 model, mat4 view, mat4 proj);
-	virtual void update_eq(state* s);
+	virtual bool update_eq(state* s);
 
 	void gen();
 	void send();
@@ -67,7 +67,7 @@ struct para_curve : public graph {
 	void generate(state* s);
 	void draw(state* s, mat4 model, mat4 view, mat4 proj);
 	void generateIndiciesAndNormals(state* s);
-	void update_eq(state* s);
+	bool update_eq(state* s);
 	string sx, sy, sz;
 	vector<op> eqx, eqy, eqz;
 	t_range range;

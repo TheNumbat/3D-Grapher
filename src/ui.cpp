@@ -30,6 +30,7 @@ void graph_enter_callback::operator()(state* s, string e) const {
 		}
 		s->graphs[g_ind]->eq_str = e;
 		s->ui->parseDoms(s);
+		regengraph(s, g_ind);
 	}
 	if (s->ev.current == in_widget)
 		s->ev.current = in_funcs;
@@ -55,6 +56,29 @@ para_enter_callback::para_enter_callback(int i) {
 }
 
 void para_enter_callback::operator()(state* s, string ex, string ey, string ez) const {
+	// Check expressions are valid. This happens twice because it is also checked when the graph is generated
+	try {
+		vector<op> x, y, z;
+		if (ex.size() && ex != " ") {
+			in(ex, x);
+			eval(x, { { 't',0.0f } });
+		}
+		if (ey.size() && ey != " ") {
+			in(ey, y);
+			eval(y, { { 't',0.0f } });
+		}
+		if (ez.size() && ez != " ") {
+			in(ez, z);
+			eval(z, { { 't',0.0f } });
+		}
+	}
+	catch (runtime_error e) {
+		s->ui->error = e.what();
+		s->ui->errorShown = true;
+		s->ev.current = in_help_or_err;
+		return;
+	}
+
 	if (ex.size() && ex != " " && ey.size() && ey != " " && ez.size() && ez != " ") {
 		int g_ind = getIndex(s, g_id);
 		if (g_ind == -1) {
@@ -62,6 +86,7 @@ void para_enter_callback::operator()(state* s, string ex, string ey, string ez) 
 			s->graphs.back()->gen();
 			g_ind = s->graphs.size() - 1; 
 		}
+
 		static_cast<para_curve*>(s->graphs.back())->sx = ex;
 		static_cast<para_curve*>(s->graphs.back())->sy = ey;
 		static_cast<para_curve*>(s->graphs.back())->sz = ez;
@@ -117,6 +142,7 @@ UI::UI(state* s) {
 	auto domsCallback = [](state* s, string exp) -> void {
 		if (exp.size() && exp != " ") {
 			s->ui->parseDoms(s);
+			regenall(s);
 		}
 		if(s->ev.current == in_widget)
 			s->ev.current = in_settings;
@@ -422,7 +448,6 @@ bool UI::parseDoms(state* s) {
 		else if (e->head == "prez: ")
 			s->set.sdom.prez = (int)round(val);
 	}
-	regenall(s);
 	return true;
 }
 
@@ -750,6 +775,7 @@ int single_edit_text::render(state* s, int ui_w, int x, int y) {
 
 triple_edit_text::triple_edit_text(state* s, function<void(state*, string, string, string)> c, function<bool(state*)> rm, string h1, string h2, string h3)
 	: edit_text(s, "", "", rm, false),
+	// ew ugly 
 	one(s, string(""), h1, [this](state* s, string st) -> void {e1 = st; enterCallback(s, e1, e2, e3); }, [this](state* s) -> bool {remove(s); return false;}, false),
 	two(s, string(""), h2, [this](state* s, string st) -> void {e2 = st; enterCallback(s, e1, e2, e3); }, [this](state* s) -> bool {remove(s); return false;}, false),
 	three(s, string(""), h3, [this](state* s, string st) -> void {e3 = st; enterCallback(s, e1, e2, e3); }, [this](state* s) -> bool {remove(s); return false;}, false) {

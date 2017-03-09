@@ -22,7 +22,7 @@ GLfloat axes[] = {
 
 void regengraph(state* s, int index) {
 
-	s->graphs[index]->update_eq(s);
+	if (!s->graphs[index]->update_eq(s)) return;
 	//printeq(cout, s->graphs[index]->eq);
 
 	Uint64 start = SDL_GetPerformanceCounter();
@@ -149,7 +149,7 @@ void graph::send() {
 	glBindVertexArray(0);
 }
 
-void graph::update_eq(state* s) {
+bool graph::update_eq(state* s) {
 	vector<op> new_eq;
 
 	try { in(eq_str, new_eq); }
@@ -157,10 +157,11 @@ void graph::update_eq(state* s) {
 		s->ui->error = e.what();
 		s->ui->errorShown = true;
 		s->ev.current = in_help_or_err;
-		return;
+		return false;
 	}
 
 	eq = new_eq;
+	return true;
 }
 
 void graph::draw(state* s, mat4 model, mat4 view, mat4 proj) {
@@ -604,7 +605,7 @@ para_curve::para_curve(int id, string _sx, string _sy, string _sz) : graph(id) {
 	range = { 0, 10, 100 }; // TODO: fix
 }
 
-void para_curve::update_eq(state* s) {
+bool para_curve::update_eq(state* s) {
 	vector<op> new_eqx, new_eqy, new_eqz;
 
 	try {
@@ -616,12 +617,13 @@ void para_curve::update_eq(state* s) {
 		s->ui->error = e.what();
 		s->ui->errorShown = true;
 		s->ev.current = in_help_or_err;
-		return;
+		return false;
 	}
 
 	eqx = new_eqx;
 	eqy = new_eqy;
 	eqz = new_eqz;
+	return true;
 }
 
 void para_curve::generate(state* s) {

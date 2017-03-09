@@ -30,6 +30,7 @@ bool num(char c) {
 			   else {throw runtime_error("ERROR: malformed expression!");}
 
 float eval(const vector<op>& EQ, vector<pair<char, float>> vars) {
+	if (!EQ.size()) throw runtime_error("ERROR: empty expression!");
 	stack<float> s;
 	float one = 0, two = 0, result = 0;
 	for (unsigned int index = 0; index < EQ.size(); index++) {
