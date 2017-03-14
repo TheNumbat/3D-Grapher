@@ -779,9 +779,9 @@ triple_edit_text::triple_edit_text(state* s, function<void(state*, string, strin
 	e1(one.exp),
 	e2(two.exp),
 	e3(three.exp),
-	one(s, string(""), h1, [this](state* s, string st) -> void {e1 = st; enterCallback(s, e1, e2, e3); }, [this](state* s) -> bool {remove(s); return false;}, false),
-	two(s, string(""), h2, [this](state* s, string st) -> void {e2 = st; enterCallback(s, e1, e2, e3); }, [this](state* s) -> bool {remove(s); return false;}, false),
-	three(s, string(""), h3, [this](state* s, string st) -> void {e3 = st; enterCallback(s, e1, e2, e3); }, [this](state* s) -> bool {remove(s); return false;}, false) {
+	one(s, string(""), h1, [this](state* s, string st) -> void {enterCallback(s, e1, e2, e3); }, [this](state* s) -> bool {remove(s); return false;}, false),
+	two(s, string(""), h2, [this](state* s, string st) -> void {enterCallback(s, e1, e2, e3); }, [this](state* s) -> bool {remove(s); return false;}, false),
+	three(s, string(""), h3, [this](state* s, string st) -> void {enterCallback(s, e1, e2, e3); }, [this](state* s) -> bool {remove(s); return false;}, false) {
 	enterCallback = c;
 	removeCallback = rm;
 }
