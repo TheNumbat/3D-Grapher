@@ -23,7 +23,7 @@ enum graph_type {
 	graph_cylindrical,		// done
 	graph_spherical,		// done
 	graph_surface,
-	graph_para_curve,
+	graph_para_curve,		// done except domain
 	graph_para_surface,
 	graph_vec_feild
 };

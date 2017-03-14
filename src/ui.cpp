@@ -174,7 +174,7 @@ UI::UI(state* s) {
 	add(prez);
 #undef add
 
-	funcs_add.push_back(new static_text("f(x,y)", [](state* s) -> void {
+	funcs_add.push_back(new static_text("Rectangular", [](state* s) -> void {
 		single_edit_text* w = new single_edit_text(s, " ", "f(x,y)= ", graph_enter_callback(s->next_graph_id, graph_func), graph_remove_callback(s->next_graph_id), true);
 		s->next_graph_id++;
 		s->ui->funcs.push_back(w);
@@ -183,7 +183,7 @@ UI::UI(state* s) {
 		SDL_StartTextInput();
 	}));
 
-	funcs_add.push_back(new static_text("r(t,z)", [](state* s) -> void {
+	funcs_add.push_back(new static_text("Cylindrical", [](state* s) -> void {
 		single_edit_text* w = new single_edit_text(s, " ", "r(t,z)= ", graph_enter_callback(s->next_graph_id, graph_cylindrical), graph_remove_callback(s->next_graph_id), true);
 		s->next_graph_id++;
 		s->ui->funcs.push_back(w);
@@ -192,7 +192,7 @@ UI::UI(state* s) {
 		SDL_StartTextInput();
 	}));
 
-	funcs_add.push_back(new static_text("p(t,p)", [](state* s) -> void {
+	funcs_add.push_back(new static_text("Spherical", [](state* s) -> void {
 		single_edit_text* w = new single_edit_text(s, " ", "p(t,p)= ", graph_enter_callback(s->next_graph_id, graph_spherical), graph_remove_callback(s->next_graph_id), true);
 		s->next_graph_id++;
 		s->ui->funcs.push_back(w);
@@ -201,7 +201,7 @@ UI::UI(state* s) {
 		SDL_StartTextInput();
 	}));
 
-	funcs_add.push_back(new static_text("r(t)", [](state* s) -> void {
+	funcs_add.push_back(new static_text("Parametric Curve", [](state* s) -> void {
 		triple_edit_text* w = new triple_edit_text(s, para_enter_callback(s->next_graph_id), graph_remove_callback(s->next_graph_id), "x(t)= ", "y(t)= ", "z(t)= ");
 		s->next_graph_id++;
 		s->ui->funcs.push_back(w);
@@ -500,7 +500,14 @@ void UI::render(state* s) {
 	int y = 6;
 
 	if (uistate == ui_funcs || uistate == ui_funcs_adding) {
-		render_widgets(s, funcs, ui_w, x, y, true);
+		if(funcs.size())
+			render_widgets(s, funcs, ui_w, x, y, true);
+		else {
+			static_text click_to_add("Click to add a graph.", [](state* s) -> void {});
+			std::vector<widget*> widgets;
+			widgets.push_back(&click_to_add);
+			render_widgets(s, widgets, ui_w, 0, 3, true);
+		}
 	}
 	if(uistate == ui_settings) {
 		y = render_widgets(s, settings, ui_w, x, y, true) - 3;
@@ -513,7 +520,7 @@ void UI::render(state* s) {
 	}
 	render_sidebar(s);
 	if (uistate == ui_funcs_adding) {
-		y = render_widgets(s, funcs_add, ui_w / 2, adding_x, adding_y, false);
+		y = render_widgets(s, funcs_add, ui_w, adding_x, adding_y, false);
 		drawRect(s->rect_s, adding_x, adding_y, 3, y - adding_y, 0.0f, 0.0f, 0.0f, 1.0f, (float)s->w, (float)s->h); // right black strip
 	}
 	if (helpShown) {
@@ -943,7 +950,6 @@ int slider::render(state* s, int ui_w, int x, int y) {
 	SDL_FreeSurface(surf);
 	return y;
 }
-
 
 bool slider::update(state* s, SDL_Event* ev) {
 	if (active) {
