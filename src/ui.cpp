@@ -776,6 +776,9 @@ int single_edit_text::render(state* s, int ui_w, int x, int y) {
 triple_edit_text::triple_edit_text(state* s, function<void(state*, string, string, string)> c, function<bool(state*)> rm, string h1, string h2, string h3)
 	: edit_text(s, "", "", rm, false),
 	// ew ugly 
+	e1(one.exp),
+	e2(two.exp),
+	e3(three.exp),
 	one(s, string(""), h1, [this](state* s, string st) -> void {e1 = st; enterCallback(s, e1, e2, e3); }, [this](state* s) -> bool {remove(s); return false;}, false),
 	two(s, string(""), h2, [this](state* s, string st) -> void {e2 = st; enterCallback(s, e1, e2, e3); }, [this](state* s) -> bool {remove(s); return false;}, false),
 	three(s, string(""), h3, [this](state* s, string st) -> void {e3 = st; enterCallback(s, e1, e2, e3); }, [this](state* s) -> bool {remove(s); return false;}, false) {

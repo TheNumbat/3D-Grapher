@@ -103,7 +103,7 @@ struct triple_edit_text : public edit_text {
 	bool update(state* s, SDL_Event* ev);
 	function<void(state*, string, string, string)> enterCallback;
 	single_edit_text one, two, three;
-	string e1, e2, e3;
+	string &e1, &e2, &e3;
 };
 
 struct toggle_text : public widget {
