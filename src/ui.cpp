@@ -268,33 +268,10 @@ UI::UI(state* s) {
 	s->ev.callbacks.push_back(callback(widgetsCallback, in_any, SDL_MOUSEBUTTONUP));
 	s->ev.callbacks.push_back(callback(widgetsCallback, in_any, SDL_MOUSEMOTION));
 
-	auto sidebar = [](state* s, SDL_Event* ev) -> bool {
-		if (ev->button.x > (int)round(s->w * UI_SCREEN_RATIO)) {
-			if (ev->button.x < (int)round(s->w * UI_SCREEN_RATIO) + 37) {
-				if (ev->button.y >= 0 && ev->button.y <= 35) {
-					s->ui->active = false;
-					s->ev.current = in_idle;
-					return true;
-				}
-				else if (ev->button.y >= 35 && ev->button.y <= 70) {
-					if (s->ui->uistate == ui_settings) {
-						s->ui->uistate = ui_funcs;
-						s->ev.current = in_funcs;
-					}
-					return true;
-				}
-				else if (ev->button.y >= 70 && ev->button.y <= 105) {
-					if (s->ui->uistate == ui_funcs) {
-						s->ui->uistate = ui_settings;
-						s->ev.current = in_settings;
-					}
-					return true;
-				}
-				else if (ev->button.y >= 105 && ev->button.y <= 140) {
-					s->ui->helpShown = true;
-					s->ev.current = in_help_or_err;
-					return true;
-				}
+	auto sidebarEvts = [this](state* s, SDL_Event* ev) -> bool {
+		if (active) {
+			for (widget* w : sidebar) {
+				if (w->update(s, ev)) return true;
 			}
 			s->ev.current = in_cam;
 			SDL_CaptureMouse(SDL_TRUE);
@@ -305,22 +282,21 @@ UI::UI(state* s) {
 			s->last_my = ev->button.y;
 			return true;
 		}
+		else {
+			if (out->update(s, ev)) return true;
+		}
 		return false;
 	};
-	s->ev.callbacks.push_back(callback(sidebar, in_funcs, SDL_MOUSEBUTTONDOWN));
-	s->ev.callbacks.push_back(callback(sidebar, in_settings, SDL_MOUSEBUTTONDOWN));
+	s->ev.callbacks.push_back(callback(sidebarEvts, in_funcs, SDL_MOUSEBUTTONDOWN));
+	s->ev.callbacks.push_back(callback(sidebarEvts, in_settings, SDL_MOUSEBUTTONDOWN));
+	s->ev.callbacks.push_back(callback(sidebarEvts, in_idle, SDL_MOUSEBUTTONDOWN));
 
-	in_r.gen();
-	out_r.gen();
-	gear_r.gen();
-	f_r.gen();
-	q_r.gen();
-	error_r.gen();
-	in_r.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(in_bmp, in_bmp_len), 1));
-	out_r.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(out_bmp, out_bmp_len), 1));
-	gear_r.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(gear_bmp, gear_bmp_len), 1));
-	f_r.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(f_bmp, f_bmp_len), 1));
-	q_r.tex.load(SDL_LoadBMP_RW(SDL_RWFromConstMem(q_bmp, q_bmp_len), 1));
+
+	sidebar.push_back(new clickable_texture(SDL_LoadBMP_RW(SDL_RWFromConstMem(in_bmp, in_bmp_len), 1), 32, 32, [](state* s) -> void {s->ui->active = false; s->ev.current = in_idle; }));
+	sidebar.push_back(new clickable_texture(SDL_LoadBMP_RW(SDL_RWFromConstMem(f_bmp, f_bmp_len), 1), 32, 32, [](state* s) -> void {if (s->ui->uistate == ui_settings) {s->ui->uistate = ui_funcs; s->ev.current = in_funcs;}}));
+	sidebar.push_back(new clickable_texture(SDL_LoadBMP_RW(SDL_RWFromConstMem(gear_bmp, gear_bmp_len), 1), 32, 32, [](state* s) -> void {if (s->ui->uistate == ui_funcs) { s->ui->uistate = ui_settings; s->ev.current = in_settings; }}));
+	sidebar.push_back(new clickable_texture(SDL_LoadBMP_RW(SDL_RWFromConstMem(q_bmp, q_bmp_len), 1), 32, 32, [](state* s) -> void {s->ui->helpShown = true; s->ev.current = in_help_or_err; }));
+	out = new clickable_texture(SDL_LoadBMP_RW(SDL_RWFromConstMem(out_bmp, out_bmp_len), 1), 32, 32, [](state* s) -> void {s->ui->active = true; if(s->ui->uistate = ui_funcs) s->ev.current = in_funcs; else s->ev.current = in_settings; });
 
 	help = {
 		"3D Grapher Help",
@@ -360,8 +336,11 @@ UI::~UI() {
 		delete w;
 	for (widget* w : dom_spr)
 		delete w;
+	for (widget* w : sidebar)
+		delete w;
 	for (textured_rect* r : helpText)
 		delete r;
+	delete out;
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
 }
@@ -506,7 +485,7 @@ void UI::render(state* s) {
 			static_text click_to_add("Click to add a graph.", [](state* s) -> void {});
 			std::vector<widget*> widgets;
 			widgets.push_back(&click_to_add);
-			render_widgets(s, widgets, ui_w, 0, 3, true);
+			render_widgets(s, widgets, ui_w, x, 3, true);
 		}
 	}
 	if(uistate == ui_settings) {
@@ -518,7 +497,12 @@ void UI::render(state* s) {
 		else if (domain == graph_spherical)
 			render_widgets(s, dom_spr, ui_w, x, y, false);
 	}
-	render_sidebar(s);
+	if (active) {
+		render_widgets(s, sidebar, 32, (int)round(s->w * UI_SCREEN_RATIO) + 3, 5, false, true);
+	}
+	else {
+		out->render(s, ui_w, 12, 3);
+	}
 	if (uistate == ui_funcs_adding) {
 		y = render_widgets(s, funcs_add, ui_w, adding_x, adding_y, false);
 		drawRect(s->rect_s, adding_x, adding_y, 3, y - adding_y, 0.0f, 0.0f, 0.0f, 1.0f, (float)s->w, (float)s->h); // right black strip
@@ -547,46 +531,56 @@ void UI::render(state* s) {
 	}
 }
 
-int UI::render_widgets(state* s, vector<widget*>& v, int ui_w, int x, int y, bool fullborders) {
-	if(fullborders) drawRect(s->rect_s, x, 0, ui_w, s->h, 1.0f, 1.0f, 1.0f, 1.0f, (float)s->w, (float)s->h); // white background
+int UI::render_widgets(state* s, vector<widget*>& v, int ui_w, int x, int y, bool fullborders, bool noborders) {
+	if(fullborders && !noborders) drawRect(s->rect_s, x, 0, ui_w, s->h, 1.0f, 1.0f, 1.0f, 1.0f, (float)s->w, (float)s->h); // white background
 	int base_y = y;
 	unsigned int windex = 0;
 	while (y < s->h && windex < v.size()) {
 		// 1st time this is rendered height will be zero
-		drawRect(s->rect_s, x, y, ui_w, v[windex]->current_yh - v[windex]->current_y, 1.0f, 1.0f, 1.0f, 1.0f, (float)s->w, (float)s->h);
+		if(!noborders) drawRect(s->rect_s, x, y, ui_w, v[windex]->current_yh - v[windex]->current_y, 1.0f, 1.0f, 1.0f, 1.0f, (float)s->w, (float)s->h);
 
 		y = v[windex]->render(s, ui_w, 5 + x, y);
-		drawRect(s->rect_s, x, y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, (float)s->w, (float)s->h); // top/bottom black strip
+		if(!noborders) drawRect(s->rect_s, x, y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, (float)s->w, (float)s->h); // top/bottom black strip
 		y += 3;
 		windex++;
 	}
-	drawRect(s->rect_s, x + ui_w, base_y, 3, (fullborders ? s->h : y) - base_y, 0.0f, 0.0f, 0.0f, 1.0f, (float)s->w, (float)s->h); // right black strip
-	drawRect(s->rect_s, x, base_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, (float)s->w, (float)s->h); // top black strip
-	drawRect(s->rect_s, x, (fullborders ? s->h : y) - 3, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, (float)s->w, (float)s->h); // bottom black strip
+	if (!noborders) {
+		drawRect(s->rect_s, x + ui_w, base_y, 3, (fullborders ? s->h : y) - base_y, 0.0f, 0.0f, 0.0f, 1.0f, (float)s->w, (float)s->h); // right black strip
+		drawRect(s->rect_s, x, base_y, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, (float)s->w, (float)s->h); // top black strip
+		drawRect(s->rect_s, x, (fullborders ? s->h : y) - 3, ui_w, 3, 0.0f, 0.0f, 0.0f, 1.0f, (float)s->w, (float)s->h); // bottom black strip
+	}
 	return y;
 }
 
-void UI::render_sidebar(state* s) {
-	if (active) {
-		if (uistate == ui_funcs || uistate == ui_funcs_adding) {
-			drawRect(s->rect_s, (int)round(s->w * UI_SCREEN_RATIO) + 3, 33, 36, 36, 0.0f, 0.0f, 0.0f, 0.251f, (float)s->w, (float)s->h);
+clickable_texture::clickable_texture(SDL_Surface* img, int _w, int _h, function<void(state*)> c) {
+	r.gen();
+	r.tex.load(img);
+	clickCallback = c;
+	w = _w;
+	h = _h;
+}
+
+clickable_texture::~clickable_texture() {}
+
+int clickable_texture::render(state* s, int ui_w, int x, int y) {
+	current_y = y;
+	current_x = x;
+	r.set(x, y, w, h);
+	r.render(s->w, s->h, s->UI_s);
+	current_yh = y + h;
+	current_xw = x + w;
+	return current_yh;
+}
+
+bool clickable_texture::update(state* s, SDL_Event* ev) {
+	if (ev->type == SDL_MOUSEBUTTONDOWN && s->ev.current != in_widget) {
+		if (ev->button.y > current_y - 3 && ev->button.y <= current_yh + 3
+			&& ev->button.x >= current_x && ev->button.x <= current_xw) {
+			clickCallback(s);
+			return true;
 		}
-		else if (uistate == ui_settings) {
-			drawRect(s->rect_s, (int)round(s->w * UI_SCREEN_RATIO) + 3, 68, 36, 36, 0.0f, 0.0f, 0.0f, 0.251f, (float)s->w, (float)s->h);
-		}
-		in_r.set((int)round(s->w * UI_SCREEN_RATIO) + 5.0f, 0, 32, 32);
-		in_r.render(s->w, s->h, s->UI_s);
-		f_r.set((int)round(s->w * UI_SCREEN_RATIO) + 5.0f, 35, 32, 32);
-		f_r.render(s->w, s->h, s->UI_s);
-		gear_r.set((int)round(s->w * UI_SCREEN_RATIO) + 5.0f, 70, 32, 32);
-		gear_r.render(s->w, s->h, s->UI_s);
-		q_r.set((int)round(s->w * UI_SCREEN_RATIO) + 5.0f, 105, 32, 32);
-		q_r.render(s->w, s->h, s->UI_s);
 	}
-	else {
-		out_r.set(11, 0, 32, 32);
-		out_r.render(s->w, s->h, s->UI_s);
-	}
+	return false;
 }
 
 edit_text::edit_text(state* s, string e, string h, function<bool(state*)> rm, bool a) {
@@ -595,7 +589,6 @@ edit_text::edit_text(state* s, string e, string h, function<bool(state*)> rm, bo
 	active = a;
 	exp = e;
 	head = h;
-	should_remove = false;
 	cursor_x = 0;
 	cursor_y = 0;
 	cursor_pos = e == " " ? 0 : e.size();

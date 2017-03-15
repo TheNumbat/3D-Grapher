@@ -37,6 +37,10 @@ struct graph_remove_callback {
 };
 
 struct widget {
+	widget() {
+		current_y = current_yh = current_x = current_xw = 0;
+		active = should_remove = false;
+	}
 	virtual ~widget() {};
 	virtual int render(state* s, int ui_w, int x, int y) = 0;
 	virtual bool update(state* s, SDL_Event* ev) = 0;
@@ -46,6 +50,7 @@ struct widget {
 };
 
 struct edit_text;
+struct clickable_texture;
 
 struct UI {
 	UI(state* s);
@@ -53,14 +58,14 @@ struct UI {
 	void remove_dead_widgets();
 	void drawRect(shader& shader, int x, int y, int w, int h, float r, float g, float b, float a, float screenw, float screenh);
 	void render(state* s);
-	void render_sidebar(state* s);
-	int render_widgets(state* s, vector<widget*>& v, int ui_w, int x, int y, bool fullborders);
+	int render_widgets(state* s, vector<widget*>& v, int ui_w, int x, int y, bool fullborders, bool noborders = false);
 	bool parseDoms(state* s);
-	vector<widget*> funcs, funcs_add, settings;
+	vector<widget*> funcs, funcs_add, settings, sidebar;
 	vector<widget*> dom_rect, dom_cyl, dom_spr; // ONLY EDIT_TEXT
+	clickable_texture* out;
 	GLuint VAO, VBO;
-	textured_rect in_r, out_r, gear_r, f_r, q_r, error_r;
 	string error;
+	textured_rect error_r;
 	vector<textured_rect*> helpText;
 	vector<string> help;
 	ui_state uistate;
@@ -69,6 +74,17 @@ struct UI {
 	bool helpShown;
 	bool errorShown;
 	int adding_x, adding_y;
+};
+
+struct clickable_texture : public widget {
+	clickable_texture(SDL_Surface* img, int w, int h, function<void(state*)> c);
+	~clickable_texture();
+	int render(state* s, int ui_w, int x, int y);
+	bool update(state* s, SDL_Event* ev);
+	function<void(state*)> clickCallback;
+	string text;
+	textured_rect r;
+	int w, h;
 };
 
 struct edit_text : public widget {

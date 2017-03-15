@@ -84,18 +84,6 @@ void add_default_callbacks(state* s) {
 	}, in_funcs, SDL_MOUSEBUTTONDOWN));
 
 	s->ev.callbacks.push_back(callback([](state* s, SDL_Event* ev) -> bool {
-		if (ev->button.x <= 43 && ev->button.y <= 32) {
-			s->ui->active = true;
-			if (s->ui->uistate == ui_funcs)
-				s->ev.current = in_funcs;
-			else
-				s->ev.current = in_settings;
-			return true;
-		}
-		return false;
-	}, in_idle, SDL_MOUSEBUTTONDOWN));
-
-	s->ev.callbacks.push_back(callback([](state* s, SDL_Event* ev) -> bool {
 		if (ev->button.x > 43 || ev->button.y > 32) {
 			s->ev.current = in_cam;
 			s->mx = ev->button.x;
