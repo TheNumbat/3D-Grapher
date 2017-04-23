@@ -565,7 +565,7 @@ clickable_texture::~clickable_texture() {}
 int clickable_texture::render(state* s, int ui_w, int x, int y) {
 	current_y = y;
 	current_x = x;
-	r.set(x, y, w, h);
+	r.set((float)x, (float)y, (float)w, (float)h);
 	r.render(s->w, s->h, s->UI_s);
 	current_yh = y + h;
 	current_xw = x + w;

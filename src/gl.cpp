@@ -151,10 +151,10 @@ void setupFuns() {
 	glUseProgram				= (PFNGLUSEPROGRAMPROC)					SDL_GL_GetProcAddress("glUseProgram");
 	glEnableVertexAttribArray	= (PFNGLENABLEVERTEXATTRIBARRAYPROC)	SDL_GL_GetProcAddress("glEnableVertexAttribArray");
 	glVertexAttribPointer		= (PFNGLVERTEXATTRIBPOINTERPROC)		SDL_GL_GetProcAddress("glVertexAttribPointer");
-	glUniformMatrix4fv			= (PFNGLUNIFORMMATRIX4FVPROC)			SDL_GL_GetProcAddress("glUniformMatrix4fv");
+	glUniformMatrix4fv			= (PFNGLUNIFORMMATRIX4FVPROC) 			SDL_GL_GetProcAddress("glUniformMatrix4fv");
 	glGetUniformLocation		= (PFNGLGETUNIFORMLOCATIONPROC)			SDL_GL_GetProcAddress("glGetUniformLocation");
-	glUniform4f					= (PFNGLUNIFORM4FPROC)					SDL_GL_GetProcAddress("glUniform4f");
-	glUniform3f					= (PFNGLUNIFORM3FPROC)					SDL_GL_GetProcAddress("glUniform3f");
+	glUniform4f					= (PFNGLUNIFORM4FPROC) 					SDL_GL_GetProcAddress("glUniform4f");
+	glUniform3f					= (PFNGLUNIFORM3FPROC) 					SDL_GL_GetProcAddress("glUniform3f");
 	glCreateShader				= (PFNGLCREATESHADERPROC)				SDL_GL_GetProcAddress("glCreateShader");
 	glShaderSource				= (PFNGLSHADERSOURCEPROC)				SDL_GL_GetProcAddress("glShaderSource");
 	glCompileShader				= (PFNGLCOMPILESHADERPROC)				SDL_GL_GetProcAddress("glCompileShader");

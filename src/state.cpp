@@ -2,6 +2,7 @@
 #include "state.h"
 #include "font.data"
 #include <algorithm>
+#include <thread>
 
 state::state() {
 	w = screen_w;
@@ -37,8 +38,8 @@ state::state() {
 	context = SDL_GL_CreateContext(window);
 	assert(context);
 
-	SDL_GL_SetSwapInterval(1);
 	setupFuns();
+	SDL_GL_SetSwapInterval(0);
 
 	glEnable(GL_POLYGON_OFFSET_FILL);
 	glEnable(GL_DEPTH_TEST);
@@ -139,10 +140,14 @@ void state::run() {
 		}
 
 		ev.run(this);
-
 		SDL_GL_SwapWindow(window);
 
 		Uint64 end = SDL_GetPerformanceCounter();
-		//cout << "frame: " << 1000.0f * (end - start) / (float)SDL_GetPerformanceFrequency() << "ms" << endl;
+		double micro = 1000000.0f * (end - start) / (float)SDL_GetPerformanceFrequency();
+		cout << "frame: " << micro / 1000.0f << "ms" << endl;
+
+		// not at all correct but OpenGL is being annoying and I don't want to deal with it right now
+		// fixes CPU usage at least
+		std::this_thread::sleep_for(std::chrono::microseconds(16666 - (Uint64)micro));
 	}
 }
