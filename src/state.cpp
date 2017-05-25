@@ -144,7 +144,7 @@ void state::run() {
 
 		Uint64 end = SDL_GetPerformanceCounter();
 		double micro = 1000000.0f * (end - start) / (float)SDL_GetPerformanceFrequency();
-		cout << "frame: " << micro / 1000.0f << "ms" << endl;
+		//cout << "frame: " << micro / 1000.0f << "ms" << endl;
 
 		// not at all correct but OpenGL is being annoying and I don't want to deal with it right now
 		// fixes CPU usage at least
