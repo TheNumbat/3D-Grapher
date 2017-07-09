@@ -100,6 +100,7 @@ void para_enter_callback::operator()(state* s, string ex, string ey, string ez) 
 UI::UI(state* s) {
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
+	error_r.gen();
 	active = true;
 	helpShown = false;
 	errorShown = false;
@@ -520,7 +521,7 @@ void UI::render(state* s) {
 		}
 	}
 	else if (errorShown) {
-		SDL_Surface* text = TTF_RenderText_Shaded(s->font, error.c_str(), { 0, 0, 0 }, { 255, 255, 255 });
+		SDL_Surface* text = TTF_RenderText_Shaded(s->font, error.c_str(), { 0, 0, 0 }, { 255 , 255, 255 });
 		int err_w = text->w, err_h = text->h;
 		error_r.tex.load(text);
 		SDL_FreeSurface(text);
