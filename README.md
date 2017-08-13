@@ -1,6 +1,6 @@
 # 3D-Grapher
 
-This is a visualization tool for graphing 3D functions, particularly useful for studying calculus III (origionally developed for use in that class).
+This is a visualization tool for graphing 3D functions, particularly useful for studying calculus III (originally developed for use in that class).
 
 ### Features
 Current
