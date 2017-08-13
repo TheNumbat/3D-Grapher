@@ -1,6 +1,8 @@
 # 3D-Grapher
 
-This is a visualization tool for graphing 3D functions, particularly useful for studying calculus III (originally developed for use in that class).
+This is a visualization tool for graphing 3D functions, particularly useful for studying calculus III (originally developed for use in that class).  
+
+Download the latest release [here](https://github.com/TheNumbat/3D-Grapher/releases).
 
 ### Features
 Current
