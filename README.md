@@ -14,6 +14,7 @@ Current
   - domain settings  
   
   Planned
+  - examples
   - rectangular surfaces
   - parametric surface
   - vector fields 
