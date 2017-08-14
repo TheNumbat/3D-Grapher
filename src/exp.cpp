@@ -229,6 +229,10 @@ void in(string str, vector<op>& EQ) {
 
 	for (int ind = 0; ind < (int)str.size(); ind++) {
 		if (str[ind] == '-' && (ind == 0 || isop(str[ind - 1]))) str[ind] = op_neg;
+		if (str[ind] == ' ') {
+			str.erase(ind, 1);
+			ind--;
+		}
 	}
 
 	char buf = 0;
