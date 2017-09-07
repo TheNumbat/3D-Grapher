@@ -38,5 +38,5 @@ Current
   - Basic lighting shaders
 
 ### Screenshots
-![functions](https://github.com/TheNumbat/3D-Grapher/raw/master/Releases/Screenshots/Functions.png)
-![settings](https://github.com/TheNumbat/3D-Grapher/raw/master/Releases/Screenshots/Settings.png)
+![functions](https://raw.githubusercontent.com/TheNumbat/3D-Grapher/f0223d71813ce799c8a96d277f617e101f73ab94/Releases/Screenshots/Functions.png)
+![settings](https://raw.githubusercontent.com/TheNumbat/3D-Grapher/f0223d71813ce799c8a96d277f617e101f73ab94/Releases/Screenshots/Settings.png)
