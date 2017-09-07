@@ -5,11 +5,11 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL.h>
 #include <algorithm>
-#include "tex_gear.data"
-#include "tex_in.data"
-#include "tex_out.data"
-#include "tex_f.data"
-#include "tex_q.data"
+#include "../data/tex_gear.data"
+#include "../data/tex_in.data"
+#include "../data/tex_out.data"
+#include "../data/tex_f.data"
+#include "../data/tex_q.data"
 
 graph_enter_callback::graph_enter_callback(int i, graph_type g) {
 	g_id = i;

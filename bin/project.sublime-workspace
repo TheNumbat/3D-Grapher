@@ -1,0 +1,498 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"glo",
+				"global_func"
+			],
+			[
+				"func",
+				"func_ptr_base"
+			],
+			[
+				"arena_all",
+				"arena_allocator"
+			],
+			[
+				"plat",
+				"platform_allocator"
+			],
+			[
+				"platform_all",
+				"platform_allocator"
+			],
+			[
+				"alloc",
+				"allocator"
+			],
+			[
+				"alo",
+				"allocator"
+			],
+			[
+				"pt",
+				"ptrs_existing"
+			],
+			[
+				"ptrs",
+				"ptrs_reloaded"
+			],
+			[
+				"fun",
+				"fun_ptrs_dirty"
+			],
+			[
+				"platform",
+				"platform_func"
+			],
+			[
+				"pla",
+				"platform_func"
+			],
+			[
+				"padding",
+				"padding-left"
+			]
+		]
+	},
+	"build_system": "Packages/User/exile.sublime-build",
+	"build_system_choices":
+	[
+		[
+			[
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					""
+				],
+				[
+					"Packages/C++/C++ Single File.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/User/exile.sublime-build",
+					""
+				],
+				[
+					"Packages/User/exile.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/User/exile.sublime-build",
+					"Debug"
+				],
+				[
+					"Packages/User/exile.sublime-build",
+					"Release"
+				]
+			],
+			[
+				"Packages/C++/C++ Single File.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/User/exile.sublime-build",
+					""
+				],
+				[
+					"Packages/User/exile.sublime-build",
+					"Run"
+				],
+				[
+					"Packages/User/exile.sublime-build",
+					"Debug"
+				],
+				[
+					"Packages/User/exile.sublime-build",
+					"Release"
+				]
+			],
+			[
+				"Packages/User/exile.sublime-build",
+				""
+			]
+		]
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 600.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"listpa",
+				"Package Control: List Packages"
+			],
+			[
+				"list",
+				"Package Control: List Packages"
+			],
+			[
+				"instal",
+				"Package Control: Install Package"
+			],
+			[
+				"insta",
+				"Package Control: Install Package"
+			],
+			[
+				"package",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 612.0
+	},
+	"console":
+	{
+		"height": 246.0,
+		"history":
+		[
+			"import urllib.request,os,hashlib; h = 'df21e130d211cfc94d9b0905775a7c0f' + '1e3d39e33b79698005270310898eea76'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://packagecontrol.io/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by)"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": false,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/w/src/game.cpp",
+		"/w/src/alloc.h",
+		"/w/build/meta_types.h",
+		"/w/src/gui.h",
+		"/C/Users/mslater/Google_Drive/ToDo.txt",
+		"/w/src/ds/map.h",
+		"/w/src/ds/functions.h",
+		"/W/src/ds/functions.cpp",
+		"/w/src/everything.h",
+		"/w/src/functions.h",
+		"/w/src/functions.cpp",
+		"/w/src/ds/string.cpp",
+		"/w/src/alloc.cpp",
+		"/w/src/log.h",
+		"/w/src/opengl.h",
+		"/w/src/ds/buffer.h",
+		"/w/src/render.h",
+		"/w/src/math.h",
+		"/w/src/events.h",
+		"/w/src/dbg.h",
+		"/w/src/dbg.cpp",
+		"/w/src/everything.cpp",
+		"/w/bin/build.bat",
+		"/w/src/platform/platform_api.h",
+		"/w/src/game.h",
+		"/w/src/platform/platform_win32.cpp",
+		"/W/src/functions.h",
+		"/w/src/platform/platform_main.cpp",
+		"/W/src/functions.cpp",
+		"/w/src/platform/platform_api_win32.h",
+		"/w/src/platform/platform_win32.h",
+		"/w/src/platform/platform_linux.h",
+		"/w/src/platform/platform_linux.cpp",
+		"/w/src/ds/string.h",
+		"/w/src/meta.cpp",
+		"/w/src/basic_types.h",
+		"/w/todo.txt",
+		"/w/src/log.cpp",
+		"/w/src/opengl.cpp",
+		"/w/src/ds/buffer.cpp",
+		"/w/src/ds/threadpool.cpp",
+		"/w/src/asset.cpp",
+		"/w/data/log_all.html",
+		"/w/src/log_html.h",
+		"/w/LUL",
+		"/w/README.md",
+		"/C/Users/mslater/Google_Drive/School/Post 9-11/Week 2/Notes.txt",
+		"/C/Users/mslater/AppData/Roaming/Sublime Text 3/Packages/User/SublimeOnSaveBuild.sublime-settings",
+		"/C/Users/mslater/Google_Drive/School/CS480/Notes/9-1.txt",
+		"/C/Users/mslater/Google_Drive/School/CS480/Notes/New Text Document.txt",
+		"/w/src/platform/windows.h",
+		"/w/src/platform_api_win32.h",
+		"/w/src/platform/wintest.cpp",
+		"/C/Users/mslater/Google_Drive/School/CS480/Notes/8-30.txt",
+		"/C/Users/mslater/AppData/Roaming/Sublime Text 3/Packages/SublimeOnSaveBuild/SublimeOnSaveBuild.sublime-settings"
+	],
+	"find":
+	{
+		"height": 55.0
+	},
+	"find_in_files":
+	{
+		"height": 157.0,
+		"where_history":
+		[
+			"w:\\src"
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"game.dll",
+			"game",
+			"CALLBACK",
+			"hash_",
+			"hash",
+			"inline",
+			"FPTR",
+			"hash_guii",
+			"lul",
+			"void func_ptr<T>",
+			"template<typename T>",
+			"this_",
+			"void* this_data,",
+			"inline",
+			"void* this_",
+			"this_data",
+			",void*,",
+			"void*,",
+			"void",
+			"platform_",
+			"extern \"C\"",
+			"dll->handle",
+			"handle",
+			"dll",
+			"args2",
+			"err",
+			"PLATFORM(",
+			"platform_error",
+			"level",
+			".write",
+			"opengl",
+			"platform",
+			"%d",
+			"write_u64",
+			"Thr",
+			"JPCSTR",
+			"WNDCLASSEXA",
+			"`"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"incremental_find":
+	{
+		"height": 28.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 218.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "Packages/User/exile.sublime-build",
+	"replace":
+	{
+		"height": 58.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"build",
+				"bin\\build.bat"
+			],
+			[
+				"game",
+				"src\\game.cpp"
+			],
+			[
+				"meta",
+				"build\\meta_types.h"
+			],
+			[
+				"every",
+				"src\\everything.h"
+			],
+			[
+				"string",
+				"src\\ds\\string.h"
+			],
+			[
+				"map.h",
+				"src\\ds\\map.h"
+			],
+			[
+				"platform_main",
+				"src\\platform\\platform_main.cpp"
+			],
+			[
+				"plat",
+				"src\\platform\\platform_api.h"
+			],
+			[
+				"buil",
+				"bin\\build.bat"
+			],
+			[
+				"win32",
+				"src\\platform\\platform_api_win32.h"
+			],
+			[
+				"platform",
+				"src\\platform\\platform_win32.h"
+			],
+			[
+				"ever",
+				"src\\everything.h"
+			],
+			[
+				"basic",
+				"src\\basic_types.h"
+			],
+			[
+				"todo",
+				"todo.txt"
+			],
+			[
+				"platfo",
+				"src\\platform\\platform_api.h"
+			],
+			[
+				"log_h",
+				"src\\log_html.h"
+			],
+			[
+				"og",
+				"src\\log.cpp"
+			],
+			[
+				"opengl",
+				"src\\opengl.cpp"
+			],
+			[
+				"log",
+				"src\\log.h"
+			],
+			[
+				"open",
+				"src\\opengl.cpp"
+			],
+			[
+				"log.cp",
+				"src\\log.cpp"
+			],
+			[
+				"log.h",
+				"src\\log.h"
+			],
+			[
+				"readme",
+				"README.md"
+			],
+			[
+				"log_ht",
+				"src\\log_html.h"
+			],
+			[
+				"log.cpp",
+				"src\\log.cpp"
+			],
+			[
+				"windows",
+				"src\\platform\\windows.h"
+			],
+			[
+				"windows.h",
+				"src\\platform\\windows.h"
+			],
+			[
+				"wintes",
+				"src\\platform\\wintest.cpp"
+			],
+			[
+				"string.cp",
+				"src\\ds\\string.cpp"
+			],
+			[
+				"test",
+				"src\\platform\\wintest.cpp"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 300.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

@@ -17,7 +17,6 @@ void evts::run(state* s) {
 	const static unsigned char* keys = SDL_GetKeyboardState(NULL);
 	SDL_Event ev;
 	while (SDL_PollEvent(&ev)) {
-		Uint8 flags = 0;
 		switch (ev.type) {
 		case SDL_QUIT:
 			s->running = false;
@@ -97,7 +96,7 @@ void add_default_callbacks(state* s) {
 		return false;
 	}, in_idle, SDL_MOUSEBUTTONDOWN));
 
-	s->ev.callbacks.push_back(callback([](state* s, SDL_Event* ev) -> bool {
+	s->ev.callbacks.push_back(callback([](state* s, SDL_Event*) -> bool {
 		if (s->ui->active)
 			if (s->ui->uistate == ui_funcs)
 				s->ev.current = in_funcs;

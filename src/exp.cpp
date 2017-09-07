@@ -175,7 +175,7 @@ float eval(const vector<op>& EQ, vector<pair<char, float>> vars) {
 			s.push(result);
 			break;
 		case var: {
-			char v = EQ[index + 1];
+			char v = (char)EQ[index + 1];
 			auto entry = find_if(vars.begin(), vars.end(), [v](const pair<char, float>& var) -> bool { return var.first == v; });
 			if (entry == vars.end()) {
 				throw runtime_error((string)"ERROR: variable " + v + " not recognized!");

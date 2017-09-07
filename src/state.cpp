@@ -1,6 +1,6 @@
 
 #include "state.h"
-#include "font.data"
+#include "../data/font.data"
 #include <algorithm>
 #include <thread>
 

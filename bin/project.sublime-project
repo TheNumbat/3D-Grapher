@@ -1,0 +1,36 @@
+{
+    "folders":
+    [
+        {
+            "path": "w:"
+        }
+    ],
+    "settings":
+    {
+        "tab_size": 4
+    },
+    "build_systems":
+    [
+        {
+            "shell_cmd": "build",
+            "file_regex": "^[.\\\\/]*([a-z]?:?[\\w.\\\\/]+)[(:]([0-9]+)[):]([0-9]+)?:?(.*)$",
+            "variants":
+            [
+                {
+                    "name": "Debug",
+                    "shell_cmd": "dev"
+                },
+                {
+                    "name": "Debug",
+                    "shell_cmd": "run",
+                    "encoding": "UTF-8"
+                },
+                {
+                    "name": "Release",
+                    "shell_cmd": "build release",
+                    "file_regex": "^[.\\\\/]*([a-z]?:?[\\w.\\\\/]+)[(:]([0-9]+)[):]([0-9]+)?:?(.*)$"
+                }
+            ]
+        }
+    ]
+}
