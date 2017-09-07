@@ -1,0 +1,28 @@
+
+UI
+	IMGUI?
+	Better settings
+	Actual math symbol display
+	Don't need * for multiply
+
+Bugs
+	Rects have to be set every frame
+	One strip of polygons is too dark on cyl/spr
+
+Math Features
+	Level curves + animate
+	Highlight curve along a set x/y
+	Highlight graph intersections
+
+	More graph types (see enum)
+	Plot evolution of 3D graph over time (4D) (animated)
+	
+	Partial Derivatives
+	Line/Surface/Flux integrals
+	E Regions
+
+	Tangent Planes
+	More than urnary functions (e.g. max, min)
+	Maxs & mins (abs and rel)
+	
+
