@@ -1,6 +1,5 @@
 
 #include "state.h"
-#include "../data/font.data"
 #include <algorithm>
 #include <thread>
 
@@ -56,6 +55,11 @@ state::state() {
 	graph_s_light.load(graph_vertex_lighting, graph_fragment_lighting);
 
 	ImGui_ImplSdlGL3_Init(window);
+	ImGui::GetStyle().WindowRounding = 0.0f;
+
+	ImGuiIO& io = ImGui::GetIO();
+	ImWchar range[] = {32, 127, 913, 969, 0};
+	io.Fonts->AddFontFromFileTTF("font.ttf", 18, 0, range);
 
 	updateAxes(this);
 
@@ -127,13 +131,67 @@ void state::run() {
 		}
 		glBindVertexArray(0);
 
-		ImGui::Begin("LUL");
+		ImGui::SetNextWindowPos({0, 0});
+		ImGui::SetNextWindowSize({0.2f * w, (float)h});
+		ImGui::Begin("LUL", 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+		static bool func = false;
+		if(ImGui::Button("Add a Function")) {
+			func = !func;
+		}
+
+		if(func) {
+			ImGui::Begin("Add a Function", 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+
+			if(ImGui::Button("Rectangular")) {
+				func = false;
+			}
+			if(ImGui::IsItemHovered()) {
+				ImGui::BeginTooltip();
+					ImGui::Text("z = f(x,y)");
+				ImGui::EndTooltip();
+			}
+
+			if(ImGui::Button("Cylindrical")) {
+				func = false;
+			}
+			if(ImGui::IsItemHovered()) {
+				ImGui::BeginTooltip();
+					ImGui::Text("z = ψ(r,θ)");
+				ImGui::EndTooltip();
+			}
+
+			if(ImGui::Button("Spherical")) {
+				func = false;
+			}
+			if(ImGui::IsItemHovered()) {
+				ImGui::BeginTooltip();
+					ImGui::Text("r = ρ(θ,φ)");
+				ImGui::EndTooltip();
+			}
+
+			if(ImGui::Button("Parametric Curve")) {
+				func = false;
+			}
+			if(ImGui::IsItemHovered()) {
+				ImGui::BeginTooltip();
+					ImGui::Text("x = f(t)");
+					ImGui::Text("y = g(t)");
+					ImGui::Text("z = h(t)");
+				ImGui::EndTooltip();
+			}
+
+			ImGui::End();
+		}
 		ImGui::End();
 
 		ImGui::Render();
 
 		SDL_Event e;
-		while(SDL_PollEvent(&e) != 0);
+		while(SDL_PollEvent(&e) != 0) {
+			if(e.type == SDL_QUIT) {
+				running = false;
+			}
+		}
 
 		SDL_GL_SwapWindow(window);
 
