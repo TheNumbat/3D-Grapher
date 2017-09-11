@@ -149,14 +149,11 @@ void graph::send() {
 	glBindVertexArray(0);
 }
 
-bool graph::update_eq(state* s) {
+bool graph::update_eq(state*) {
 	vector<op> new_eq;
 
 	try { in(eq_str, new_eq); }
 	catch (runtime_error e) {
-		s->ui->error = e.what();
-		s->ui->errorShown = true;
-		s->ev.current = in_help_or_err;
 		return false;
 	}
 
@@ -252,34 +249,34 @@ void graph::generateIndiciesAndNormals(state* s) {
 	normals.clear();
 
 	vec3 norm;
-	int x_max;
-	int y_max;
+	int _x_max = 0;
+	int _y_max = 0;
 	if (type == graph_func) {
-		x_max = s->set.rdom.xrez;
-		y_max = s->set.rdom.yrez;
+		_x_max = s->set.rdom.xrez;
+		_y_max = s->set.rdom.yrez;
 	}
 	else if (type == graph_cylindrical) {
-		x_max = s->set.cdom.trez;
-		y_max = s->set.cdom.zrez;
+		_x_max = s->set.cdom.trez;
+		_y_max = s->set.cdom.zrez;
 	}
 	else if (type == graph_spherical) {
-		x_max = s->set.sdom.prez;
-		y_max = s->set.sdom.trez;
+		_x_max = s->set.sdom.prez;
+		_y_max = s->set.sdom.trez;
 	}
 
-	for (int x = 0; x < x_max; x++) {
-		for (int y = 0; y < y_max; y++) {
-			GLuint i_index = x * (y_max + 1) + y;
+	for (int x = 0; x < _x_max; x++) {
+		for (int y = 0; y < _y_max; y++) {
+			GLuint i_index = x * (_y_max + 1) + y;
 
 			if (!isnan(verticies[i_index * 3 + 2]) &&
 				!isinf(verticies[i_index * 3 + 2])) {
 				indicies.push_back(i_index);
 				indicies.push_back(i_index + 1);
-				indicies.push_back(i_index + y_max + 1);
+				indicies.push_back(i_index + _y_max + 1);
 
 				indicies.push_back(i_index + 1);
-				indicies.push_back(i_index + y_max + 1);
-				indicies.push_back(i_index + y_max + 2);
+				indicies.push_back(i_index + _y_max + 1);
+				indicies.push_back(i_index + _y_max + 2);
 
 				float x1 = verticies[i_index * 3];
 				float y1 = verticies[i_index * 3 + 1];
@@ -287,9 +284,9 @@ void graph::generateIndiciesAndNormals(state* s) {
 				float x2 = verticies[(i_index + 1) * 3];
 				float y2 = verticies[(i_index + 1) * 3 + 1];
 				float z2 = verticies[(i_index + 1) * 3 + 2];
-				float x3 = verticies[(i_index + y_max + 1) * 3];
-				float y3 = verticies[(i_index + y_max + 1) * 3 + 1];
-				float z3 = verticies[(i_index + y_max + 1) * 3 + 2];
+				float x3 = verticies[(i_index + _y_max + 1) * 3];
+				float y3 = verticies[(i_index + _y_max + 1) * 3 + 1];
+				float z3 = verticies[(i_index + _y_max + 1) * 3 + 2];
 				vec3 one(x2 - x1, y2 - y1, z2 - z1);
 				vec3 two(x3 - x1, y3 - y1, z3 - z1);
 				norm = glm::normalize(cross(two, one));
@@ -316,9 +313,8 @@ void fxy_graph::genthread(gendata* g) {
 			float z;
 			try { z = eval(g->s->graphs[index]->eq, { { 'x',x },{ 'y',y } }); }
 			catch (runtime_error e) {
-				g->s->ui->error = e.what();
-				g->s->ui->errorShown = true;
-				g->s->ev.current = in_help_or_err;
+				
+				
 				g->success = false;
 				return;
 			}
@@ -414,9 +410,8 @@ void cyl_graph::genthread(gendata* g) {
 			float r;
 			try { r = eval(g->s->graphs[index]->eq, { { 'z',z },{ 't',t } }); }
 			catch (runtime_error e) {
-				g->s->ui->error = e.what();
-				g->s->ui->errorShown = true;
-				g->s->ev.current = in_help_or_err;
+				
+				
 				g->success = false;
 				return;
 			}
@@ -443,7 +438,7 @@ void cyl_graph::generate(state* s) {
 
 	float dz = (s->set.cdom.zmax - s->set.cdom.zmin) / s->set.cdom.zrez;
 	float dt = (s->set.cdom.tmax - s->set.cdom.tmin) / s->set.cdom.trez;
-	float zmin = s->set.cdom.zmin;
+	float _zmin = s->set.cdom.zmin;
 	unsigned int tzDelta = s->set.cdom.zrez / numthreads;
 	unsigned int tzLast = s->set.cdom.zrez - (numthreads - 1) * tzDelta + 1;
 
@@ -463,13 +458,13 @@ void cyl_graph::generate(state* s) {
 			d->s = s;
 			d->dz = dz;
 			d->dt = dt;
-			d->zmin = zmin;
+			d->zmin = _zmin;
 			d->ID = ID;
 
 			data.push_back(d);
 			threads.push_back(thread(genthread, data.back()));
 
-			zmin += tzDelta * dz;
+			_zmin += tzDelta * dz;
 		}
 	}
 	bool success = true;
@@ -488,7 +483,7 @@ void cyl_graph::generate(state* s) {
 			if (data[i]->gzmin < gzmin) gzmin = data[i]->gzmin;
 			if (data[i]->gzmax > gzmax) gzmax = data[i]->gzmax;
 		}
-		zmin = gzmin;
+		_zmin = gzmin;
 		zmax = gzmax;
 
 		normalize(s);
@@ -512,9 +507,9 @@ void spr_graph::genthread(gendata* g) {
 			float r;
 			try { r = eval(g->s->graphs[index]->eq, { { 't',t },{ 'p',p } }); }
 			catch (runtime_error e) {
-				g->s->ui->error = e.what();
-				g->s->ui->errorShown = true;
-				g->s->ev.current = in_help_or_err;
+				
+				
+				
 				g->success = false;
 				return;
 			}
@@ -605,7 +600,7 @@ para_curve::para_curve(int id, string _sx, string _sy, string _sz) : graph(id) {
 	range = { 0, 10, 100 }; // TODO: fix
 }
 
-bool para_curve::update_eq(state* s) {
+bool para_curve::update_eq(state*) {
 	vector<op> new_eqx, new_eqy, new_eqz;
 
 	try {
@@ -614,9 +609,9 @@ bool para_curve::update_eq(state* s) {
 		in(sz, new_eqz);
 	}
 	catch (runtime_error e) {
-		s->ui->error = e.what();
-		s->ui->errorShown = true;
-		s->ev.current = in_help_or_err;
+		
+		
+		
 		return false;
 	}
 
@@ -637,9 +632,9 @@ void para_curve::generate(state* s) {
 			z = eval(eqz, { { 't',t } });
 		}
 		catch (runtime_error e) {
-			s->ui->error = e.what();
-			s->ui->errorShown = true;
-			s->ev.current = in_help_or_err;
+			
+			
+			
 			return;
 		}
 
@@ -653,7 +648,7 @@ void para_curve::generate(state* s) {
 	generateIndiciesAndNormals(s);
 }
 
-void para_curve::generateIndiciesAndNormals(state* s) {
+void para_curve::generateIndiciesAndNormals(state*) {
 	indicies.clear();
 	indicies.push_back(0);
 	for (int i = 1; i < range.trez - 1; i++) {

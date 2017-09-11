@@ -34,6 +34,12 @@ extern PFNGLACTIVETEXTUREPROC				_glActiveTexture;
 extern PFNGLUNIFORM1IPROC					glUniform1i;
 extern PFNGLDISABLEVERTEXATTRIBARRAYPROC	glDisableVertexAttribArray;
 extern PFNGLUNIFORM1FPROC					glUniform1f;
+extern PFNGLBINDSAMPLERPROC					glBindSampler;
+extern PFNGLBLENDEQUATIONSEPARATEPROC		glBlendEquationSeparate;
+extern PFNGLBLENDFUNCSEPARATEPROC			glBlendFuncSeparate;
+extern PFNGLGETATTRIBLOCATIONPROC			glGetAttribLocation;
+extern PFNGLDETACHSHADERPROC				glDetachShader;
+extern PFNGLBLENDEQUATIONPROC				_glBlendEquation;
 
 extern const GLchar* graph_vertex;
 extern const GLchar* graph_fragment;

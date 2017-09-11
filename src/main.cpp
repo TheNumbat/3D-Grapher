@@ -1,7 +1,7 @@
 ﻿
 #include "state.h"
 
-int main(int argc, char** args) {
+int main(int, char**) {
 
 	state st;
 	st.run();

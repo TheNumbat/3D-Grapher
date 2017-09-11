@@ -16,6 +16,7 @@ bld/
 [Ll]og/
 Build/
 *.sublime-workspace
+*.ini
 
 # Visual Studio 2015 cache/options directory
 .vs/

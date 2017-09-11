@@ -27,6 +27,12 @@ PFNGLACTIVETEXTUREPROC				_glActiveTexture;
 PFNGLUNIFORM1IPROC					glUniform1i;
 PFNGLDISABLEVERTEXATTRIBARRAYPROC	glDisableVertexAttribArray;
 PFNGLUNIFORM1FPROC					glUniform1f;
+PFNGLBINDSAMPLERPROC				glBindSampler;
+PFNGLBLENDEQUATIONSEPARATEPROC		glBlendEquationSeparate;
+PFNGLBLENDFUNCSEPARATEPROC			glBlendFuncSeparate;
+PFNGLGETATTRIBLOCATIONPROC			glGetAttribLocation;
+PFNGLDETACHSHADERPROC				glDetachShader;
+PFNGLBLENDEQUATIONPROC				_glBlendEquation;
 
 texture::texture() {
 	glGenTextures(1, &tex);
@@ -170,6 +176,12 @@ void setupFuns() {
 	glUniform1i					= (PFNGLUNIFORM1IPROC)					SDL_GL_GetProcAddress("glUniform1i");
 	glDisableVertexAttribArray  = (PFNGLDISABLEVERTEXATTRIBARRAYPROC)   SDL_GL_GetProcAddress("glDisableVertexAttribArray");
 	glUniform1f					= (PFNGLUNIFORM1FPROC)					SDL_GL_GetProcAddress("glUniform1f");
+	glBindSampler				= (PFNGLBINDSAMPLERPROC)				SDL_GL_GetProcAddress("glBindSampler");
+	glBlendEquationSeparate		= (PFNGLBLENDEQUATIONSEPARATEPROC)		SDL_GL_GetProcAddress("glBlendEquationSeparate");
+	glBlendFuncSeparate			= (PFNGLBLENDFUNCSEPARATEPROC) 			SDL_GL_GetProcAddress("glBlendFuncSeparate");
+	glGetAttribLocation 		= (PFNGLGETATTRIBLOCATIONPROC)			SDL_GL_GetProcAddress("glGetAttribLocation");
+	glDetachShader				= (PFNGLDETACHSHADERPROC)				SDL_GL_GetProcAddress("glDetachShader");
+	_glBlendEquation			= (PFNGLBLENDEQUATIONPROC)				SDL_GL_GetProcAddress("glBlendEquation");
 }
 
 const GLchar* graph_vertex = {

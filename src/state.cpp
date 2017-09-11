@@ -53,17 +53,11 @@ state::state() {
 
 	graph_s.load(graph_vertex, graph_fragment);
 	axis_s.load(axis_vertex, axis_fragment);
-	UI_s.load(ui_vertex, ui_fragment);
-	rect_s.load(rect_vertex, rect_fragment);
 	graph_s_light.load(graph_vertex_lighting, graph_fragment_lighting);
 
-	TTF_Init();
-	font = TTF_OpenFontRW(SDL_RWFromConstMem((const void*)DroidSans_ttf, DroidSans_ttf_len), 1, 24);
-	
-	add_default_callbacks(this);
-	updateAxes(this);
+	ImGui_ImplSdlGL3_Init(window);
 
-	ui = new UI(this);
+	updateAxes(this);
 
 	c_3d.reset();
 	c_3d_static.reset();
@@ -71,10 +65,9 @@ state::state() {
 }
 
 state::~state() {
-	delete ui;
 	for (graph* g : graphs)
 		delete g;
-	TTF_CloseFont(font);
+	ImGui_ImplSdlGL3_Shutdown();
 	glDeleteBuffers(1, &axisVBO);
 	glDeleteVertexArrays(1, &axisVAO);
 	SDL_GL_DeleteContext(context);
@@ -90,6 +83,8 @@ void state::run() {
 
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		ImGui_ImplSdlGL3_NewFrame(window);
 
 		mat4 model, view, proj, modelviewproj;
 		model = rotate(model, radians(-90.0f), vec3(1, 0, 0));
@@ -132,22 +127,18 @@ void state::run() {
 		}
 		glBindVertexArray(0);
 
-		{
-			glDisable(GL_DEPTH_TEST);
-			glEnable(GL_BLEND);
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			ui->render(this);
-		}
+		ImGui::Begin("LUL");
+		ImGui::End();
 
-		ev.run(this);
+		ImGui::Render();
+
+		SDL_Event e;
+		while(SDL_PollEvent(&e) != 0);
+
 		SDL_GL_SwapWindow(window);
 
 		Uint64 end = SDL_GetPerformanceCounter();
 		double micro = 1000000.0f * (end - start) / (float)SDL_GetPerformanceFrequency();
-		//cout << "frame: " << micro / 1000.0f << "ms" << endl;
-
-		// not at all correct but OpenGL is being annoying and I don't want to deal with it right now
-		// fixes CPU usage at least
 		std::this_thread::sleep_for(std::chrono::microseconds(16666 - (Uint64)micro));
 	}
 }
