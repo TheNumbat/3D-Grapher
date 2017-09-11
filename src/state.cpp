@@ -80,7 +80,6 @@ state::~state() {
 }
 
 void state::run() {
-	const unsigned char* keys = SDL_GetKeyboardState(NULL);
 
 	while (running) {
 		Uint64 start = SDL_GetPerformanceCounter();

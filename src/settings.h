@@ -1,9 +1,6 @@
 
 #pragma once
 
-#include "graph.h"
-#include "cam.h"
-
 struct rect_domain {
 	float xmin, xmax, ymin, ymax, zmin, zmax;
 	int xrez, yrez;

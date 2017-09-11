@@ -1,10 +1,6 @@
 
 #pragma once
 
-#include <iostream>
-#include <sstream>
-#include <vector>
-
 using namespace std;
 
 const float val_e = 2.7182818284590452353602874713527f;

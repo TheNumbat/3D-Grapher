@@ -1,16 +1,6 @@
 
 #pragma once
 
-#include <vector>
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
-#include "gl.h"
-#include "exp.h"
-
-using namespace std;
-using namespace glm;
-
 struct state;
 
 struct t_range {

@@ -4,12 +4,6 @@
 const float UI_SCREEN_RATIO = 0.2f;
 const int screen_w = 1280, screen_h = 720;
 
-#include <imgui/imgui.h>
-#include "imgui_impl.h"
-#include "graph.h"
-#include "cam.h"
-#include "settings.h"
-
 struct state {
 	state();
 	~state();

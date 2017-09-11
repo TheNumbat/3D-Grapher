@@ -28,7 +28,7 @@ void regengraph(state* s, int index) {
 	Uint64 start = SDL_GetPerformanceCounter();
 	s->graphs[index]->generate(s);
 	Uint64 end = SDL_GetPerformanceCounter();
-	//cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << endl;
+	cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << endl;
 
 	updateAxes(s);
 	s->graphs[index]->send();
@@ -40,7 +40,7 @@ int getIndex(state* s, int ID) {
 		return -1;
 	}
 	else {
-		int pos = entry - s->graphs.begin();
+		int pos = (int)(entry - s->graphs.begin());
 		return pos;
 	}
 }

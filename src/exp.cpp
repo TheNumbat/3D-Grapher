@@ -196,7 +196,7 @@ float eval(const vector<op>& EQ, vector<pair<char, float>> vars) {
 			int i2 = index;
 			string num;
 			while (EQ[i2] != num_break) {
-				num.push_back(EQ[i2]);
+				num.push_back((char)EQ[i2]);
 				i2++;
 				index++;
 			}
@@ -240,7 +240,7 @@ void in(string str, vector<op>& EQ) {
 	queue<op> q;
 	stringstream in;
 	in << str;
-	bool queued = false, added = false, ins = true;
+	bool added = false, ins = true;
 	while (!in.eof()) {
 		if (ins)
 			in >> buf;
@@ -270,7 +270,7 @@ void in(string str, vector<op>& EQ) {
 		case power:
 		case subtract:
 			ins = true;
-			while (s.size() && precedence(s.top()) >= precedence(buf)) {
+			while (s.size() && precedence((char)s.top()) >= precedence(buf)) {
 				EQ.push_back(s.top());
 				s.pop();
 				added = true;
@@ -291,59 +291,59 @@ void in(string str, vector<op>& EQ) {
 			break;
 		default: // Functions, variables, and numbers
 			if (!num(buf)) {
-				if (in.peek() != EOF && !isnonfunc(in.peek())) {
-					string str;
-					getline(in, str, '(');
-					str.insert(0, 1, buf);
+				if (in.peek() != EOF && !isnonfunc((char)in.peek())) {
+					string func;
+					getline(in, func, '(');
+					func.insert(0, 1, buf);
 					// Test function name
 					{
-						if (str == "sqrt")
+						if (func == "sqrt")
 							s.push(op_sqrt);
-						else if (str == "sin")
+						else if (func == "sin")
 							s.push(op_sin);
-						else if (str == "cos")
+						else if (func == "cos")
 							s.push(op_cos);
-						else if (str == "tan")
+						else if (func == "tan")
 							s.push(op_tan);
-						else if (str == "asin")
+						else if (func == "asin")
 							s.push(op_asin);
-						else if (str == "acos")
+						else if (func == "acos")
 							s.push(op_acos);
-						else if (str == "atan")
+						else if (func == "atan")
 							s.push(op_atan);
-						else if (str == "abs")
+						else if (func == "abs")
 							s.push(op_abs);
-						else if (str == "exp")
+						else if (func == "exp")
 							s.push(op_exp);
-						else if (str == "exptwo")
+						else if (func == "exptwo")
 							s.push(op_exptwo);
-						else if (str == "ceil")
+						else if (func == "ceil")
 							s.push(op_ceil);
-						else if (str == "floor")
+						else if (func == "floor")
 							s.push(op_floor);
-						else if (str == "ln")
+						else if (func == "ln")
 							s.push(op_ln);
-						else if (str == "log")
+						else if (func == "log")
 							s.push(op_log);
-						else if (str == "log2")
+						else if (func == "log2")
 							s.push(op_log2);
-						else if (str == "sec")
+						else if (func == "sec")
 							s.push(op_sec);
-						else if (str == "csc")
+						else if (func == "csc")
 							s.push(op_csc);
-						else if (str == "cot")
+						else if (func == "cot")
 							s.push(op_cot);
-						else if (str == "asec")
+						else if (func == "asec")
 							s.push(op_asec);
-						else if (str == "acsc")
+						else if (func == "acsc")
 							s.push(op_acsc);
-						else if (str == "acot")
+						else if (func == "acot")
 							s.push(op_acot);
 						else {
 							if (!in.good())
-								throw runtime_error("ERROR: unknown name '" + str + "'");
+								throw runtime_error("ERROR: unknown name '" + func + "'");
 							else
-								throw runtime_error("ERROR: unknown function '" + str + "()'");
+								throw runtime_error("ERROR: unknown function '" + func + "()'");
 						}
 					}
 					s.push('(');
