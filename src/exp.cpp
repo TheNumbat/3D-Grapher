@@ -1,14 +1,4 @@
 
-#include "exp.h"
-#include <string>
-#include <stack>
-#include <queue>
-#include <algorithm>
-#include <exception>
-#include <math.h>
-
-using namespace std;
-
 bool isop(char c) {
 	return c == open_p || c == add || c == subtract || c == op_neg ||
 		   c == multiply || c == modulo || c == divide || c == power;

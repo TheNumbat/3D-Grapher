@@ -1,8 +1,4 @@
 
-#include "state.h"
-#include <algorithm>
-#include <thread>
-
 state::state() {
 	w = screen_w;
 	h = screen_h;

@@ -1,13 +1,4 @@
 
-#include "graph.h"
-#include "state.h"
-
-#include <thread>
-#include <limits>
-#include <vector>
-#include <algorithm>
-
-using namespace std;
 
 GLfloat axes[] = {
    -10.0f,  0.0f ,  0.0f ,		1.0f, 0.0f, 0.0f,

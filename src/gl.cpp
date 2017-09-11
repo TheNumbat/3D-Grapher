@@ -1,6 +1,4 @@
 
-#include "gl.h"
-
 PFNGLBINDVERTEXARRAYPROC			glBindVertexArray;
 PFNGLDELETEBUFFERSPROC				glDeleteBuffers;
 PFNGLBINDBUFFERPROC					glBindBuffer;

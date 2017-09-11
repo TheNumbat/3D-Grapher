@@ -3,6 +3,13 @@
 #include <sstream>
 #include <vector>
 #include <string>
+#include <stack>
+#include <queue>
+#include <algorithm>
+#include <exception>
+#include <cmath>
+#include <thread>
+#include <limits>
 
 #include <glm/include/glm.hpp>
 #include <glm/include/gtc/matrix_transform.hpp>
@@ -10,15 +17,17 @@
 
 #include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
+#include <SDL2/SDL_syswm.h>
 
 #include <imgui/imgui.h>
 
 using namespace glm;
 using namespace std;
 
+#include "gl.h"
 #include "cam.h"
 #include "exp.h"
-#include "gl.h"
 #include "graph.h"
 #include "imgui_impl.h"
 #include "settings.h"
