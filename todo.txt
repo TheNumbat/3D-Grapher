@@ -5,6 +5,8 @@ UI
 	Actual math symbol display
 	Don't need * for multiply
 
+https://github.com/goldsborough/latexpp
+
 Bugs
 	Rects have to be set every frame
 	One strip of polygons is too dark on cyl/spr
@@ -25,4 +27,3 @@ Math Features
 	More than urnary functions (e.g. max, min)
 	Maxs & mins (abs and rel)
 	
-
