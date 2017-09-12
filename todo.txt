@@ -1,11 +1,19 @@
 
+
 UI
-	IMGUI?
+	Redo UI manager & event manager
+	
 	Better settings
 	Actual math symbol display
 	Don't need * for multiply
 
+	per-graph domain/step/etc. settings
+	animate through settings
+
 https://github.com/goldsborough/latexpp
+
+Misc.
+	Keys & ability to align camera XY, XZ, YZ (currently XY will not go fully orthogonal)
 
 Bugs
 	Rects have to be set every frame
