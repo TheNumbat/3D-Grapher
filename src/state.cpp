@@ -51,7 +51,7 @@ state::state() {
 	ImGui::GetStyle().WindowRounding = 0.0f;
 
 	ImGuiIO& io = ImGui::GetIO();
-	static const ImWchar range[] = {32, 127, 913, 969, 0}; // apparently this needs to be persistent...
+	static const ImWchar range[] = {32, 127, 215, 215, 913, 969, 8592, 9654, 0}; // apparently this needs to be persistent...
 	io.Fonts->AddFontFromFileTTF("font.ttf", 18, 0, range);
 
 	updateAxes(this);
@@ -148,7 +148,7 @@ void state::UI() {
 
 	ImGui::SetNextWindowPos({0, 0});
 	ImGui::SetNextWindowSize({0.2f * w, (float)h});
-	ImGui::Begin("LUL", 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+	ImGui::Begin("Main", 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 	
 	static bool func = false;
 	if(ImGui::Button("Add a Function")) {
@@ -171,6 +171,7 @@ void state::UI() {
 
 		if(ImGui::Button("Cylindrical")) {
 			func = false;
+			graphs.push_back(new cyl_graph(next_graph_id++));
 		}
 		if(ImGui::IsItemHovered()) {
 			ImGui::BeginTooltip();
@@ -180,6 +181,7 @@ void state::UI() {
 
 		if(ImGui::Button("Spherical")) {
 			func = false;
+			graphs.push_back(new spr_graph(next_graph_id++));
 		}
 		if(ImGui::IsItemHovered()) {
 			ImGui::BeginTooltip();
@@ -189,6 +191,7 @@ void state::UI() {
 
 		if(ImGui::Button("Parametric Curve")) {
 			func = false;
+			graphs.push_back(new para_curve(next_graph_id++));
 		}
 		if(ImGui::IsItemHovered()) {
 			ImGui::BeginTooltip();
@@ -198,12 +201,35 @@ void state::UI() {
 			ImGui::EndTooltip();
 		}
 
+		if(ImGui::Button("Cancel")) {
+			func = false;
+		}
+
 		ImGui::End();
 	}
 
-	for(graph* g : graphs) {
-		static char buf[100] = {};
-		ImGui::InputTextMultiline("test", buf, 99);
+	ImGui::Separator();
+	ImGui::Columns(2);
+	ImGui::SetColumnWidth(-1, ImGui::GetWindowWidth() * 0.85f);
+
+	for(int i = 0; i < graphs.size(); i++) {
+		graph* g = graphs[i];
+
+		if(ImGui::InputTextMultiline(to_string(g->ID).c_str(), (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 25, 75), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue)) {
+			regengraph(this, getIndex(this, g->ID));		
+		}
+		ImGui::NextColumn();
+		if(ImGui::Button("×")) {
+			delete g;
+			graphs.erase(graphs.begin() + i);
+			i--;
+		}
+		if(ImGui::Button("▶")) {
+			regengraph(this, getIndex(this, g->ID));
+		}
+		ImGui::NextColumn();
+
+		ImGui::Separator();
 	}
 
 	ImGui::End();

@@ -28,7 +28,7 @@ const int z_max = 32;
 extern GLfloat axes[];
 
 struct graph {
-	graph(int id, string s = " ");
+	graph(int id);
 	virtual ~graph();
 
 	virtual void normalize(state* s);
@@ -76,7 +76,7 @@ struct fxy_graph : public graph {
 		bool success;
 	};
 
-	fxy_graph(int id, string s = " ");
+	fxy_graph(int id);
 	void generate(state* s);
 	static void genthread(gendata* g);
 };
@@ -94,7 +94,7 @@ struct cyl_graph : public graph {
 		bool success;
 	};
 
-	cyl_graph(int id, string s = " ");
+	cyl_graph(int id);
 	void generate(state* s);
 	static void genthread(gendata* g);
 };
@@ -112,7 +112,7 @@ struct spr_graph : public graph {
 		bool success;
 	};
 
-	spr_graph(int id, string s = " ");
+	spr_graph(int id);
 	void generate(state* s);
 	static void genthread(gendata* g);
 };

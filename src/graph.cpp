@@ -14,7 +14,7 @@ GLfloat axes[] = {
 void regengraph(state* s, int index) {
 
 	if (!s->graphs[index]->update_eq(s)) return;
-	//printeq(cout, s->graphs[index]->eq);
+	printeq(cout, s->graphs[index]->eq);
 
 	Uint64 start = SDL_GetPerformanceCounter();
 	s->graphs[index]->generate(s);
@@ -104,8 +104,8 @@ void resetCam(state* s) {
 	s->c_3d.updateFront();
 }
 
-graph::graph(int id, string s) {
-	eq_str = s;
+graph::graph(int id) {
+	eq_str.resize(1000, 0);
 	ID = id;
 	zmin = zmax = 0;
 	rel_opactiy = 1.0f;
@@ -291,7 +291,7 @@ void graph::generateIndiciesAndNormals(state* s) {
 	normals.push_back(norm);
 }
 
-fxy_graph::fxy_graph(int id, string s) : graph(id, s) {
+fxy_graph::fxy_graph(int id) : graph(id) {
 	type = graph_func;
 }
 
@@ -388,7 +388,7 @@ void fxy_graph::generate(state* s) {
 		delete g;
 }
 
-cyl_graph::cyl_graph(int id, string s) : graph(id, s) {
+cyl_graph::cyl_graph(int id) : graph(id) {
 	type = graph_cylindrical;
 }
 
@@ -485,7 +485,7 @@ void cyl_graph::generate(state* s) {
 		delete g;
 }
 
-spr_graph::spr_graph(int id, string s) : graph(id, s) {
+spr_graph::spr_graph(int id) : graph(id) {
 	type = graph_spherical;
 }
 

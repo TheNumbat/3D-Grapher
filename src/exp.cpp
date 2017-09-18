@@ -214,15 +214,18 @@ int precedence(char c) {
 	}
 }
 
-void in(string str, vector<op>& EQ) {
-	if (str == " " || !str.size()) throw runtime_error("ERROR: blank string!");
+void in(string _str, vector<op>& EQ) {
+	if (_str == " " || !_str.size()) throw runtime_error("ERROR: blank string!");
 
-	for (int ind = 0; ind < (int)str.size(); ind++) {
-		if (str[ind] == '-' && (ind == 0 || isop(str[ind - 1]))) str[ind] = op_neg;
-		if (str[ind] == ' ') {
-			str.erase(ind, 1);
+	string str;
+
+	for (int ind = 0; ind < (int)_str.length() && _str[ind]; ind++) {
+		if (_str[ind] == '-' && (ind == 0 || isop(_str[ind - 1]))) _str[ind] = op_neg;
+		if (_str[ind] == ' ') {
+			_str.erase(ind, 1);
 			ind--;
 		}
+		str.push_back(_str[ind]);
 	}
 
 	char buf = 0;
