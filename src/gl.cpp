@@ -32,30 +32,6 @@ PFNGLGETATTRIBLOCATIONPROC			glGetAttribLocation;
 PFNGLDETACHSHADERPROC				glDetachShader;
 PFNGLBLENDEQUATIONPROC				_glBlendEquation;
 
-texture::texture() {
-	glGenTextures(1, &tex);
-	sW = sH = 0;
-}
-
-texture::~texture() {
-	glDeleteTextures(1, &tex);
-}
-
-void texture::load(SDL_Surface* surf) {
-	use();
-	SDL_Surface* temp = SDL_ConvertSurfaceFormat(surf, SDL_PIXELFORMAT_ARGB8888, 0);
-	sW = temp->w;
-	sH = temp->h;
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, temp->w, temp->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, temp->pixels);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	SDL_FreeSurface(temp);
-}
-
-void texture::use() {
-	glBindTexture(GL_TEXTURE_2D, tex);
-}
-
 shader::~shader() {
 	glDeleteShader(program);
 }
@@ -82,69 +58,6 @@ void shader::use() {
 
 GLuint shader::getUniform(const GLchar* name) {
 	return glGetUniformLocation(program, name);
-}
-
-textured_rect::textured_rect() {
-	x = y = w = h = 0;
-	needsupdate = true;
-}
-
-textured_rect::~textured_rect() {
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &VBO);
-}
-
-textured_rect::textured_rect(float _x, float _y, float _w, float _h) {
-	x = _x; y = _y; w = _w; h = _h;
-	needsupdate = true;
-}
-
-void textured_rect::gen() {
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-}
-
-void textured_rect::set(float _x, float _y, float _w, float _h) {
-	x = _x; y = _y; w = _w; h = _h;
-	if (w == 0) w = (float)tex.sW;
-	if (h == 0) h = (float)tex.sH;
-	needsupdate = true;
-}
-
-void textured_rect::update_bounds(int wW, int wH) {
-	gl_points[0] = { -1.0f + 2.0f * x / wW                , 1.0f - 2.0f * y / wH      , 0.0f, 1.0f };
-	gl_points[1] = { -1.0f + 2.0f * x / wW                , 1.0f - 2.0f * (y + h) / wH, 0.0f, 0.0f };
-	gl_points[2] = { -1.0f + 2.0f * x / wW + 2.0f * w / wW, 1.0f - 2.0f * y / wH      , 1.0f, 1.0f };
-
-	gl_points[3] = { -1.0f + 2.0f * x / wW                , 1.0f - 2.0f * (y + h) / wH, 0.0f, 0.0f };
-	gl_points[4] = { -1.0f + 2.0f * x / wW + 2.0f * w / wW, 1.0f - 2.0f *  y / wH     , 1.0f, 1.0f };
-	gl_points[5] = { -1.0f + 2.0f * x / wW + 2.0f * w / wW, 1.0f - 2.0f * (y + h) / wH, 1.0f, 0.0f };
-	
-	glBindVertexArray(VAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(gl_points), gl_points, GL_STATIC_DRAW);
-	glBindVertexArray(0);
-
-	needsupdate = false;
-}
-
-void textured_rect::render(int wW, int wH, shader& s) {
-	if (needsupdate)
-		update_bounds(wW, wH);
-	glBindVertexArray(VAO);
-	s.use();
-	tex.use();
-
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)(2 * sizeof(GLfloat)));
-	glEnableVertexAttribArray(1);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-	
-	glBindVertexArray(0);
 }
 
 void setupFuns() {
@@ -243,57 +156,6 @@ const GLchar* graph_fragment_lighting = {
 	"}\n"
 
 	// abs is not correct, but lights both sides
-};
-
-const GLchar* ui_vertex = {
-	"#version 330 core\n"
-
-	"layout (location = 0) in vec2 position;\n"
-	"layout (location = 1) in vec2 tcoord;\n"
-
-	"out vec2 coord;\n"
-
-	"void main() {\n"
-	"	gl_Position = vec4(position, 0.0f, 1.0f);\n"
-	"	coord = tcoord;\n"
-	"}\n"
-};
-
-const GLchar* ui_fragment = {
-	"#version 330 core\n"
-
-	"in vec2 coord;\n"
-	"out vec4 color;\n"
-	"uniform sampler2D tex;\n"
-
-	"void main() {\n"
-	"	color = texture(tex, vec2(coord.x, 1.0f - coord.y));\n"
-	"}\n"
-};
-
-const GLchar* rect_vertex = {
-	"#version 330 core\n"
-
-	"layout (location = 0) in vec2 position;\n"
-
-	"uniform vec4 vcolor;\n"
-	"out vec4 fcolor;\n"
-
-	"void main() {\n"
-	"	gl_Position = vec4(position, 0.0f, 1.0f);\n"
-	"	fcolor = vcolor;\n"
-	"}\n"
-};
-
-const GLchar* rect_fragment = {
-	"#version 330 core\n"
-
-	"in vec4 fcolor;\n"
-	"out vec4 color;\n"
-
-	"void main() {\n"
-	"	color = fcolor;\n"
-	"}\n"
 };
 
 const GLchar* axis_vertex = {

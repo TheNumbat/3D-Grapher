@@ -109,6 +109,7 @@ graph::graph(int id) {
 	ID = id;
 	zmin = zmax = 0;
 	rel_opactiy = 1.0f;
+	gen();
 }
 
 graph::~graph() {
@@ -153,6 +154,8 @@ bool graph::update_eq(state*) {
 }
 
 void graph::draw(state* s, mat4 model, mat4 view, mat4 proj) {
+	if(!verticies.size()) return;
+
 	glBindVertexArray(VAO);
 	{
 		glEnable(GL_DEPTH_TEST);
