@@ -7,17 +7,6 @@ state::state() {
 	next_graph_id = 0;
 	last_mx = last_my = 0;
 
-	set.wireframe = false;
-	set.lighting = true;
-	set.axisnormalization = false;
-	set.graphopacity = 1.0f;
-	set.ambientLighting = 0.0f;
-	set.fov = 60.0f;
-	set.camtype = cam_3d_static;
-	set.rdom = { -10, 10, -10, 10, -10, 10, 200, 200 };
-	set.cdom = { 0, 1, 0, 2 * val_pi, 0, 10, 200, 200 };
-	set.sdom = { 0, 2 * val_pi, 0, val_pi, 0, 10, 200, 200 };
-
 	SDL_Init(SDL_INIT_EVERYTHING);
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
@@ -215,7 +204,7 @@ void state::UI() {
 	for(int i = 0; i < graphs.size(); i++) {
 		graph* g = graphs[i];
 
-		if(ImGui::InputTextMultiline(to_string(g->ID).c_str(), (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 25, 75), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue)) {
+		if(ImGui::InputTextMultiline(to_string(g->ID).c_str(), (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 25, 50), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue)) {
 			regengraph(this, getIndex(this, g->ID));		
 		}
 		ImGui::NextColumn();

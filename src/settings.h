@@ -17,14 +17,14 @@ struct spr_domain {
 };
 
 struct settings {
-	bool wireframe;
-	bool lighting;
-	bool axisnormalization;
-	float graphopacity;
-	float ambientLighting;
-	float fov;
-	rect_domain rdom;
-	cyl_domain cdom;
-	spr_domain sdom;
-	cam_type camtype;
+	bool wireframe         = false;
+	bool lighting          = true;
+	bool axisnormalization = false;
+	float graphopacity     = 1.0f;
+	float ambientLighting  = 0.0f;
+	float fov              = 60.0f;
+	rect_domain rdom       = { -10, 10, -10, 10, -10, 10, 200, 200 };
+	cyl_domain cdom        = { 0, 1, 0, 2 * val_pi, 0, 10, 200, 200 };
+	spr_domain sdom        = { 0, 2 * val_pi, 0, val_pi, 0, 10, 200, 200 };
+	cam_type camtype       = cam_3d_static;
 };
