@@ -131,6 +131,28 @@ void state::RenderAxes() {
 	glBindVertexArray(0);
 }
 
+int callback(ImGuiTextEditCallbackData* data)
+{
+	char& c = data->Buf[data->CursorPos - 1];
+	if(c == 'p') {
+		data->InsertChars(data->CursorPos - 1, "π");
+		data->DeleteChars(data->CursorPos - 1, 1);
+		data->BufDirty = true;
+	}
+	else if (c == 't') {
+		data->InsertChars(data->CursorPos - 1, "θ");
+		data->DeleteChars(data->CursorPos - 1, 1);
+		data->BufDirty = true;
+	}
+	else if (c == 'p') {
+		data->InsertChars(data->CursorPos - 1, "π");
+		data->DeleteChars(data->CursorPos - 1, 1);
+		data->BufDirty = true;
+	}
+
+    return 0;
+}
+
 void state::UI() {
 
 	ImGui_ImplSdlGL3_NewFrame(window);
@@ -140,7 +162,8 @@ void state::UI() {
 	ImGui::Begin("Main", 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 	
 	static bool func = false;
-	if(ImGui::Button("Add a Function")) {
+
+	if(ImGui::Button("Add a Graph")) {
 		func = !func;
 	}
 	ImGui::SameLine();
@@ -150,7 +173,7 @@ void state::UI() {
 
 	if(func) {
 		ImGui::SetNextWindowFocus();
-		ImGui::Begin("Add a Function", 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::Begin("Add a Graph", 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
 
 		if(ImGui::Button("Rectangular")) {
 			func = false;
@@ -158,7 +181,7 @@ void state::UI() {
 		}
 		if(ImGui::IsItemHovered()) {
 			ImGui::BeginTooltip();
-				ImGui::Text("z = f(x,y)");
+				ImGui::Text("f(x,y)");
 			ImGui::EndTooltip();
 		}
 
@@ -168,7 +191,7 @@ void state::UI() {
 		}
 		if(ImGui::IsItemHovered()) {
 			ImGui::BeginTooltip();
-				ImGui::Text("z = ψ(r,θ)");
+				ImGui::Text("ψ(r,θ)");
 			ImGui::EndTooltip();
 		}
 
@@ -178,7 +201,7 @@ void state::UI() {
 		}
 		if(ImGui::IsItemHovered()) {
 			ImGui::BeginTooltip();
-				ImGui::Text("r = ρ(θ,φ)");
+				ImGui::Text("ρ(θ,φ)");
 			ImGui::EndTooltip();
 		}
 
@@ -209,9 +232,22 @@ void state::UI() {
 		graph* g = graphs[i];
 		ImGui::PushID(g->ID);
 
-		if(ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 80), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue)) {
-			regengraph(this, getIndex(this, g->ID));		
+		switch(g->type) {
+		case graph_func: {
+			ImGui::Text("f(x,y) =");
+		} break;
+		case graph_cylindrical: {
+			ImGui::Text("ψ(r,θ) =");
+		} break;
+		case graph_spherical: {
+			ImGui::Text("ρ(θ,φ) =");
+		} break;
+		case graph_para_curve: {
+
+		} break;
 		}
+
+		ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
 		ImGui::NextColumn();
 		if(ImGui::Button("×")) {
 			delete g;
