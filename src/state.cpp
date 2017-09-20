@@ -40,7 +40,7 @@ state::state() {
 	ImGui::GetStyle().WindowRounding = 0.0f;
 
 	ImGuiIO& io = ImGui::GetIO();
-	static const ImWchar range[] = {32, 127, 215, 215, 913, 969, 8592, 9654, 0}; // apparently this needs to be persistent...
+	static const ImWchar range[] = {32, 127, 215, 215, 913, 969, 8592, 9654, 9881, 9881, 0}; // apparently this needs to be persistent...
 	io.Fonts->AddFontFromFileTTF("font.ttf", 18, 0, range);
 
 	updateAxes(this);
@@ -143,6 +143,10 @@ void state::UI() {
 	if(ImGui::Button("Add a Function")) {
 		func = !func;
 	}
+	ImGui::SameLine();
+	if(ImGui::Button("Settings")) {
+		
+	}
 
 	if(func) {
 		ImGui::SetNextWindowFocus();
@@ -203,8 +207,9 @@ void state::UI() {
 
 	for(int i = 0; i < graphs.size(); i++) {
 		graph* g = graphs[i];
+		ImGui::PushID(g->ID);
 
-		if(ImGui::InputTextMultiline(to_string(g->ID).c_str(), (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 25, 50), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue)) {
+		if(ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 80), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_EnterReturnsTrue)) {
 			regengraph(this, getIndex(this, g->ID));		
 		}
 		ImGui::NextColumn();
@@ -216,9 +221,13 @@ void state::UI() {
 		if(ImGui::Button("▶")) {
 			regengraph(this, getIndex(this, g->ID));
 		}
+		if(ImGui::Button("⚙")) {
+			
+		}
 		ImGui::NextColumn();
 
 		ImGui::Separator();
+		ImGui::PopID();
 	}
 
 	ImGui::End();
