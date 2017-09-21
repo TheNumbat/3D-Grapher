@@ -133,20 +133,33 @@ void state::RenderAxes() {
 
 int callback(ImGuiTextEditCallbackData* data)
 {
-	char& c = data->Buf[data->CursorPos - 1];
-	if(c == 'p') {
-		data->InsertChars(data->CursorPos - 1, "π");
-		data->DeleteChars(data->CursorPos - 1, 1);
+	int pos = data->CursorPos - 1;
+	char* one = &data->Buf[pos];
+	char* two = &data->Buf[pos - 1];
+
+	if(*one == 'p') {
+		data->DeleteChars(pos, 1);
+		data->InsertChars(pos, "π");
 		data->BufDirty = true;
 	}
-	else if (c == 't') {
-		data->InsertChars(data->CursorPos - 1, "θ");
-		data->DeleteChars(data->CursorPos - 1, 1);
+	else if (*one == 't') {
+		data->DeleteChars(pos, 1);
+		data->InsertChars(pos, "θ");
 		data->BufDirty = true;
 	}
-	else if (c == 'p') {
-		data->InsertChars(data->CursorPos - 1, "π");
-		data->DeleteChars(data->CursorPos - 1, 1);
+	else if (strcmp(two, "π") == 0) {
+		data->DeleteChars(pos - 1, 2);
+		data->InsertChars(pos - 1, "φ");
+		data->BufDirty = true;
+	}
+	else if (strcmp(two, "φ") == 0) {
+		data->DeleteChars(pos - 1, 2);
+		data->InsertChars(pos - 1, "p");
+		data->BufDirty = true;
+	}
+	else if (strcmp(two, "θ") == 0) {
+		data->DeleteChars(pos - 1, 2);
+		data->InsertChars(pos - 1, "t");
 		data->BufDirty = true;
 	}
 
@@ -191,7 +204,7 @@ void state::UI() {
 		}
 		if(ImGui::IsItemHovered()) {
 			ImGui::BeginTooltip();
-				ImGui::Text("ψ(r,θ)");
+				ImGui::Text("ψ(z,θ)");
 			ImGui::EndTooltip();
 		}
 
@@ -237,7 +250,7 @@ void state::UI() {
 			ImGui::Text("f(x,y) =");
 		} break;
 		case graph_cylindrical: {
-			ImGui::Text("ψ(r,θ) =");
+			ImGui::Text("ψ(z,θ) =");
 		} break;
 		case graph_spherical: {
 			ImGui::Text("ρ(θ,φ) =");

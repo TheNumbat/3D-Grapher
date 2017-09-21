@@ -144,7 +144,7 @@ void graph::send() {
 bool graph::update_eq(state*) {
 	vector<op> new_eq;
 
-	try { in(eq_str, new_eq); }
+	try { in(utf8_to_wstring(eq_str), new_eq); }
 	catch (runtime_error e) {
 		return false;
 	}
@@ -402,7 +402,7 @@ void cyl_graph::genthread(gendata* g) {
 		float t = g->s->set.cdom.tmin;
 		for (int tt = 0; tt <= g->s->set.cdom.trez; tt++, t += g->dt) {
 			float r;
-			try { r = eval(g->s->graphs[index]->eq, { { 'z',z },{ 't',t } }); }
+			try { r = eval(g->s->graphs[index]->eq, { { 'z',z },{ 952,t } }); }
 			catch (runtime_error e) {
 				
 				
@@ -499,7 +499,7 @@ void spr_graph::genthread(gendata* g) {
 		float t = g->s->set.sdom.tmin;
 		for (int tt = 0; tt <= g->s->set.sdom.trez; tt++, t += g->dt) {
 			float r;
-			try { r = eval(g->s->graphs[index]->eq, { { 't',t },{ 'p',p } }); }
+			try { r = eval(g->s->graphs[index]->eq, { { 952,t },{ 966,p } }); }
 			catch (runtime_error e) {
 				
 				
@@ -598,9 +598,9 @@ bool para_curve::update_eq(state*) {
 	vector<op> new_eqx, new_eqy, new_eqz;
 
 	try {
-		in(sx, new_eqx);
-		in(sy, new_eqy);
-		in(sz, new_eqz);
+		in(utf8_to_wstring(sx), new_eqx);
+		in(utf8_to_wstring(sy), new_eqy);
+		in(utf8_to_wstring(sz), new_eqz);
 	}
 	catch (runtime_error e) {
 		

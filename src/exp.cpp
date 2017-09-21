@@ -1,15 +1,15 @@
 
-bool isop(char c) {
+bool isop(wchar_t c) {
 	return c == open_p || c == add || c == subtract || c == op_neg ||
 		   c == multiply || c == modulo || c == divide || c == power;
 }
 
-bool isnonfunc(char c) {
+bool isnonfunc(wchar_t c) {
 	return c == close_p || c == add || c == subtract || c == op_neg ||
 		   c == multiply || c == modulo || c == divide || c == power;
 }
 
-bool num(char c) {
+bool num(wchar_t c) {
 	return c >= '0' && c <= '9' || c == '.';
 }
 
@@ -19,7 +19,7 @@ bool num(char c) {
 #define get1() if(s.size()) {one = s.top();s.pop();} \
 			   else {throw runtime_error("ERROR: malformed expression!");}
 
-float eval(const vector<op>& EQ, vector<pair<char, float>> vars) {
+float eval(const vector<op>& EQ, vector<pair<wchar_t, float>> vars) {
 	if (!EQ.size()) throw runtime_error("ERROR: empty expression!");
 	stack<float> s;
 	float one = 0, two = 0, result = 0;
@@ -165,10 +165,10 @@ float eval(const vector<op>& EQ, vector<pair<char, float>> vars) {
 			s.push(result);
 			break;
 		case var: {
-			char v = (char)EQ[index + 1];
-			auto entry = find_if(vars.begin(), vars.end(), [v](const pair<char, float>& var) -> bool { return var.first == v; });
+			wchar_t v = EQ[index + 1];
+			auto entry = find_if(vars.begin(), vars.end(), [v](const pair<wchar_t, float>& var) -> bool { return var.first == v; });
 			if (entry == vars.end()) {
-				throw runtime_error((string)"ERROR: variable " + v + " not recognized!");
+				throw runtime_error("ERROR: variable " + wstring_to_utf8(to_wstring(v)) + " not recognized!");
 			}
 			else {
 				s.push(entry->second);
@@ -200,7 +200,7 @@ float eval(const vector<op>& EQ, vector<pair<char, float>> vars) {
 	return result;
 }
 
-int precedence(char c) {
+int precedence(wchar_t c) {
 	switch (c) {
 	case open_p: return -1;
 	case op_neg:
@@ -214,10 +214,10 @@ int precedence(char c) {
 	}
 }
 
-void in(string _str, vector<op>& EQ) {
-	if (_str == " " || !_str.size()) throw runtime_error("ERROR: blank string!");
+void in(wstring _str, vector<op>& EQ) {
+	if (_str == L" " || !_str.size()) throw runtime_error("ERROR: blank string!");
 
-	string str;
+	wstring str;
 
 	for (int ind = 0; ind < (int)_str.length() && _str[ind]; ind++) {
 		if (_str[ind] == '-' && (ind == 0 || isop(_str[ind - 1]))) _str[ind] = op_neg;
@@ -228,15 +228,16 @@ void in(string _str, vector<op>& EQ) {
 		str.push_back(_str[ind]);
 	}
 
-	char buf = 0;
+	wchar_t buf = 0;
 	stack<op> s;
 	queue<op> q;
-	stringstream in;
+	wstringstream in;
 	in << str;
 	bool added = false, ins = true;
 	while (!in.eof()) {
-		if (ins)
+		if (ins) {
 			in >> buf;
+		}
 		if (in.eof()) break;
 		switch (buf) {
 		case open_p:
@@ -246,7 +247,7 @@ void in(string _str, vector<op>& EQ) {
 		case close_p:
 			ins = true;
 			if (s.size()) {
-				int cur;
+				wchar_t cur;
 				do {
 					cur = s.top();
 					if (cur != open_p) {
@@ -263,7 +264,7 @@ void in(string _str, vector<op>& EQ) {
 		case power:
 		case subtract:
 			ins = true;
-			while (s.size() && precedence((char)s.top()) >= precedence(buf)) {
+			while (s.size() && precedence(s.top()) >= precedence(buf)) {
 				EQ.push_back(s.top());
 				s.pop();
 				added = true;
@@ -284,59 +285,59 @@ void in(string _str, vector<op>& EQ) {
 			break;
 		default: // Functions, variables, and numbers
 			if (!num(buf)) {
-				if (in.peek() != EOF && !isnonfunc((char)in.peek())) {
-					string func;
-					getline(in, func, '(');
+				if (in.peek() != WCHAR_MAX && !isnonfunc(in.peek())) {
+					wstring func;
+					getline(in, func, L'(');
 					func.insert(0, 1, buf);
 					// Test function name
 					{
-						if (func == "sqrt")
+						if (func == L"sqrt")
 							s.push(op_sqrt);
-						else if (func == "sin")
+						else if (func == L"sin")
 							s.push(op_sin);
-						else if (func == "cos")
+						else if (func == L"cos")
 							s.push(op_cos);
-						else if (func == "tan")
+						else if (func == L"tan")
 							s.push(op_tan);
-						else if (func == "asin")
+						else if (func == L"asin")
 							s.push(op_asin);
-						else if (func == "acos")
+						else if (func == L"acos")
 							s.push(op_acos);
-						else if (func == "atan")
+						else if (func == L"atan")
 							s.push(op_atan);
-						else if (func == "abs")
+						else if (func == L"abs")
 							s.push(op_abs);
-						else if (func == "exp")
+						else if (func == L"exp")
 							s.push(op_exp);
-						else if (func == "exptwo")
+						else if (func == L"exptwo")
 							s.push(op_exptwo);
-						else if (func == "ceil")
+						else if (func == L"ceil")
 							s.push(op_ceil);
-						else if (func == "floor")
+						else if (func == L"floor")
 							s.push(op_floor);
-						else if (func == "ln")
+						else if (func == L"ln")
 							s.push(op_ln);
-						else if (func == "log")
+						else if (func == L"log")
 							s.push(op_log);
-						else if (func == "log2")
+						else if (func == L"log2")
 							s.push(op_log2);
-						else if (func == "sec")
+						else if (func == L"sec")
 							s.push(op_sec);
-						else if (func == "csc")
+						else if (func == L"csc")
 							s.push(op_csc);
-						else if (func == "cot")
+						else if (func == L"cot")
 							s.push(op_cot);
-						else if (func == "asec")
+						else if (func == L"asec")
 							s.push(op_asec);
-						else if (func == "acsc")
+						else if (func == L"acsc")
 							s.push(op_acsc);
-						else if (func == "acot")
+						else if (func == L"acot")
 							s.push(op_acot);
 						else {
 							if (!in.good())
-								throw runtime_error("ERROR: unknown name '" + func + "'");
+								throw runtime_error("ERROR: unknown name '" + wstring_to_utf8(func) + "'");
 							else
-								throw runtime_error("ERROR: unknown function '" + func + "()'");
+								throw runtime_error("ERROR: unknown function '" + wstring_to_utf8(func) + "()'");
 						}
 					}
 					s.push('(');
@@ -419,7 +420,7 @@ void printeq(ostream& out, vector<op> eq) {
 		else if (c == var)
 			out << "var";
 		else
-			out << (char)c;
+			out << c;
 		out << " ";
 	}
 	out << endl;
