@@ -186,7 +186,7 @@ void state::UI() {
 
 	if(func) {
 		ImGui::SetNextWindowFocus();
-		ImGui::Begin("Add a Graph", 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::Begin("Add a Graph", &func, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
 
 		if(ImGui::Button("Rectangular")) {
 			func = false;
@@ -228,10 +228,6 @@ void state::UI() {
 				ImGui::Text("y = g(t)");
 				ImGui::Text("z = h(t)");
 			ImGui::EndTooltip();
-		}
-
-		if(ImGui::Button("Cancel")) {
-			func = false;
 		}
 
 		ImGui::End();
