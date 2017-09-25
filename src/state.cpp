@@ -255,7 +255,6 @@ void state::UI() {
 		graph* g = graphs[i];
 		ImGui::PushID(g->ID);
 
-		float y_top = ImGui::GetCursorPosY();
 		switch(g->type) {
 		case graph_func: {
 			ImGui::Text("f(x,y) =");
@@ -285,10 +284,8 @@ void state::UI() {
 			ImGui::PopID();
 		} break;
 		}
-		float y_bot = ImGui::GetCursorPosY();
 
 		ImGui::NextColumn();
-		ImGui::SetCursorPosY((y_bot - y_top) / 2.0f);
 		if(ImGui::Button("×")) {
 			if(settings_index == i) {
 				settings_index = 0;
@@ -429,14 +426,15 @@ void state::Events() {
 		case SDL_MOUSEBUTTONDOWN: {
 			if(!io.WantCaptureMouse) {
 				current = mode::cam;
-				last_mx = e.button.x;
-				last_my = e.button.y;
 				SDL_CaptureMouse(SDL_TRUE);
 				SDL_SetRelativeMouseMode(SDL_TRUE);
 			}
+			last_mx = e.button.x;
+			last_my = e.button.y;
 		} break;
+
 		case SDL_MOUSEBUTTONUP: {
-			if(!io.WantCaptureMouse) {
+			if(!io.WantCaptureMouse && current == mode::cam) {
 				current = mode::idle;
 				SDL_CaptureMouse(SDL_FALSE);
 				SDL_SetRelativeMouseMode(SDL_FALSE);
