@@ -334,6 +334,9 @@ void fxy_graph::generate() {
 	if (HT) numthreads /= 2;
 #endif
 
+	xmin = ymin = zmin = FLT_MAX;
+	xmax = ymax = zmax = -FLT_MAX;
+
 	float dx = (set.rdom.xmax - set.rdom.xmin) / set.rdom.xrez;
 	float dy = (set.rdom.ymax - set.rdom.ymin) / set.rdom.yrez;
 	xmin = set.rdom.xmin;
@@ -438,6 +441,9 @@ void cyl_graph::generate() {
 	bool HT = (cpuinfo[3] & (1 << 28)) > 0;
 	if (HT) numthreads /= 2;
 #endif
+
+	xmin = ymin = zmin = FLT_MAX;
+	xmax = ymax = zmax = -FLT_MAX;
 
 	float dz = (set.cdom.zmax - set.cdom.zmin) / set.cdom.zrez;
 	float dt = (set.cdom.tmax - set.cdom.tmin) / set.cdom.trez;
@@ -554,6 +560,9 @@ void spr_graph::generate() {
 	if (HT) numthreads /= 2;
 #endif
 
+	xmin = ymin = zmin = FLT_MAX;
+	xmax = ymax = zmax = -FLT_MAX;
+
 	float dt = (set.sdom.tmax - set.sdom.tmin) / set.sdom.trez;
 	float dp = (set.sdom.pmax - set.sdom.pmin) / set.sdom.prez;
 	float pmin = set.sdom.pmin;
@@ -627,12 +636,12 @@ void spr_graph::generate() {
 		delete g;
 }
 
-para_curve::para_curve(int id, string _sx, string _sy, string _sz) : graph(id) {
+para_curve::para_curve(int id) : graph(id) {
 	type = graph_para_curve;
-	sx = _sx;
-	sy = _sy;
-	sz = _sz;
-	range = { 0, 10, 100 }; // TODO: fix
+	sx.resize(1000, 0);
+	sy.resize(1000, 0);
+	sz.resize(1000, 0);
+	set.pdom = { 0, 10, 100 };
 }
 
 bool para_curve::update_eq(state*) {
@@ -645,8 +654,6 @@ bool para_curve::update_eq(state*) {
 	}
 	catch (runtime_error e) {
 		
-		
-		
 		return false;
 	}
 
@@ -657,9 +664,13 @@ bool para_curve::update_eq(state*) {
 }
 
 void para_curve::generate() {
+
+	xmin = ymin = zmin = FLT_MAX;
+	xmax = ymax = zmax = -FLT_MAX;
+
 	verticies.clear();
-	float t = range.tmin;
-	for (int tstep = 0; tstep < range.trez; tstep++, t += (range.tmax - range.tmin) / range.trez) {
+	float t = set.pdom.tmin;
+	for (int tstep = 0; tstep < set.pdom.trez; tstep++, t += (set.pdom.tmax - set.pdom.tmin) / set.pdom.trez) {
 		float x, y, z;
 		try { 
 			x = eval(eqx, { { 't',t } });
@@ -667,14 +678,15 @@ void para_curve::generate() {
 			z = eval(eqz, { { 't',t } });
 		}
 		catch (runtime_error e) {
-			
-			
-			
+		
 			return;
 		}
-
 		if (z < zmin) zmin = z;
-		else if (z > zmax) zmax = z;
+		if (z > zmax) zmax = z;
+		if (y < ymin) ymin = y;
+		if (y > ymax) ymax = y;
+		if (x < xmin) xmin = x;
+		if (x > xmax) xmax = x;
 
 		verticies.push_back(x);
 		verticies.push_back(y);
@@ -686,11 +698,11 @@ void para_curve::generate() {
 void para_curve::generateIndiciesAndNormals() {
 	indicies.clear();
 	indicies.push_back(0);
-	for (int i = 1; i < range.trez - 1; i++) {
+	for (int i = 1; i < set.pdom.trez - 1; i++) {
 		indicies.push_back(i);
 		indicies.push_back(i);
 	}
-	indicies.push_back(range.trez - 1);
+	indicies.push_back(set.pdom.trez - 1);
 }
 
 void para_curve::draw(state* s, mat4 model, mat4 view, mat4 proj) {

@@ -3,11 +3,6 @@
 
 struct state;
 
-struct t_range {
-	float tmin, tmax;
-	int trez;
-};
-
 enum graph_type {
 	graph_func,				// done
 	graph_cylindrical,		// done
@@ -57,14 +52,13 @@ struct graph {
 };
 
 struct para_curve : public graph {
-	para_curve(int id, string sx = " ", string sy = " ", string sz = " ");
+	para_curve(int id);
 	void generate();
 	void draw(state* s, mat4 model, mat4 view, mat4 proj);
 	void generateIndiciesAndNormals();
 	bool update_eq(state* s);
 	string sx, sy, sz;
 	vector<op> eqx, eqy, eqz;
-	t_range range;
 };
 
 struct fxy_graph : public graph {

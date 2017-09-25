@@ -1,12 +1,8 @@
 
 
 UI
-	Redo UI manager & event manager
-	
-	Better settings
 	Don't need * for multiply
-	
-	animate through settings
+	animate through settings / equation changes
 
 https://github.com/goldsborough/latexpp
 

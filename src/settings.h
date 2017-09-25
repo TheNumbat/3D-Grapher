@@ -16,6 +16,11 @@ struct spr_domain {
 	int trez, prez;
 };
 
+struct para_domain {
+	float tmin, tmax;
+	int trez;
+};
+
 struct graph_settings {
 	bool wireframe         = false;
 	bool lighting          = true;
@@ -26,6 +31,7 @@ struct graph_settings {
 		rect_domain rdom;       // { -10, 10, -10, 10, -10, 10, 200, 200 };
 		cyl_domain cdom;        // { 0, 1, 0, 2 * val_pi, 0, 10, 200, 200 };
 		spr_domain sdom;        // { 0, 2 * val_pi, 0, val_pi, 0, 10, 200, 200 };
+		para_domain pdom;		// { 0, 10, 100 }
 	};
 };
 

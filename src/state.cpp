@@ -254,23 +254,40 @@ void state::UI() {
 		graph* g = graphs[i];
 		ImGui::PushID(g->ID);
 
+		float y_top = ImGui::GetCursorPosY();
 		switch(g->type) {
 		case graph_func: {
 			ImGui::Text("f(x,y) =");
+			ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
 		} break;
 		case graph_cylindrical: {
 			ImGui::Text("ψ(z,θ) =");
+			ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
 		} break;
 		case graph_spherical: {
 			ImGui::Text("ρ(θ,φ) =");
+			ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
 		} break;
 		case graph_para_curve: {
-
+			para_curve* p = (para_curve*)g;
+			ImGui::Text("x(t) =");
+			ImGui::PushID(0);
+			ImGui::InputTextMultiline("", (char*)p->sx.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
+			ImGui::PopID();
+			ImGui::Text("y(t) =");
+			ImGui::PushID(1);
+			ImGui::InputTextMultiline("", (char*)p->sy.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
+			ImGui::PopID();
+			ImGui::Text("z(t) =");
+			ImGui::PushID(2);
+			ImGui::InputTextMultiline("", (char*)p->sz.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
+			ImGui::PopID();
 		} break;
 		}
+		float y_bot = ImGui::GetCursorPosY();
 
-		ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
 		ImGui::NextColumn();
+		ImGui::SetCursorPosY((y_bot - y_top) / 2.0f);
 		if(ImGui::Button("×")) {
 			if(settings_index == i) {
 				settings_index = 0;
@@ -301,11 +318,14 @@ void state::UI() {
 		ImGui::SetNextWindowPos({0.2f * w, 0.0f});
 		ImGui::Begin("Settings", &settings, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
 		graph* g = graphs[settings_index];
-		ImGui::Checkbox("Wireframe", &g->set.wireframe);
-		ImGui::Checkbox("Lighting", &g->set.lighting);
-		changed = changed || ImGui::Checkbox("Normalization", &g->set.axisnormalization);
-		ImGui::SliderFloat("Opacity", &g->set.opacity, 0.0f, 1.0f);
-		ImGui::SliderFloat("Ambient Light", &g->set.ambientLighting, 0.0f, 1.0f);
+		
+		if(g->type != graph_para_curve) {
+			ImGui::Checkbox("Wireframe", &g->set.wireframe);
+			ImGui::Checkbox("Lighting", &g->set.lighting);
+			changed = changed || ImGui::Checkbox("Normalization", &g->set.axisnormalization);
+			ImGui::SliderFloat("Opacity", &g->set.opacity, 0.0f, 1.0f);
+			ImGui::SliderFloat("Ambient Light", &g->set.ambientLighting, 0.0f, 1.0f);
+		}
 		
 		switch(g->type) {
 		case graph_func: {
@@ -333,7 +353,9 @@ void state::UI() {
 			changed = changed || ImGui::InputInt("φrez", &g->set.sdom.prez);
 		} break;
 		case graph_para_curve: {
-
+			changed = changed || ImGui::InputFloat("tmin", &g->set.pdom.tmin);
+			changed = changed || ImGui::InputFloat("tmax", &g->set.pdom.tmax);
+			changed = changed || ImGui::InputInt("trez", &g->set.pdom.trez);
 		} break;
 		}
 
