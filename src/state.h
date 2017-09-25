@@ -1,7 +1,6 @@
 
 #pragma once
 
-const float UI_SCREEN_RATIO = 0.2f;
 const int screen_w = 1280, screen_h = 720;
 
 struct state {
@@ -38,7 +37,5 @@ struct state {
 	vector<graph*> graphs;
 	_cam_3d c_3d;
 	_cam_3d_static c_3d_static;
-	
-	// UI
-	settings set;
+	camera_settings c_set;
 };

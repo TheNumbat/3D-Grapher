@@ -89,13 +89,13 @@ void state::RenderGraphs() {
 
 	mat4 model, view, proj;
 	model = rotate(model, radians(-90.0f), vec3(1, 0, 0));
-	if (set.camtype == cam_3d) {
+	if (c_set.camtype == cam_3d) {
 		view = c_3d.getView();
-		proj = perspective(radians(set.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
+		proj = perspective(radians(c_set.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
 	}
 	else {
 		view = c_3d_static.getView();
-		proj = perspective(radians(set.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
+		proj = perspective(radians(c_set.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
 	} 
 	modelviewproj =  proj * view * model;
 
@@ -175,17 +175,27 @@ void state::UI() {
 	ImGui::Begin("Main", 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 	
 	static bool func = false;
+	static bool camera = false;
 
 	if(ImGui::Button("Add a Graph")) {
 		func = !func;
 	}
 	ImGui::SameLine();
-	if(ImGui::Button("Settings")) {
-		
+	if(ImGui::Button("Camera")) {
+		camera = !camera;
+	}
+
+	if(camera) {
+		ImGui::SetNextWindowPos({0.2f * w, 0.0f});
+		ImGui::Begin("Camera", &camera, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::SliderFloat("FOV", &c_set.fov, 10.0f, 170.0f);
+		const char* names[] = {"Free 3D", "Static 3D"};
+		ImGui::Combo("Camera", (int*)&c_set.camtype, names, 2);
+		ImGui::End();
 	}
 
 	if(func) {
-		ImGui::SetNextWindowFocus();
+		ImGui::SetNextWindowPos({0.2f * w, 0.0f});
 		ImGui::Begin("Add a Graph", &func, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
 
 		if(ImGui::Button("Rectangular")) {
@@ -237,6 +247,9 @@ void state::UI() {
 	ImGui::Columns(2);
 	ImGui::SetColumnWidth(-1, ImGui::GetWindowWidth() * 0.85f);
 
+	static bool settings = false;
+	static int settings_index = 0;
+
 	for(int i = 0; i < graphs.size(); i++) {
 		graph* g = graphs[i];
 		ImGui::PushID(g->ID);
@@ -259,20 +272,76 @@ void state::UI() {
 		ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
 		ImGui::NextColumn();
 		if(ImGui::Button("×")) {
+			if(settings_index == i) {
+				settings_index = 0;
+				settings = false;
+			}
 			delete g;
 			graphs.erase(graphs.begin() + i);
 			i--;
+			updateAxes(this);
 		}
 		if(ImGui::Button("▶")) {
-			regengraph(this, getIndex(this, g->ID));
+			regengraph(this, i);
 		}
 		if(ImGui::Button("⚙")) {
-			
+			if(settings_index == i) settings = !settings;
+			else settings = true;
+			settings_index = i;
 		}
 		ImGui::NextColumn();
 
 		ImGui::Separator();
 		ImGui::PopID();
+	}
+
+	if(settings) {
+		bool changed = false;
+
+		ImGui::SetNextWindowPos({0.2f * w, 0.0f});
+		ImGui::Begin("Settings", &settings, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+		graph* g = graphs[settings_index];
+		ImGui::Checkbox("Wireframe", &g->set.wireframe);
+		ImGui::Checkbox("Lighting", &g->set.lighting);
+		changed = changed || ImGui::Checkbox("Normalization", &g->set.axisnormalization);
+		ImGui::SliderFloat("Opacity", &g->set.opacity, 0.0f, 1.0f);
+		ImGui::SliderFloat("Ambient Light", &g->set.ambientLighting, 0.0f, 1.0f);
+		
+		switch(g->type) {
+		case graph_func: {
+			changed = changed || ImGui::InputFloat("xmin", &g->set.rdom.xmin);
+			changed = changed || ImGui::InputFloat("xmax", &g->set.rdom.xmax);
+			changed = changed || ImGui::InputFloat("ymin", &g->set.rdom.ymin);
+			changed = changed || ImGui::InputFloat("ymax", &g->set.rdom.ymax);
+			changed = changed || ImGui::InputInt("xrez", &g->set.rdom.xrez);
+			changed = changed || ImGui::InputInt("yrez", &g->set.rdom.yrez);
+		} break;
+		case graph_cylindrical: {
+			changed = changed || ImGui::InputFloat("zmin", &g->set.cdom.zmin);
+			changed = changed || ImGui::InputFloat("zmax", &g->set.cdom.zmax);
+			changed = changed || ImGui::InputFloat("θmin", &g->set.cdom.tmin);
+			changed = changed || ImGui::InputFloat("θmax", &g->set.cdom.tmax);
+			changed = changed || ImGui::InputInt("zrez", &g->set.cdom.zrez);
+			changed = changed || ImGui::InputInt("θrez", &g->set.cdom.trez);
+		} break;
+		case graph_spherical: {
+			changed = changed || ImGui::InputFloat("θmin", &g->set.sdom.tmin);
+			changed = changed || ImGui::InputFloat("θmax", &g->set.sdom.tmax);
+			changed = changed || ImGui::InputFloat("φmin", &g->set.sdom.pmin);
+			changed = changed || ImGui::InputFloat("φmax", &g->set.sdom.pmax);
+			changed = changed || ImGui::InputInt("θrez", &g->set.sdom.trez);
+			changed = changed || ImGui::InputInt("φrez", &g->set.sdom.prez);
+		} break;
+		case graph_para_curve: {
+
+		} break;
+		}
+
+		if(changed) {
+			regengraph(this, settings_index);
+		}
+
+		ImGui::End();
 	}
 
 	ImGui::End();
@@ -313,10 +382,10 @@ void state::Events() {
 			if(current == mode::cam) {
 				int dx = (e.motion.x - mx);
 				int dy = (e.motion.y - my);
-				if (set.camtype == cam_3d) {
+				if (c_set.camtype == cam_3d) {
 					c_3d.move(dx, dy);
 				}
-				else if (set.camtype == cam_3d_static) {
+				else if (c_set.camtype == cam_3d_static) {
 					c_3d_static.move(dx, dy);
 				}
 			}
@@ -346,7 +415,7 @@ void state::Events() {
 
 	float dT = (SDL_GetTicks() - c_3d.lastUpdate) / 1000.0f;
 	c_3d.lastUpdate = SDL_GetTicks();
-	if (set.camtype == cam_3d && current == mode::cam) {
+	if (c_set.camtype == cam_3d && current == mode::cam) {
 		if (keys[SDL_SCANCODE_W]) {
 			c_3d.pos += c_3d.front * c_3d.speed * dT;
 		}
