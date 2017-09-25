@@ -1,14 +1,8 @@
 
 
 UI
-	Redo UI manager & event manager
-	
-	Better settings
-	Actual math symbol display
 	Don't need * for multiply
-
-	per-graph domain/step/etc. settings
-	animate through settings
+	animate through settings / equation changes
 
 https://github.com/goldsborough/latexpp
 

@@ -2,7 +2,7 @@
 #pragma once
 
 enum cam_type {
-	cam_3d,
+	cam_3d = 0,
 	cam_3d_static
 };
 

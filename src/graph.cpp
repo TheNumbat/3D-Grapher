@@ -17,7 +17,7 @@ void regengraph(state* s, int index) {
 	printeq(cout, s->graphs[index]->eq);
 
 	Uint64 start = SDL_GetPerformanceCounter();
-	s->graphs[index]->generate(s);
+	s->graphs[index]->generate();
 	Uint64 end = SDL_GetPerformanceCounter();
 	cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << endl;
 
@@ -51,40 +51,42 @@ void regenall(state* s) {
 }
 
 void updateAxes(state* s) {
+	float xmin = FLT_MAX, xmax = -FLT_MAX;
+	float ymin = FLT_MAX, ymax = -FLT_MAX;
 	float zmin = FLT_MAX, zmax = -FLT_MAX;
 
-	if (s->graphs.size()) {
-		for (graph* g : s->graphs) {
-			if (g->zmin < zmin) zmin = g->zmin;
-			if (g->zmax > zmax) zmax = g->zmax;
-			if (!g->verticies.size()) {
-				zmin = -10;
-				zmax = 10;
-			}
-		}
-		if (zmin > 0) zmin = 0;
-		if (zmax < 0) zmax = 0;
+	bool found_a_graph = false;
+	for (graph* g : s->graphs) {
+		if(g->verticies.size()) found_a_graph = true;
+		if (g->zmin < zmin) zmin = g->zmin;
+		if (g->zmax > zmax) zmax = g->zmax;
+		if (g->ymin < ymin) ymin = g->ymin;
+		if (g->ymax > ymax) ymax = g->ymax;
+		if (g->xmin < xmin) xmin = g->xmin;
+		if (g->xmax > xmax) xmax = g->xmax;			
 	}
-	else {
+	if (zmin > 0) zmin = 0;
+	if (zmax < 0) zmax = 0;
+	if (ymin > 0) ymin = 0;
+	if (ymax < 0) ymax = 0;
+	if (xmin > 0) xmin = 0;
+	if (xmax < 0) xmax = 0;
+	
+	if(!found_a_graph) {
 		zmin = -10;
 		zmax = 10;
+		xmin = -10;
+		xmax = 10;
+		ymin = -10;
+		ymax = 10;
 	}
 
-	s->set.rdom.zmin = zmin;
-	s->set.rdom.zmax = zmax;
-	axes[x_min] = s->set.rdom.xmin;
-	axes[y_min] = s->set.rdom.ymin;
-	axes[z_min] = s->set.rdom.zmin;
-	axes[x_max] = s->set.rdom.xmax;
-	axes[y_max] = s->set.rdom.ymax;
-	axes[z_max] = s->set.rdom.zmax;
-
-	if (axes[x_min] > 0) axes[x_min] = 0;
-	if (axes[y_min] > 0) axes[y_min] = 0;
-	if (axes[z_min] > 0) axes[z_min] = 0;
-	if (axes[x_max] < 0) axes[x_max] = 0;
-	if (axes[y_max] < 0) axes[y_max] = 0;
-	if (axes[z_max] < 0) axes[z_max] = 0;
+	axes[x_min] = xmin;
+	axes[y_min] = ymin;
+	axes[z_min] = zmin;
+	axes[x_max] = xmax;
+	axes[y_max] = ymax;
+	axes[z_max] = zmax;
 
 	glBindVertexArray(s->axisVAO);
 	{
@@ -94,21 +96,20 @@ void updateAxes(state* s) {
 }
 
 void resetCam(state* s) {
-	s->c_3d_static.radius = std::max(s->set.rdom.ymax - s->set.rdom.ymin, s->set.rdom.xmax - s->set.rdom.xmin);
-	s->c_3d_static.lookingAt.x = (s->set.rdom.xmax + s->set.rdom.xmin) / 2;
-	s->c_3d_static.lookingAt.z = (s->set.rdom.ymax + s->set.rdom.ymin) / -2;
+	s->c_3d_static.radius = std::max(axes[y_max] - axes[y_min], axes[x_max] - axes[x_min]);
+	s->c_3d_static.lookingAt.x = (axes[x_max] + axes[x_min]) / 2;
+	s->c_3d_static.lookingAt.z = (axes[y_max] + axes[y_min]) / -2;
 	s->c_3d_static.updatePos();
 
-	s->c_3d.pos.x = (s->set.rdom.xmax + s->set.rdom.xmin) / 2;
-	s->c_3d.pos.z = (s->set.rdom.ymax + s->set.rdom.ymin) / -2;
+	s->c_3d.pos.x = (axes[x_max] + axes[x_min]) / 2;
+	s->c_3d.pos.z = (axes[y_max] + axes[y_min]) / -2;
 	s->c_3d.updateFront();
 }
 
 graph::graph(int id) {
 	eq_str.resize(1000, 0);
 	ID = id;
-	zmin = zmax = 0;
-	rel_opactiy = 1.0f;
+	xmin = xmax = ymin = ymax = zmin = zmax = 0;
 	gen();
 }
 
@@ -141,11 +142,13 @@ void graph::send() {
 	glBindVertexArray(0);
 }
 
-bool graph::update_eq(state*) {
+bool graph::update_eq(state* s) {
 	vector<op> new_eq;
 
-	try { in(eq_str, new_eq); }
+	try { in(utf8_to_wstring(eq_str), new_eq); }
 	catch (runtime_error e) {
+		s->error_shown = true;
+		s->error = e.what();
 		return false;
 	}
 
@@ -163,7 +166,7 @@ void graph::draw(state* s, mat4 model, mat4 view, mat4 proj) {
 
 		mat4 modelviewproj = proj * view * model;
 
-		if (s->set.lighting) {
+		if (set.lighting) {
 			s->graph_s_light.use();
 
 			glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -177,11 +180,11 @@ void graph::draw(state* s, mat4 model, mat4 view, mat4 proj) {
 			glUniformMatrix4fv(s->graph_s_light.getUniform("model"), 1, GL_FALSE, value_ptr(model));
 			glUniformMatrix4fv(s->graph_s_light.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
 
-			glUniform4f(s->graph_s_light.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, s->set.graphopacity * rel_opactiy);
+			glUniform4f(s->graph_s_light.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, set.opacity);
 			glUniform3f(s->graph_s_light.getUniform("lightColor"), 1.0f, 1.0f, 1.0f);
-			glUniform1f(s->graph_s_light.getUniform("ambientStrength"), s->set.ambientLighting);
+			glUniform1f(s->graph_s_light.getUniform("ambientStrength"), set.ambientLighting);
 
-			if (s->set.camtype == cam_3d) {
+			if (s->c_set.camtype == cam_3d) {
 
 				glUniform3f(s->graph_s_light.getUniform("lightPos"), s->c_3d.pos.x, s->c_3d.pos.y, s->c_3d.pos.z);
 			}
@@ -198,7 +201,7 @@ void graph::draw(state* s, mat4 model, mat4 view, mat4 proj) {
 
 			glUniformMatrix4fv(s->graph_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
 
-			glUniform4f(s->graph_s.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, s->set.graphopacity * rel_opactiy);
+			glUniform4f(s->graph_s.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, set.opacity);
 		}
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -206,16 +209,16 @@ void graph::draw(state* s, mat4 model, mat4 view, mat4 proj) {
 		glPolygonOffset(1.0f, 0.0f);
 		glDrawElements(GL_TRIANGLES, (int)indicies.size(), GL_UNSIGNED_INT, (void*)0);
 
-		if (s->set.wireframe) {
+		if (set.wireframe) {
 			glDisable(GL_BLEND);
 
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			glPolygonOffset(0.0f, 0.0f);
 
-			if (s->set.lighting)
-				glUniform4f(s->graph_s_light.getUniform("vcolor"), 0.0f, 0.0f, 0.0f, s->set.graphopacity);
+			if (set.lighting)
+				glUniform4f(s->graph_s_light.getUniform("vcolor"), 0.0f, 0.0f, 0.0f, set.opacity);
 			else
-				glUniform4f(s->graph_s.getUniform("vcolor"), 0.0f, 0.0f, 0.0f, s->set.graphopacity);
+				glUniform4f(s->graph_s.getUniform("vcolor"), 0.0f, 0.0f, 0.0f, set.opacity);
 
 			glDrawElements(GL_TRIANGLES, (int)indicies.size(), GL_UNSIGNED_INT, (void*)0);
 		}
@@ -226,11 +229,11 @@ void graph::draw(state* s, mat4 model, mat4 view, mat4 proj) {
 	glBindVertexArray(0);
 }
 
-void graph::normalize(state* s) {
-	if (s->set.axisnormalization) {
+void graph::normalize() {
+	if (set.axisnormalization) {
 		for (unsigned int i = 0; i < verticies.size(); i += 3) {
-			verticies[i] /= (s->set.rdom.xmax - s->set.rdom.xmin) / 20;
-			verticies[i + 1] /= (s->set.rdom.ymax - s->set.rdom.ymin) / 20;
+			verticies[i] /= (set.rdom.xmax - set.rdom.xmin) / 20;
+			verticies[i + 1] /= (set.rdom.ymax - set.rdom.ymin) / 20;
 			verticies[i + 2] /= (zmax - zmin) / 20;
 		}
 		zmin = -10;
@@ -238,7 +241,7 @@ void graph::normalize(state* s) {
 	}
 }
 
-void graph::generateIndiciesAndNormals(state* s) {
+void graph::generateIndiciesAndNormals() {
 	indicies.clear();
 	normals.clear();
 
@@ -246,16 +249,16 @@ void graph::generateIndiciesAndNormals(state* s) {
 	int _x_max = 0;
 	int _y_max = 0;
 	if (type == graph_func) {
-		_x_max = s->set.rdom.xrez;
-		_y_max = s->set.rdom.yrez;
+		_x_max = set.rdom.xrez;
+		_y_max = set.rdom.yrez;
 	}
 	else if (type == graph_cylindrical) {
-		_x_max = s->set.cdom.trez;
-		_y_max = s->set.cdom.zrez;
+		_x_max = set.cdom.trez;
+		_y_max = set.cdom.zrez;
 	}
 	else if (type == graph_spherical) {
-		_x_max = s->set.sdom.prez;
-		_y_max = s->set.sdom.trez;
+		_x_max = set.sdom.prez;
+		_y_max = set.sdom.trez;
 	}
 
 	for (int x = 0; x < _x_max; x++) {
@@ -296,25 +299,25 @@ void graph::generateIndiciesAndNormals(state* s) {
 
 fxy_graph::fxy_graph(int id) : graph(id) {
 	type = graph_func;
+	set.rdom = { -10, 10, -10, 10, 200, 200 };
 }
 
 void fxy_graph::genthread(gendata* g) {
-	int index = getIndex(g->s, g->ID);
+
 	float x = g->xmin;
 	for (int tx = 0; tx < g->txrez; tx++, x += g->dx) {
-		float y = g->s->set.rdom.ymin;
-		for (int ty = 0; ty <= g->s->set.rdom.yrez; ty++, y += g->dy) {
+		float y = g->dom.ymin;
+		for (int ty = 0; ty <= g->dom.yrez; ty++, y += g->dy) {
 			float z;
-			try { z = eval(g->s->graphs[index]->eq, { { 'x',x },{ 'y',y } }); }
+			try { z = eval(g->eq, { { 'x',x },{ 'y',y } }); }
 			catch (runtime_error e) {
-				
 				
 				g->success = false;
 				return;
 			}
 
 			if (z < g->zmin) g->zmin = z;
-			else if (z > g->zmax) g->zmax = z;
+			if (z > g->zmax) g->zmax = z;
 
 			g->ret.push_back(x);
 			g->ret.push_back(y);
@@ -324,7 +327,7 @@ void fxy_graph::genthread(gendata* g) {
 	g->success = true;
 }
 
-void fxy_graph::generate(state* s) {
+void fxy_graph::generate() {
 	unsigned int numthreads = thread::hardware_concurrency();
 #ifdef _MSC_VER
 	int cpuinfo[4];
@@ -333,11 +336,18 @@ void fxy_graph::generate(state* s) {
 	if (HT) numthreads /= 2;
 #endif
 
-	float dx = (s->set.rdom.xmax - s->set.rdom.xmin) / s->set.rdom.xrez;
-	float dy = (s->set.rdom.ymax - s->set.rdom.ymin) / s->set.rdom.yrez;
-	float xmin = s->set.rdom.xmin;
-	unsigned int txDelta = s->set.rdom.xrez / numthreads;
-	unsigned int txLast = s->set.rdom.xrez - (numthreads - 1) * txDelta + 1;
+	xmin = ymin = zmin = FLT_MAX;
+	xmax = ymax = zmax = -FLT_MAX;
+
+	float dx = (set.rdom.xmax - set.rdom.xmin) / set.rdom.xrez;
+	float dy = (set.rdom.ymax - set.rdom.ymin) / set.rdom.yrez;
+	xmin = set.rdom.xmin;
+	ymin = set.rdom.ymin;
+	xmax = set.rdom.xmax;
+	ymax = set.rdom.ymax;
+	float _xmin = xmin;
+	unsigned int txDelta = set.rdom.xrez / numthreads;
+	unsigned int txLast = set.rdom.xrez - (numthreads - 1) * txDelta + 1;
 
 	verticies.clear();
 
@@ -352,16 +362,17 @@ void fxy_graph::generate(state* s) {
 			else
 				d->txrez = txDelta;
 
-			d->s = s;
+			d->dom = set.rdom;
+			d->eq = eq;
 			d->dx = dx;
 			d->dy = dy;
-			d->xmin = xmin;
+			d->xmin = _xmin;
 			d->ID = ID;
 
 			data.push_back(d);
 			threads.push_back(thread(genthread, data.back()));
 
-			xmin += txDelta * dx;
+			_xmin += txDelta * dx;
 		}
 	}
 	bool success = true;
@@ -383,8 +394,8 @@ void fxy_graph::generate(state* s) {
 		zmin = gzmin;
 		zmax = gzmax;
 
-		normalize(s);
-		generateIndiciesAndNormals(s);
+		normalize();
+		generateIndiciesAndNormals();
 	}
 
 	for (gendata* g : data)
@@ -393,35 +404,38 @@ void fxy_graph::generate(state* s) {
 
 cyl_graph::cyl_graph(int id) : graph(id) {
 	type = graph_cylindrical;
+	set.cdom = { 0, 1, 0, 2 * val_pi, 200, 200 };
 }
 
 void cyl_graph::genthread(gendata* g) {
-	int index = getIndex(g->s, g->ID);
 	float z = g->zmin;
 	for (int tz = 0; tz < g->tzrez; tz++, z += g->dz) {
-		float t = g->s->set.cdom.tmin;
-		for (int tt = 0; tt <= g->s->set.cdom.trez; tt++, t += g->dt) {
+		float t = g->dom.tmin;
+		for (int tt = 0; tt <= g->dom.trez; tt++, t += g->dt) {
 			float r;
-			try { r = eval(g->s->graphs[index]->eq, { { 'z',z },{ 't',t } }); }
+			try { r = eval(g->eq, { { 'z',z },{ 952,t } }); }
 			catch (runtime_error e) {
-				
-				
+			
 				g->success = false;
 				return;
 			}
 
-			if (z < g->gzmin) g->gzmin = z;
-			else if (z > g->gzmax) g->gzmax = z;
+			float x = r * cos(t);
+			float y = r * sin(t);
+			if (x < g->gxmin) g->gxmin = x;
+			if (x > g->gxmax) g->gxmax = x;
+			if (y < g->gymin) g->gymin = y;
+			if (y > g->gymax) g->gymax = y;
 
-			g->ret.push_back(r * cos(t));
-			g->ret.push_back(r * sin(t));
+			g->ret.push_back(x);
+			g->ret.push_back(y);
 			g->ret.push_back(z);
 		}
 	}
 	g->success = true;
 }
 
-void cyl_graph::generate(state* s) {
+void cyl_graph::generate() {
 	unsigned int numthreads = thread::hardware_concurrency();
 #ifdef _MSC_VER
 	int cpuinfo[4];
@@ -430,11 +444,16 @@ void cyl_graph::generate(state* s) {
 	if (HT) numthreads /= 2;
 #endif
 
-	float dz = (s->set.cdom.zmax - s->set.cdom.zmin) / s->set.cdom.zrez;
-	float dt = (s->set.cdom.tmax - s->set.cdom.tmin) / s->set.cdom.trez;
-	float _zmin = s->set.cdom.zmin;
-	unsigned int tzDelta = s->set.cdom.zrez / numthreads;
-	unsigned int tzLast = s->set.cdom.zrez - (numthreads - 1) * tzDelta + 1;
+	xmin = ymin = zmin = FLT_MAX;
+	xmax = ymax = zmax = -FLT_MAX;
+
+	float dz = (set.cdom.zmax - set.cdom.zmin) / set.cdom.zrez;
+	float dt = (set.cdom.tmax - set.cdom.tmin) / set.cdom.trez;
+	zmin = set.cdom.zmin;
+	zmax = set.cdom.zmax;
+	float _zmin = zmin;
+	unsigned int tzDelta = set.cdom.zrez / numthreads;
+	unsigned int tzLast = set.cdom.zrez - (numthreads - 1) * tzDelta + 1;
 
 	verticies.clear();
 
@@ -449,7 +468,8 @@ void cyl_graph::generate(state* s) {
 			else
 				d->tzrez = tzDelta;
 
-			d->s = s;
+			d->eq = eq;
+			d->dom = set.cdom;
 			d->dz = dz;
 			d->dt = dt;
 			d->zmin = _zmin;
@@ -472,16 +492,23 @@ void cyl_graph::generate(state* s) {
 	}
 
 	if (success) {
-		float gzmin = FLT_MAX, gzmax = -FLT_MAX;
+		float gxmin = FLT_MAX, gxmax = -FLT_MAX;
 		for (unsigned int i = 0; i < threads.size(); i++) {
-			if (data[i]->gzmin < gzmin) gzmin = data[i]->gzmin;
-			if (data[i]->gzmax > gzmax) gzmax = data[i]->gzmax;
+			if (data[i]->gxmin < gxmin) gxmin = data[i]->gxmin;
+			if (data[i]->gxmax > gxmax) gxmax = data[i]->gxmax;
 		}
-		_zmin = gzmin;
-		zmax = gzmax;
+		xmin = gxmin;
+		xmax = gxmax;
+		float gymin = FLT_MAX, gymax = -FLT_MAX;
+		for (unsigned int i = 0; i < threads.size(); i++) {
+			if (data[i]->gymin < gymin) gymin = data[i]->gymin;
+			if (data[i]->gymax > gymax) gymax = data[i]->gymax;
+		}
+		ymin = gymin;
+		ymax = gymax;
 
-		normalize(s);
-		generateIndiciesAndNormals(s);
+		normalize();
+		generateIndiciesAndNormals();
 	}
 
 	for (gendata* g : data)
@@ -490,36 +517,43 @@ void cyl_graph::generate(state* s) {
 
 spr_graph::spr_graph(int id) : graph(id) {
 	type = graph_spherical;
+	set.sdom = { 0, 2 * val_pi, 0, val_pi, 200, 200 };
 }
 
 void spr_graph::genthread(gendata* g) {
-	int index = getIndex(g->s, g->ID);
+
 	float p = g->pmin;
 	for (int tp = 0; tp < g->tprez; tp++, p += g->dp) {
-		float t = g->s->set.sdom.tmin;
-		for (int tt = 0; tt <= g->s->set.sdom.trez; tt++, t += g->dt) {
+		float t = g->dom.tmin;
+		for (int tt = 0; tt <= g->dom.trez; tt++, t += g->dt) {
 			float r;
-			try { r = eval(g->s->graphs[index]->eq, { { 't',t },{ 'p',p } }); }
+			try { r = eval(g->eq, { { 952,t },{ 966,p } }); }
 			catch (runtime_error e) {
-				
-				
 				
 				g->success = false;
 				return;
 			}
 
-			if (r * cos(p) < g->zmin) g->zmin = r * cos(p);
-			else if (r * cos(p) > g->zmax) g->zmax = r * cos(p);
+			float x = r * cos(t) * sin(p);
+			float y = r * sin(t) * sin(p);
+			float z = r * cos(p);
 
-			g->ret.push_back(r * cos(t) * sin(p));
-			g->ret.push_back(r * sin(t) * sin(p));
-			g->ret.push_back(r * cos(p));
+			if (z < g->gzmin) g->gzmin = z;
+			if (z > g->gzmax) g->gzmax = z;
+			if (y < g->gymin) g->gymin = y;
+			if (y > g->gymax) g->gymax = y;
+			if (x < g->gxmin) g->gxmin = x;
+			if (x > g->gxmax) g->gxmax = x;
+
+			g->ret.push_back(x);
+			g->ret.push_back(y);
+			g->ret.push_back(z);
 		}
 	}
 	g->success = true;
 }
 
-void spr_graph::generate(state* s) {
+void spr_graph::generate() {
 	unsigned int numthreads = thread::hardware_concurrency();
 #ifdef _MSC_VER
 	int cpuinfo[4];
@@ -528,11 +562,14 @@ void spr_graph::generate(state* s) {
 	if (HT) numthreads /= 2;
 #endif
 
-	float dt = (s->set.sdom.tmax - s->set.sdom.tmin) / s->set.sdom.trez;
-	float dp = (s->set.sdom.pmax - s->set.sdom.pmin) / s->set.sdom.prez;
-	float pmin = s->set.sdom.pmin;
-	unsigned int tpDelta = s->set.sdom.prez / numthreads;
-	unsigned int tpLast = s->set.sdom.prez - (numthreads - 1) * tpDelta + 1;
+	xmin = ymin = zmin = FLT_MAX;
+	xmax = ymax = zmax = -FLT_MAX;
+
+	float dt = (set.sdom.tmax - set.sdom.tmin) / set.sdom.trez;
+	float dp = (set.sdom.pmax - set.sdom.pmin) / set.sdom.prez;
+	float pmin = set.sdom.pmin;
+	unsigned int tpDelta = set.sdom.prez / numthreads;
+	unsigned int tpLast = set.sdom.prez - (numthreads - 1) * tpDelta + 1;
 
 	verticies.clear();
 
@@ -547,7 +584,8 @@ void spr_graph::generate(state* s) {
 			else
 				d->tprez = tpDelta;
 
-			d->s = s;
+			d->dom = set.sdom;
+			d->eq = eq;
 			d->dt = dt;
 			d->dp = dp;
 			d->pmin = pmin;
@@ -572,39 +610,51 @@ void spr_graph::generate(state* s) {
 	if (success) {
 		float gzmin = FLT_MAX, gzmax = -FLT_MAX;
 		for (unsigned int i = 0; i < threads.size(); i++) {
-			if (data[i]->zmin < gzmin) gzmin = data[i]->zmin;
-			if (data[i]->zmax > gzmax) gzmax = data[i]->zmax;
+			if (data[i]->gzmin < gzmin) gzmin = data[i]->gzmin;
+			if (data[i]->gzmax > gzmax) gzmax = data[i]->gzmax;
 		}
 		zmin = gzmin;
 		zmax = gzmax;
+		float gxmin = FLT_MAX, gxmax = -FLT_MAX;
+		for (unsigned int i = 0; i < threads.size(); i++) {
+			if (data[i]->gxmin < gxmin) gxmin = data[i]->gxmin;
+			if (data[i]->gxmax > gxmax) gxmax = data[i]->gxmax;
+		}
+		xmin = gxmin;
+		xmax = gxmax;
+		float gymin = FLT_MAX, gymax = -FLT_MAX;
+		for (unsigned int i = 0; i < threads.size(); i++) {
+			if (data[i]->gymin < gymin) gymin = data[i]->gymin;
+			if (data[i]->gymax > gymax) gymax = data[i]->gymax;
+		}
+		ymin = gymin;
+		ymax = gymax;
 
-		normalize(s);
-		generateIndiciesAndNormals(s);
+		normalize();
+		generateIndiciesAndNormals();
 	}
 
 	for (gendata* g : data)
 		delete g;
 }
 
-para_curve::para_curve(int id, string _sx, string _sy, string _sz) : graph(id) {
+para_curve::para_curve(int id) : graph(id) {
 	type = graph_para_curve;
-	sx = _sx;
-	sy = _sy;
-	sz = _sz;
-	range = { 0, 10, 100 }; // TODO: fix
+	sx.resize(1000, 0);
+	sy.resize(1000, 0);
+	sz.resize(1000, 0);
+	set.pdom = { 0, 10, 100 };
 }
 
 bool para_curve::update_eq(state*) {
 	vector<op> new_eqx, new_eqy, new_eqz;
 
 	try {
-		in(sx, new_eqx);
-		in(sy, new_eqy);
-		in(sz, new_eqz);
+		in(utf8_to_wstring(sx), new_eqx);
+		in(utf8_to_wstring(sy), new_eqy);
+		in(utf8_to_wstring(sz), new_eqz);
 	}
 	catch (runtime_error e) {
-		
-		
 		
 		return false;
 	}
@@ -615,10 +665,14 @@ bool para_curve::update_eq(state*) {
 	return true;
 }
 
-void para_curve::generate(state* s) {
+void para_curve::generate() {
+
+	xmin = ymin = zmin = FLT_MAX;
+	xmax = ymax = zmax = -FLT_MAX;
+
 	verticies.clear();
-	float t = range.tmin;
-	for (int tstep = 0; tstep < range.trez; tstep++, t += (range.tmax - range.tmin) / range.trez) {
+	float t = set.pdom.tmin;
+	for (int tstep = 0; tstep < set.pdom.trez; tstep++, t += (set.pdom.tmax - set.pdom.tmin) / set.pdom.trez) {
 		float x, y, z;
 		try { 
 			x = eval(eqx, { { 't',t } });
@@ -626,30 +680,31 @@ void para_curve::generate(state* s) {
 			z = eval(eqz, { { 't',t } });
 		}
 		catch (runtime_error e) {
-			
-			
-			
+		
 			return;
 		}
-
 		if (z < zmin) zmin = z;
-		else if (z > zmax) zmax = z;
+		if (z > zmax) zmax = z;
+		if (y < ymin) ymin = y;
+		if (y > ymax) ymax = y;
+		if (x < xmin) xmin = x;
+		if (x > xmax) xmax = x;
 
 		verticies.push_back(x);
 		verticies.push_back(y);
 		verticies.push_back(z);
 	}
-	generateIndiciesAndNormals(s);
+	generateIndiciesAndNormals();
 }
 
-void para_curve::generateIndiciesAndNormals(state*) {
+void para_curve::generateIndiciesAndNormals() {
 	indicies.clear();
 	indicies.push_back(0);
-	for (int i = 1; i < range.trez - 1; i++) {
+	for (int i = 1; i < set.pdom.trez - 1; i++) {
 		indicies.push_back(i);
 		indicies.push_back(i);
 	}
-	indicies.push_back(range.trez - 1);
+	indicies.push_back(set.pdom.trez - 1);
 }
 
 void para_curve::draw(state* s, mat4 model, mat4 view, mat4 proj) {
@@ -666,7 +721,7 @@ void para_curve::draw(state* s, mat4 model, mat4 view, mat4 proj) {
 	glEnableVertexAttribArray(0);
 
 	glUniformMatrix4fv(s->graph_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
-	glUniform4f(s->graph_s.getUniform("vcolor"), 0.0f, 0.0f, 0.0f, s->set.graphopacity * rel_opactiy);
+	glUniform4f(s->graph_s.getUniform("vcolor"), 0.0f, 0.0f, 0.0f, set.opacity);
 	
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
