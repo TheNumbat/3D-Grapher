@@ -50,6 +50,7 @@ state::state() {
 
 	c_3d.reset();
 	c_3d_static.reset();
+	error_shown = false;
 	running = true;
 }
 
@@ -363,6 +364,16 @@ void state::UI() {
 			regengraph(this, settings_index);
 		}
 
+		ImGui::End();
+	}
+
+	if(error_shown) {
+		ImGui::SetNextWindowPos({0.2f * w, 0.0f});
+		ImGui::Begin("Error!", &error_shown, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::Text(error.c_str());
+		if(ImGui::Button("Dismiss")) {
+			error_shown = false;
+		}
 		ImGui::End();
 	}
 

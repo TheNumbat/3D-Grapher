@@ -142,11 +142,13 @@ void graph::send() {
 	glBindVertexArray(0);
 }
 
-bool graph::update_eq(state*) {
+bool graph::update_eq(state* s) {
 	vector<op> new_eq;
 
 	try { in(utf8_to_wstring(eq_str), new_eq); }
 	catch (runtime_error e) {
+		s->error_shown = true;
+		s->error = e.what();
 		return false;
 	}
 

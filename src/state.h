@@ -29,6 +29,10 @@ struct state {
 	bool running;
 	mode current;
 
+	// errors
+	bool error_shown;
+	string error;
+
 	// OpenGL
 	GLuint axisVAO, axisVBO;
 	shader graph_s, axis_s, UI_s, rect_s, graph_s_light;
