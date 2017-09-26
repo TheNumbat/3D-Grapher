@@ -1,4 +1,9 @@
 
+Ian
+-Press enter to graph
+-Camera reset button
+-Scroll wheel FOV
+-X on window close button always on
 
 UI
 	Don't need * for multiply

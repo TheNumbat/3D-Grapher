@@ -184,7 +184,7 @@ void graph::draw(state* s, mat4 model, mat4 view, mat4 proj) {
 			glUniform3f(s->graph_s_light.getUniform("lightColor"), 1.0f, 1.0f, 1.0f);
 			glUniform1f(s->graph_s_light.getUniform("ambientStrength"), set.ambientLighting);
 
-			if (s->c_set.camtype == cam_3d) {
+			if (s->camtype == cam_3d) {
 
 				glUniform3f(s->graph_s_light.getUniform("lightPos"), s->c_3d.pos.x, s->c_3d.pos.y, s->c_3d.pos.z);
 			}

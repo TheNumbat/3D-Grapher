@@ -8,7 +8,7 @@ enum cam_type {
 
 struct _cam_3d {
 	vec3 pos, front, up, right, globalUp;
-	float pitch, yaw, speed;
+	float pitch, yaw, speed, fov;
 	Uint32 lastUpdate;
 
 	mat4 getView() {
@@ -26,6 +26,7 @@ struct _cam_3d {
 	}
 
 	void reset() {
+		fov = 60.0f;
 		pitch = -45.0f;
 		yaw = 225.0f;
 		speed = 5.0f;
@@ -49,7 +50,7 @@ struct _cam_3d {
 
 struct _cam_3d_static {
 	vec3 pos, lookingAt, up;
-	float pitch, yaw, radius;
+	float pitch, yaw, radius, fov;
 
 	mat4 getView() {
 		mat4 ret = lookAt(pos, lookingAt, up);
@@ -57,6 +58,7 @@ struct _cam_3d_static {
 	}
 
 	void reset() {
+		fov = 60.0f;
 		pitch = 45.0f;
 		radius = 20.0f;
 		lookingAt = vec3(0, 0, 0);

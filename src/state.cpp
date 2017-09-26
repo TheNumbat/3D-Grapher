@@ -90,13 +90,13 @@ void state::RenderGraphs() {
 
 	mat4 model, view, proj;
 	model = rotate(model, radians(-90.0f), vec3(1, 0, 0));
-	if (c_set.camtype == cam_3d) {
+	if (camtype == cam_3d) {
 		view = c_3d.getView();
-		proj = perspective(radians(c_set.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
+		proj = perspective(radians(c_3d.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
 	}
 	else {
 		view = c_3d_static.getView();
-		proj = perspective(radians(c_set.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
+		proj = perspective(radians(c_3d_static.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
 	} 
 	modelviewproj =  proj * view * model;
 
@@ -173,7 +173,7 @@ void state::UI() {
 
 	ImGui::SetNextWindowPos({0, 0});
 	ImGui::SetNextWindowSize({0.2f * w, (float)h});
-	ImGui::Begin("Main", 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+	ImGui::Begin("Main", 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings);
 	
 	static bool func = false;
 	static bool camera = false;
@@ -188,16 +188,30 @@ void state::UI() {
 
 	if(camera) {
 		ImGui::SetNextWindowPos({0.2f * w, 0.0f});
-		ImGui::Begin("Camera", &camera, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
-		ImGui::SliderFloat("FOV", &c_set.fov, 10.0f, 170.0f);
+		ImGui::Begin("Camera", &camera, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
+		
 		const char* names[] = {"Free 3D", "Static 3D"};
-		ImGui::Combo("Camera", (int*)&c_set.camtype, names, 2);
+		ImGui::Combo("Camera", (int*)&camtype, names, 2);
+
+		if(camtype == cam_3d) {
+			ImGui::SliderFloat("FOV", &c_3d.fov, 10.0f, 170.0f);
+		} else if(camtype == cam_3d_static) {
+			ImGui::SliderFloat("FOV", &c_3d_static.fov, 10.0f, 170.0f);
+		}
+		
+		if(ImGui::Button("Reset Camera")) {
+			if(camtype == cam_3d) {
+				c_3d.reset();
+			} else if(camtype == cam_3d_static) {
+				c_3d_static.reset();
+			}
+		}
 		ImGui::End();
 	}
 
 	if(func) {
 		ImGui::SetNextWindowPos({0.2f * w, 0.0f});
-		ImGui::Begin("Add a Graph", &func, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::Begin("Add a Graph", &func, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
 
 		if(ImGui::Button("Rectangular")) {
 			func = false;
@@ -258,29 +272,35 @@ void state::UI() {
 		switch(g->type) {
 		case graph_func: {
 			ImGui::Text("f(x,y) =");
-			ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
+			if(ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback)) {
+				regengraph(this, i);
+			}
 		} break;
 		case graph_cylindrical: {
 			ImGui::Text("ψ(z,θ) =");
-			ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
+			if(ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback)) {
+				regengraph(this, i);
+			}
 		} break;
 		case graph_spherical: {
 			ImGui::Text("ρ(θ,φ) =");
-			ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
+			if(ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback)) {
+				regengraph(this, i);
+			}
 		} break;
 		case graph_para_curve: {
 			para_curve* p = (para_curve*)g;
 			ImGui::Text("x(t) =");
 			ImGui::PushID(0);
-			ImGui::InputTextMultiline("", (char*)p->sx.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
+			ImGui::InputTextMultiline("", (char*)p->sx.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
 			ImGui::PopID();
 			ImGui::Text("y(t) =");
 			ImGui::PushID(1);
-			ImGui::InputTextMultiline("", (char*)p->sy.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
+			ImGui::InputTextMultiline("", (char*)p->sy.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
 			ImGui::PopID();
 			ImGui::Text("z(t) =");
 			ImGui::PushID(2);
-			ImGui::InputTextMultiline("", (char*)p->sz.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
+			ImGui::InputTextMultiline("", (char*)p->sz.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
 			ImGui::PopID();
 		} break;
 		}
@@ -318,7 +338,7 @@ void state::UI() {
 		graph* g = graphs[settings_index];
 
 		ImGui::SetNextWindowPos({0.2f * w, 0.0f});
-		ImGui::Begin("Settings", &settings, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::Begin("Settings", &settings, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
 		
 		if(g->type != graph_para_curve) {
 			ImGui::Checkbox("Wireframe", &g->set.wireframe);
@@ -369,7 +389,7 @@ void state::UI() {
 
 	if(error_shown) {
 		ImGui::SetNextWindowPos({0.2f * w, 0.0f});
-		ImGui::Begin("Error!", &error_shown, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::Begin("Error!", &error_shown, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
 		ImGui::Text(error.c_str());
 		if(ImGui::Button("Dismiss")) {
 			error_shown = false;
@@ -415,10 +435,10 @@ void state::Events() {
 			if(current == mode::cam) {
 				int dx = (e.motion.x - mx);
 				int dy = (e.motion.y - my);
-				if (c_set.camtype == cam_3d) {
+				if (camtype == cam_3d) {
 					c_3d.move(dx, dy);
 				}
-				else if (c_set.camtype == cam_3d_static) {
+				else if (camtype == cam_3d_static) {
 					c_3d_static.move(dx, dy);
 				}
 			}
@@ -444,12 +464,26 @@ void state::Events() {
 				SDL_WarpMouseInWindow(window, last_mx, last_my);
 			}
 		} break;
+
+		case SDL_MOUSEWHEEL: {
+			if(!io.WantCaptureMouse) {
+				if(camtype == cam_3d) {
+					c_3d.fov -= 5 * e.wheel.y;
+					if(c_3d.fov < 10) c_3d.fov = 10;
+					if(c_3d.fov > 170) c_3d.fov = 170;
+				} else if(camtype == cam_3d_static) {
+					c_3d_static.fov -= 5 * e.wheel.y;
+					if(c_3d_static.fov < 10) c_3d_static.fov = 10;
+					if(c_3d_static.fov > 170) c_3d_static.fov = 170;
+				}
+			}
+		} break;
 		}
 	}
 
 	float dT = (SDL_GetTicks() - c_3d.lastUpdate) / 1000.0f;
 	c_3d.lastUpdate = SDL_GetTicks();
-	if (c_set.camtype == cam_3d && current == mode::cam) {
+	if (camtype == cam_3d && current == mode::cam) {
 		if (keys[SDL_SCANCODE_W]) {
 			c_3d.pos += c_3d.front * c_3d.speed * dT;
 		}

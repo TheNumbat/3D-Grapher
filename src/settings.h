@@ -34,8 +34,3 @@ struct graph_settings {
 		para_domain pdom;		// { 0, 10, 100 }
 	};
 };
-
-struct camera_settings {
-	cam_type camtype       = cam_3d_static;
-	float fov              = 60.0f;
-};

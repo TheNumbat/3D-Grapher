@@ -39,7 +39,9 @@ struct state {
 	
 	// Math
 	vector<graph*> graphs;
+
+	// camera
+	cam_type camtype = cam_3d_static;
 	_cam_3d c_3d;
 	_cam_3d_static c_3d_static;
-	camera_settings c_set;
 };
