@@ -175,8 +175,11 @@ void state::UI() {
 	ImGui::SetNextWindowSize({0.2f * w, (float)h});
 	ImGui::Begin("Main", 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings);
 	
-	static bool func = false;
-	static bool camera = false;
+	static bool func 	 = false;
+	static bool camera 	 = false;
+	static bool help 	 = false;
+	static bool settings = false;
+	static int settings_index = 0;
 
 	if(ImGui::Button("Add a Graph")) {
 		func = !func;
@@ -184,6 +187,82 @@ void state::UI() {
 	ImGui::SameLine();
 	if(ImGui::Button("Camera")) {
 		camera = !camera;
+	}
+	ImGui::SameLine();
+	if(ImGui::Button("Help")) {
+		help = !help;
+	}
+
+	ImGui::Separator();
+	ImGui::Columns(2);
+	ImGui::SetColumnWidth(-1, ImGui::GetWindowWidth() * 0.85f);
+
+	for(int i = 0; i < graphs.size(); i++) {
+		graph* g = graphs[i];
+		ImGui::PushID(g->ID);
+
+		switch(g->type) {
+		case graph_func: {
+			ImGui::Text("f(x,y) =");
+			if(ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback)) {
+				regengraph(this, i);
+			}
+		} break;
+		case graph_cylindrical: {
+			ImGui::Text("ψ(z,θ) =");
+			if(ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback)) {
+				regengraph(this, i);
+			}
+		} break;
+		case graph_spherical: {
+			ImGui::Text("ρ(θ,φ) =");
+			if(ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback)) {
+				regengraph(this, i);
+			}
+		} break;
+		case graph_para_curve: {
+			para_curve* p = (para_curve*)g;
+			ImGui::Text("x(t) =");
+			ImGui::PushID(0);
+			ImGui::InputTextMultiline("", (char*)p->sx.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
+			ImGui::PopID();
+			ImGui::Text("y(t) =");
+			ImGui::PushID(1);
+			ImGui::InputTextMultiline("", (char*)p->sy.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
+			ImGui::PopID();
+			ImGui::Text("z(t) =");
+			ImGui::PushID(2);
+			ImGui::InputTextMultiline("", (char*)p->sz.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
+			ImGui::PopID();
+		} break;
+		}
+
+		ImGui::NextColumn();
+		if(ImGui::Button("×")) {
+			if(settings_index == i) {
+				settings_index = 0;
+				settings = false;
+			}
+			if(settings_index > i) {
+				settings_index--;
+			}
+			delete g;
+			graphs.erase(graphs.begin() + i);
+			i--;
+			updateAxes(this);
+		}
+		if(ImGui::Button("▶")) {
+			regengraph(this, i);
+		}
+		if(ImGui::Button("⚙")) {
+			if(settings_index == i) settings = !settings;
+			else settings = true;
+			settings_index = i;
+		}
+		ImGui::NextColumn();
+
+		ImGui::Separator();
+		ImGui::PopID();
 	}
 
 	if(camera) {
@@ -258,81 +337,6 @@ void state::UI() {
 		ImGui::End();
 	}
 
-	ImGui::Separator();
-	ImGui::Columns(2);
-	ImGui::SetColumnWidth(-1, ImGui::GetWindowWidth() * 0.85f);
-
-	static bool settings = false;
-	static int settings_index = 0;
-
-	for(int i = 0; i < graphs.size(); i++) {
-		graph* g = graphs[i];
-		ImGui::PushID(g->ID);
-
-		switch(g->type) {
-		case graph_func: {
-			ImGui::Text("f(x,y) =");
-			if(ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback)) {
-				regengraph(this, i);
-			}
-		} break;
-		case graph_cylindrical: {
-			ImGui::Text("ψ(z,θ) =");
-			if(ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback)) {
-				regengraph(this, i);
-			}
-		} break;
-		case graph_spherical: {
-			ImGui::Text("ρ(θ,φ) =");
-			if(ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback)) {
-				regengraph(this, i);
-			}
-		} break;
-		case graph_para_curve: {
-			para_curve* p = (para_curve*)g;
-			ImGui::Text("x(t) =");
-			ImGui::PushID(0);
-			ImGui::InputTextMultiline("", (char*)p->sx.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
-			ImGui::PopID();
-			ImGui::Text("y(t) =");
-			ImGui::PushID(1);
-			ImGui::InputTextMultiline("", (char*)p->sy.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
-			ImGui::PopID();
-			ImGui::Text("z(t) =");
-			ImGui::PushID(2);
-			ImGui::InputTextMultiline("", (char*)p->sz.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
-			ImGui::PopID();
-		} break;
-		}
-
-		ImGui::NextColumn();
-		if(ImGui::Button("×")) {
-			if(settings_index == i) {
-				settings_index = 0;
-				settings = false;
-			}
-			if(settings_index > i) {
-				settings_index--;
-			}
-			delete g;
-			graphs.erase(graphs.begin() + i);
-			i--;
-			updateAxes(this);
-		}
-		if(ImGui::Button("▶")) {
-			regengraph(this, i);
-		}
-		if(ImGui::Button("⚙")) {
-			if(settings_index == i) settings = !settings;
-			else settings = true;
-			settings_index = i;
-		}
-		ImGui::NextColumn();
-
-		ImGui::Separator();
-		ImGui::PopID();
-	}
-
 	if(settings) {
 		bool changed = false;
 		graph* g = graphs[settings_index];
@@ -394,6 +398,15 @@ void state::UI() {
 		if(ImGui::Button("Dismiss")) {
 			error_shown = false;
 		}
+		ImGui::End();
+	}
+
+	if(help) {
+		ImGui::SetNextWindowPos({0.2f * w, 0.0f});
+		ImGui::Begin("Help", &help, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings);
+		ImGui::PushTextWrapPos(250);
+		ImGui::TextWrapped("TESTINGTESTINGTESTINGTESTINGTESTINGTESTINGTESTINGTESTINGTESTINGTESTINGTESTINGTESTING");
+		ImGui::PopTextWrapPos();
 		ImGui::End();
 	}
 
