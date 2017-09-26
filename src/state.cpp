@@ -291,6 +291,9 @@ void state::UI() {
 				settings_index = 0;
 				settings = false;
 			}
+			if(settings_index > i) {
+				settings_index--;
+			}
 			delete g;
 			graphs.erase(graphs.begin() + i);
 			i--;
@@ -312,10 +315,10 @@ void state::UI() {
 
 	if(settings) {
 		bool changed = false;
+		graph* g = graphs[settings_index];
 
 		ImGui::SetNextWindowPos({0.2f * w, 0.0f});
 		ImGui::Begin("Settings", &settings, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
-		graph* g = graphs[settings_index];
 		
 		if(g->type != graph_para_curve) {
 			ImGui::Checkbox("Wireframe", &g->set.wireframe);

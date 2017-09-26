@@ -29,7 +29,7 @@ struct graph {
 	virtual void normalize();
 	virtual void generateIndiciesAndNormals();
 
-	virtual void generate() = 0;
+	virtual void generate(state* s) = 0;
 	virtual void draw(state* s, mat4 model, mat4 view, mat4 proj);
 	virtual bool update_eq(state* s);
 
@@ -53,7 +53,7 @@ struct graph {
 
 struct para_curve : public graph {
 	para_curve(int id);
-	void generate();
+	void generate(state* s);
 	void draw(state* s, mat4 model, mat4 view, mat4 proj);
 	void generateIndiciesAndNormals();
 	bool update_eq(state* s);
@@ -73,10 +73,11 @@ struct fxy_graph : public graph {
 		float zmin, zmax, xmin, dx, dy;
 		int txrez, ID;
 		bool success;
+		state* s;
 	};
 
 	fxy_graph(int id);
-	void generate();
+	void generate(state* s);
 	static void genthread(gendata* g);
 };
 
@@ -92,10 +93,11 @@ struct cyl_graph : public graph {
 		float gxmin, gxmax, gymin, gymax, zmin, dz, dt;
 		int tzrez, ID;
 		bool success;
+		state* s;
 	};
 
 	cyl_graph(int id);
-	void generate();
+	void generate(state* s);
 	static void genthread(gendata* g);
 };
 
@@ -111,10 +113,11 @@ struct spr_graph : public graph {
 		float gxmin, gxmax, gymin, gymax, gzmin, gzmax, pmin, dt, dp;
 		int tprez, ID;
 		bool success;
+		state* s;
 	};
 
 	spr_graph(int id);
-	void generate();
+	void generate(state* s);
 	static void genthread(gendata* g);
 };
 

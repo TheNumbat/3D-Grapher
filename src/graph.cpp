@@ -17,7 +17,7 @@ void regengraph(state* s, int index) {
 	printeq(cout, s->graphs[index]->eq);
 
 	Uint64 start = SDL_GetPerformanceCounter();
-	s->graphs[index]->generate();
+	s->graphs[index]->generate(s);
 	Uint64 end = SDL_GetPerformanceCounter();
 	cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << endl;
 
@@ -311,7 +311,8 @@ void fxy_graph::genthread(gendata* g) {
 			float z;
 			try { z = eval(g->eq, { { 'x',x },{ 'y',y } }); }
 			catch (runtime_error e) {
-				
+				g->s->error_shown = true;
+				g->s->error = e.what();
 				g->success = false;
 				return;
 			}
@@ -327,7 +328,7 @@ void fxy_graph::genthread(gendata* g) {
 	g->success = true;
 }
 
-void fxy_graph::generate() {
+void fxy_graph::generate(state* s) {
 	unsigned int numthreads = thread::hardware_concurrency();
 #ifdef _MSC_VER
 	int cpuinfo[4];
@@ -362,6 +363,7 @@ void fxy_graph::generate() {
 			else
 				d->txrez = txDelta;
 
+			d->s = s;
 			d->dom = set.rdom;
 			d->eq = eq;
 			d->dx = dx;
@@ -415,7 +417,8 @@ void cyl_graph::genthread(gendata* g) {
 			float r;
 			try { r = eval(g->eq, { { 'z',z },{ 952,t } }); }
 			catch (runtime_error e) {
-			
+				g->s->error_shown = true;
+				g->s->error = e.what();			
 				g->success = false;
 				return;
 			}
@@ -435,7 +438,7 @@ void cyl_graph::genthread(gendata* g) {
 	g->success = true;
 }
 
-void cyl_graph::generate() {
+void cyl_graph::generate(state* s) {
 	unsigned int numthreads = thread::hardware_concurrency();
 #ifdef _MSC_VER
 	int cpuinfo[4];
@@ -468,6 +471,7 @@ void cyl_graph::generate() {
 			else
 				d->tzrez = tzDelta;
 
+			d->s = s;
 			d->eq = eq;
 			d->dom = set.cdom;
 			d->dz = dz;
@@ -529,7 +533,8 @@ void spr_graph::genthread(gendata* g) {
 			float r;
 			try { r = eval(g->eq, { { 952,t },{ 966,p } }); }
 			catch (runtime_error e) {
-				
+				g->s->error_shown = true;
+				g->s->error = e.what();				
 				g->success = false;
 				return;
 			}
@@ -553,7 +558,7 @@ void spr_graph::genthread(gendata* g) {
 	g->success = true;
 }
 
-void spr_graph::generate() {
+void spr_graph::generate(state* s) {
 	unsigned int numthreads = thread::hardware_concurrency();
 #ifdef _MSC_VER
 	int cpuinfo[4];
@@ -584,6 +589,7 @@ void spr_graph::generate() {
 			else
 				d->tprez = tpDelta;
 
+			d->s = s;
 			d->dom = set.sdom;
 			d->eq = eq;
 			d->dt = dt;
@@ -646,7 +652,7 @@ para_curve::para_curve(int id) : graph(id) {
 	set.pdom = { 0, 10, 100 };
 }
 
-bool para_curve::update_eq(state*) {
+bool para_curve::update_eq(state* s) {
 	vector<op> new_eqx, new_eqy, new_eqz;
 
 	try {
@@ -655,7 +661,8 @@ bool para_curve::update_eq(state*) {
 		in(utf8_to_wstring(sz), new_eqz);
 	}
 	catch (runtime_error e) {
-		
+		s->error_shown = true;
+		s->error = e.what();		
 		return false;
 	}
 
@@ -665,7 +672,7 @@ bool para_curve::update_eq(state*) {
 	return true;
 }
 
-void para_curve::generate() {
+void para_curve::generate(state* s) {
 
 	xmin = ymin = zmin = FLT_MAX;
 	xmax = ymax = zmax = -FLT_MAX;
@@ -680,7 +687,8 @@ void para_curve::generate() {
 			z = eval(eqz, { { 't',t } });
 		}
 		catch (runtime_error e) {
-		
+			s->error_shown = true;
+			s->error = e.what();			
 			return;
 		}
 		if (z < zmin) zmin = z;

@@ -14,13 +14,13 @@ bool num(wchar_t c) {
 }
 
 #define get2() if(s.size() > 1) {two = s.top();s.pop();one = s.top();s.pop();} \
-			   else {throw runtime_error("ERROR: malformed expression!");}
+			   else {throw runtime_error("Malformed expression!");}
 
 #define get1() if(s.size()) {one = s.top();s.pop();} \
-			   else {throw runtime_error("ERROR: malformed expression!");}
+			   else {throw runtime_error("Malformed expression!");}
 
 float eval(const vector<op>& EQ, vector<pair<wchar_t, float>> vars) {
-	if (!EQ.size()) throw runtime_error("ERROR: empty expression!");
+	if (!EQ.size()) throw runtime_error("Empty expression!");
 	stack<float> s;
 	float one = 0, two = 0, result = 0;
 	for (unsigned int index = 0; index < EQ.size(); index++) {
@@ -168,7 +168,7 @@ float eval(const vector<op>& EQ, vector<pair<wchar_t, float>> vars) {
 			wchar_t v = EQ[index + 1];
 			auto entry = find_if(vars.begin(), vars.end(), [v](const pair<wchar_t, float>& var) -> bool { return var.first == v; });
 			if (entry == vars.end()) {
-				throw runtime_error("ERROR: variable " + wstring_to_utf8(to_wstring(v)) + " not recognized!");
+				throw runtime_error("Variable " + to_string((char)v) + " not recognized!");
 			}
 			else {
 				s.push(entry->second);
@@ -196,7 +196,7 @@ float eval(const vector<op>& EQ, vector<pair<wchar_t, float>> vars) {
 	}
 	result = s.top();
 	s.pop();
-	if (s.size()) throw runtime_error("ERROR: malformed expression!");
+	if (s.size()) throw runtime_error("Malformed expression!");
 	return result;
 }
 
@@ -215,7 +215,6 @@ int precedence(wchar_t c) {
 }
 
 void in(wstring _str, vector<op>& EQ) {
-	if (_str == L" " || !_str.size()) throw runtime_error("ERROR: blank string!");
 
 	wstring str;
 
@@ -335,9 +334,15 @@ void in(wstring _str, vector<op>& EQ) {
 							s.push(op_acot);
 						else {
 							if (!in.good())
-								throw runtime_error("ERROR: unknown name '" + wstring_to_utf8(func) + "'");
+								throw runtime_error("Unknown name '" + wstring_to_utf8(func) + "'!");
 							else
-								throw runtime_error("ERROR: unknown function '" + wstring_to_utf8(func) + "()'");
+								throw runtime_error("Unknown function '" + wstring_to_utf8(func) + "()'!");
+						}
+						if(!in.good()) {
+							throw runtime_error("No parenthesis after '" + wstring_to_utf8(func) + "'!");
+						}
+						if(in.peek() == ')') {
+							throw runtime_error("No arguments in '" + wstring_to_utf8(func) + "'!");	
 						}
 					}
 					s.push('(');
@@ -361,13 +366,13 @@ void in(wstring _str, vector<op>& EQ) {
 	}
 	while (s.size()) {
 		if (s.top() == '(' || s.top() == ')') {
-			throw runtime_error("ERROR: unbalanced parenthesis!");
+			throw runtime_error("Unbalanced parenthesis!");
 		}
 		EQ.push_back(s.top());
 		s.pop();
 	}
 	if (!EQ.size()) {
-		throw runtime_error("ERROR: empty expression!");
+		throw runtime_error("Empty expression!");
 	}
 }
 
