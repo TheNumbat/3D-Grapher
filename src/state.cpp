@@ -461,8 +461,22 @@ void state::UIError() {
 void state::UIHelp() {
 	ImGui::SetNextWindowPos({0.2f * w, 0.0f});
 	ImGui::Begin("Help", &ui.help, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings);
-	ImGui::PushTextWrapPos(250);
-	ImGui::TextWrapped("");
+	ImGui::PushTextWrapPos(450);
+	ImGui::Separator();
+	ImGui::TextWrapped("Equations");
+	ImGui::Indent();
+	ImGui::TextWrapped("Click the Add a Graph button to create a new function and enter its definition.");
+	ImGui::TextWrapped("To enter a math symbol, type the first letter of the symbol's English name and press tab. For example, to input θ, type 't' and press tab.");
+	ImGui::TextWrapped("You must add * to signify multiplication.");
+	ImGui::TextWrapped("Finally, press enter/click the ▶ button to render the graph, or click the ⚙ button to adjust domain and rendering settings.");
+	ImGui::Unindent();
+	ImGui::Separator();
+	ImGui::TextWrapped("Camera");
+	ImGui::Indent();
+	ImGui::TextWrapped("Click the Camera button to change the camera settings.");
+	ImGui::TextWrapped("The FOV (field of view) sets the zoom.");
+	ImGui::TextWrapped("The Free 3D camera allows you to fly around the scene in first person. Click and hold on the graph to navigate with W/A/S/D.");
+	ImGui::Unindent();
 	ImGui::PopTextWrapPos();
 	ImGui::End();
 }
