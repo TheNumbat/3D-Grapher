@@ -40,17 +40,16 @@ state::state() {
 	ImGui::GetStyle().WindowRounding = 0.0f;
 
 	ImGuiIO& io = ImGui::GetIO();
-	static const ImWchar range[] = {32, 127, 215, 215, 913, 969, 8592, 9654, 9881, 9881, 0}; // apparently this needs to be persistent...
+	const ImWchar range[] = {32, 127, 215, 215, 913, 969, 8592, 9654, 9881, 9881, 0};
 	io.Fonts->AddFontFromFileTTF("font.ttf", 18, 0, range);
 
-	updateAxes(this);
+	axes[3] = axes[9] = axes[16] = axes[22] = axes[29] = axes[35] = 1.0f;
+	updateAxes();
 
 	keys = SDL_GetKeyboardState(NULL);
-	current = mode::idle;
 
 	c_3d.reset();
 	c_3d_static.reset();
-	error_shown = false;
 	running = true;
 }
 
@@ -63,6 +62,89 @@ state::~state() {
 	SDL_GL_DeleteContext(context);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
+}
+
+void state::regengraph(int index) {
+
+	if (!graphs[index]->update_eq(this)) return;
+	printeq(cout, graphs[index]->eq);
+
+	Uint64 start = SDL_GetPerformanceCounter();
+	graphs[index]->generate(this);
+	Uint64 end = SDL_GetPerformanceCounter();
+	cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << endl;
+
+	updateAxes();
+	graphs[index]->send();
+}
+
+void state::regenall() {
+	bool gen = false;
+	for (int i = 0; i < (int)graphs.size(); i++) {
+		regengraph(i);
+		if (graphs[i]->verticies.size()) {
+			gen = true;
+		}
+	}
+	if (gen) {
+		updateAxes();
+	}
+}
+
+void state::updateAxes() {
+	float xmin = FLT_MAX, xmax = -FLT_MAX;
+	float ymin = FLT_MAX, ymax = -FLT_MAX;
+	float zmin = FLT_MAX, zmax = -FLT_MAX;
+
+	bool found_a_graph = false;
+	for (graph* g : graphs) {
+		if(g->verticies.size()) found_a_graph = true;
+		if (g->zmin < zmin) zmin = g->zmin;
+		if (g->zmax > zmax) zmax = g->zmax;
+		if (g->ymin < ymin) ymin = g->ymin;
+		if (g->ymax > ymax) ymax = g->ymax;
+		if (g->xmin < xmin) xmin = g->xmin;
+		if (g->xmax > xmax) xmax = g->xmax;			
+	}
+	if (zmin > 0) zmin = 0;
+	if (zmax < 0) zmax = 0;
+	if (ymin > 0) ymin = 0;
+	if (ymax < 0) ymax = 0;
+	if (xmin > 0) xmin = 0;
+	if (xmax < 0) xmax = 0;
+	
+	if(!found_a_graph) {
+		zmin = -10;
+		zmax = 10;
+		xmin = -10;
+		xmax = 10;
+		ymin = -10;
+		ymax = 10;
+	}
+
+	axes[x_min] = xmin;
+	axes[y_min] = ymin;
+	axes[z_min] = zmin;
+	axes[x_max] = xmax;
+	axes[y_max] = ymax;
+	axes[z_max] = zmax;
+
+	glBindVertexArray(axisVAO);
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, axisVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
+	}
+}
+
+void state::resetCam() {
+	c_3d_static.radius = std::max(axes[y_max] - axes[y_min], axes[x_max] - axes[x_min]);
+	c_3d_static.lookingAt.x = (axes[x_max] + axes[x_min]) / 2;
+	c_3d_static.lookingAt.z = (axes[y_max] + axes[y_min]) / -2;
+	c_3d_static.updatePos();
+
+	c_3d.pos.x = (axes[x_max] + axes[x_min]) / 2;
+	c_3d.pos.z = (axes[y_max] + axes[y_min]) / -2;
+	c_3d.updateFront();
 }
 
 void state::run() {
@@ -132,7 +214,7 @@ void state::RenderAxes() {
 	glBindVertexArray(0);
 }
 
-int callback(ImGuiTextEditCallbackData* data)
+int complete_callback(ImGuiTextEditCallbackData* data)
 {
 	int pos = data->CursorPos - 1;
 	char* one = &data->Buf[pos];
@@ -167,33 +249,7 @@ int callback(ImGuiTextEditCallbackData* data)
     return 0;
 }
 
-void state::UI() {
-
-	ImGui_ImplSdlGL3_NewFrame(window);
-
-	ImGui::SetNextWindowPos({0, 0});
-	ImGui::SetNextWindowSize({0.2f * w, (float)h});
-	ImGui::Begin("Main", 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings);
-	
-	static bool func 	 = false;
-	static bool camera 	 = false;
-	static bool help 	 = false;
-	static bool settings = false;
-	static int settings_index = 0;
-
-	if(ImGui::Button("Add a Graph")) {
-		func = !func;
-	}
-	ImGui::SameLine();
-	if(ImGui::Button("Camera")) {
-		camera = !camera;
-	}
-	ImGui::SameLine();
-	if(ImGui::Button("Help")) {
-		help = !help;
-	}
-
-	ImGui::Separator();
+void state::UIGraphs() {
 	ImGui::Columns(2);
 	ImGui::SetColumnWidth(-1, ImGui::GetWindowWidth() * 0.85f);
 
@@ -204,210 +260,255 @@ void state::UI() {
 		switch(g->type) {
 		case graph_func: {
 			ImGui::Text("f(x,y) =");
-			if(ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback)) {
-				regengraph(this, i);
+			if(ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback)) {
+				regengraph(i);
 			}
 		} break;
 		case graph_cylindrical: {
 			ImGui::Text("ψ(z,θ) =");
-			if(ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback)) {
-				regengraph(this, i);
+			if(ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback)) {
+				regengraph(i);
 			}
 		} break;
 		case graph_spherical: {
 			ImGui::Text("ρ(θ,φ) =");
-			if(ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback)) {
-				regengraph(this, i);
+			if(ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback)) {
+				regengraph(i);
 			}
 		} break;
 		case graph_para_curve: {
 			para_curve* p = (para_curve*)g;
 			ImGui::Text("x(t) =");
 			ImGui::PushID(0);
-			ImGui::InputTextMultiline("", (char*)p->sx.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
+			ImGui::InputTextMultiline("", (char*)p->sx.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback);
 			ImGui::PopID();
 			ImGui::Text("y(t) =");
 			ImGui::PushID(1);
-			ImGui::InputTextMultiline("", (char*)p->sy.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
+			ImGui::InputTextMultiline("", (char*)p->sy.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback);
 			ImGui::PopID();
 			ImGui::Text("z(t) =");
 			ImGui::PushID(2);
-			ImGui::InputTextMultiline("", (char*)p->sz.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, callback);
+			ImGui::InputTextMultiline("", (char*)p->sz.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback);
 			ImGui::PopID();
 		} break;
 		}
 
 		ImGui::NextColumn();
 		if(ImGui::Button("×")) {
-			if(settings_index == i) {
-				settings_index = 0;
-				settings = false;
+			if(ui.settings_index == i) {
+				ui.settings_index = 0;
+				ui.settings = false;
 			}
-			if(settings_index > i) {
-				settings_index--;
+			if(ui.settings_index > i) {
+				ui.settings_index--;
 			}
 			delete g;
 			graphs.erase(graphs.begin() + i);
 			i--;
-			updateAxes(this);
+			updateAxes();
 		}
 		if(ImGui::Button("▶")) {
-			regengraph(this, i);
+			regengraph(i);
 		}
 		if(ImGui::Button("⚙")) {
-			if(settings_index == i) settings = !settings;
-			else settings = true;
-			settings_index = i;
+			if(ui.settings_index == i) ui.settings = !ui.settings;
+			else ui.settings = true;
+			ui.settings_index = i;
 		}
 		ImGui::NextColumn();
 
 		ImGui::Separator();
 		ImGui::PopID();
 	}
+}
 
-	if(camera) {
-		ImGui::SetNextWindowPos({0.2f * w, 0.0f});
-		ImGui::Begin("Camera", &camera, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
-		
-		const char* names[] = {"Free 3D", "Static 3D"};
-		ImGui::Combo("Camera", (int*)&camtype, names, 2);
+void state::UICamera() {
+	ImGui::SetNextWindowPos({0.2f * w, 0.0f});
+	ImGui::Begin("Camera", &ui.cam, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
+	
+	const char* names[] = {"Free 3D", "Static 3D"};
+	ImGui::Combo("Camera", (int*)&camtype, names, 2);
 
+	if(camtype == cam_3d) {
+		ImGui::SliderFloat("FOV", &c_3d.fov, 10.0f, 170.0f);
+	} else if(camtype == cam_3d_static) {
+		ImGui::SliderFloat("FOV", &c_3d_static.fov, 10.0f, 170.0f);
+	}
+	
+	if(ImGui::Button("Reset Camera")) {
 		if(camtype == cam_3d) {
-			ImGui::SliderFloat("FOV", &c_3d.fov, 10.0f, 170.0f);
+			c_3d.reset();
 		} else if(camtype == cam_3d_static) {
-			ImGui::SliderFloat("FOV", &c_3d_static.fov, 10.0f, 170.0f);
+			c_3d_static.reset();
 		}
-		
-		if(ImGui::Button("Reset Camera")) {
-			if(camtype == cam_3d) {
-				c_3d.reset();
-			} else if(camtype == cam_3d_static) {
-				c_3d_static.reset();
-			}
-		}
-		ImGui::End();
+	}
+	ImGui::End();
+}
+
+void state::UIFunc() {
+	ImGui::SetNextWindowPos({0.2f * w, 0.0f});
+	ImGui::Begin("Add a Graph", &ui.func, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
+
+	if(ImGui::Button("Rectangular")) {
+		ui.func = false;
+		graphs.push_back(new fxy_graph(next_graph_id++));
+	}
+	if(ImGui::IsItemHovered()) {
+		ImGui::BeginTooltip();
+			ImGui::Text("f(x,y)");
+		ImGui::EndTooltip();
 	}
 
-	if(func) {
-		ImGui::SetNextWindowPos({0.2f * w, 0.0f});
-		ImGui::Begin("Add a Graph", &func, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
-
-		if(ImGui::Button("Rectangular")) {
-			func = false;
-			graphs.push_back(new fxy_graph(next_graph_id++));
-		}
-		if(ImGui::IsItemHovered()) {
-			ImGui::BeginTooltip();
-				ImGui::Text("f(x,y)");
-			ImGui::EndTooltip();
-		}
-
-		if(ImGui::Button("Cylindrical")) {
-			func = false;
-			graphs.push_back(new cyl_graph(next_graph_id++));
-		}
-		if(ImGui::IsItemHovered()) {
-			ImGui::BeginTooltip();
-				ImGui::Text("ψ(z,θ)");
-			ImGui::EndTooltip();
-		}
-
-		if(ImGui::Button("Spherical")) {
-			func = false;
-			graphs.push_back(new spr_graph(next_graph_id++));
-		}
-		if(ImGui::IsItemHovered()) {
-			ImGui::BeginTooltip();
-				ImGui::Text("ρ(θ,φ)");
-			ImGui::EndTooltip();
-		}
-
-		if(ImGui::Button("Parametric Curve")) {
-			func = false;
-			graphs.push_back(new para_curve(next_graph_id++));
-		}
-		if(ImGui::IsItemHovered()) {
-			ImGui::BeginTooltip();
-				ImGui::Text("x = f(t)");
-				ImGui::Text("y = g(t)");
-				ImGui::Text("z = h(t)");
-			ImGui::EndTooltip();
-		}
-
-		ImGui::End();
+	if(ImGui::Button("Cylindrical")) {
+		ui.func = false;
+		graphs.push_back(new cyl_graph(next_graph_id++));
+	}
+	if(ImGui::IsItemHovered()) {
+		ImGui::BeginTooltip();
+			ImGui::Text("ψ(z,θ)");
+		ImGui::EndTooltip();
 	}
 
-	if(settings) {
-		bool changed = false;
-		graph* g = graphs[settings_index];
-
-		ImGui::SetNextWindowPos({0.2f * w, 0.0f});
-		ImGui::Begin("Settings", &settings, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
-		
-		if(g->type != graph_para_curve) {
-			ImGui::Checkbox("Wireframe", &g->set.wireframe);
-			ImGui::Checkbox("Lighting", &g->set.lighting);
-			changed = changed || ImGui::Checkbox("Normalization", &g->set.axisnormalization);
-			ImGui::SliderFloat("Opacity", &g->set.opacity, 0.0f, 1.0f);
-			ImGui::SliderFloat("Ambient Light", &g->set.ambientLighting, 0.0f, 1.0f);
-		}
-		
-		switch(g->type) {
-		case graph_func: {
-			changed = changed || ImGui::InputFloat("xmin", &g->set.rdom.xmin);
-			changed = changed || ImGui::InputFloat("xmax", &g->set.rdom.xmax);
-			changed = changed || ImGui::InputFloat("ymin", &g->set.rdom.ymin);
-			changed = changed || ImGui::InputFloat("ymax", &g->set.rdom.ymax);
-			changed = changed || ImGui::InputInt("xrez", &g->set.rdom.xrez);
-			changed = changed || ImGui::InputInt("yrez", &g->set.rdom.yrez);
-		} break;
-		case graph_cylindrical: {
-			changed = changed || ImGui::InputFloat("zmin", &g->set.cdom.zmin);
-			changed = changed || ImGui::InputFloat("zmax", &g->set.cdom.zmax);
-			changed = changed || ImGui::InputFloat("θmin", &g->set.cdom.tmin);
-			changed = changed || ImGui::InputFloat("θmax", &g->set.cdom.tmax);
-			changed = changed || ImGui::InputInt("zrez", &g->set.cdom.zrez);
-			changed = changed || ImGui::InputInt("θrez", &g->set.cdom.trez);
-		} break;
-		case graph_spherical: {
-			changed = changed || ImGui::InputFloat("θmin", &g->set.sdom.tmin);
-			changed = changed || ImGui::InputFloat("θmax", &g->set.sdom.tmax);
-			changed = changed || ImGui::InputFloat("φmin", &g->set.sdom.pmin);
-			changed = changed || ImGui::InputFloat("φmax", &g->set.sdom.pmax);
-			changed = changed || ImGui::InputInt("θrez", &g->set.sdom.trez);
-			changed = changed || ImGui::InputInt("φrez", &g->set.sdom.prez);
-		} break;
-		case graph_para_curve: {
-			changed = changed || ImGui::InputFloat("tmin", &g->set.pdom.tmin);
-			changed = changed || ImGui::InputFloat("tmax", &g->set.pdom.tmax);
-			changed = changed || ImGui::InputInt("trez", &g->set.pdom.trez);
-		} break;
-		}
-
-		if(changed) {
-			regengraph(this, settings_index);
-		}
-
-		ImGui::End();
+	if(ImGui::Button("Spherical")) {
+		ui.func = false;
+		graphs.push_back(new spr_graph(next_graph_id++));
+	}
+	if(ImGui::IsItemHovered()) {
+		ImGui::BeginTooltip();
+			ImGui::Text("ρ(θ,φ)");
+		ImGui::EndTooltip();
 	}
 
-	if(error_shown) {
-		ImGui::SetNextWindowPos({0.2f * w, 0.0f});
-		ImGui::Begin("Error!", &error_shown, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
-		ImGui::Text(error.c_str());
-		if(ImGui::Button("Dismiss")) {
-			error_shown = false;
-		}
-		ImGui::End();
+	if(ImGui::Button("Parametric Curve")) {
+		ui.func = false;
+		graphs.push_back(new para_curve(next_graph_id++));
+	}
+	if(ImGui::IsItemHovered()) {
+		ImGui::BeginTooltip();
+			ImGui::Text("x = f(t)");
+			ImGui::Text("y = g(t)");
+			ImGui::Text("z = h(t)");
+		ImGui::EndTooltip();
 	}
 
-	if(help) {
-		ImGui::SetNextWindowPos({0.2f * w, 0.0f});
-		ImGui::Begin("Help", &help, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings);
-		ImGui::PushTextWrapPos(250);
-		ImGui::TextWrapped("TESTINGTESTINGTESTINGTESTINGTESTINGTESTINGTESTINGTESTINGTESTINGTESTINGTESTINGTESTING");
-		ImGui::PopTextWrapPos();
-		ImGui::End();
+	ImGui::End();
+}
+
+void state::UISettings() {
+	bool changed = false;
+	graph* g = graphs[ui.settings_index];
+
+	ImGui::SetNextWindowPos({0.2f * w, 0.0f});
+	ImGui::Begin("Settings", &ui.settings, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
+	
+	if(g->type != graph_para_curve) {
+		ImGui::Checkbox("Wireframe", &g->set.wireframe);
+		ImGui::Checkbox("Lighting", &g->set.lighting);
+		changed = changed || ImGui::Checkbox("Normalization", &g->set.axisnormalization);
+		ImGui::SliderFloat("Opacity", &g->set.opacity, 0.0f, 1.0f);
+		ImGui::SliderFloat("Ambient Light", &g->set.ambientLighting, 0.0f, 1.0f);
+	}
+	
+	switch(g->type) {
+	case graph_func: {
+		changed = changed || ImGui::InputFloat("xmin", &g->set.rdom.xmin);
+		changed = changed || ImGui::InputFloat("xmax", &g->set.rdom.xmax);
+		changed = changed || ImGui::InputFloat("ymin", &g->set.rdom.ymin);
+		changed = changed || ImGui::InputFloat("ymax", &g->set.rdom.ymax);
+		changed = changed || ImGui::InputInt("xrez", &g->set.rdom.xrez);
+		changed = changed || ImGui::InputInt("yrez", &g->set.rdom.yrez);
+	} break;
+	case graph_cylindrical: {
+		changed = changed || ImGui::InputFloat("zmin", &g->set.cdom.zmin);
+		changed = changed || ImGui::InputFloat("zmax", &g->set.cdom.zmax);
+		changed = changed || ImGui::InputFloat("θmin", &g->set.cdom.tmin);
+		changed = changed || ImGui::InputFloat("θmax", &g->set.cdom.tmax);
+		changed = changed || ImGui::InputInt("zrez", &g->set.cdom.zrez);
+		changed = changed || ImGui::InputInt("θrez", &g->set.cdom.trez);
+	} break;
+	case graph_spherical: {
+		changed = changed || ImGui::InputFloat("θmin", &g->set.sdom.tmin);
+		changed = changed || ImGui::InputFloat("θmax", &g->set.sdom.tmax);
+		changed = changed || ImGui::InputFloat("φmin", &g->set.sdom.pmin);
+		changed = changed || ImGui::InputFloat("φmax", &g->set.sdom.pmax);
+		changed = changed || ImGui::InputInt("θrez", &g->set.sdom.trez);
+		changed = changed || ImGui::InputInt("φrez", &g->set.sdom.prez);
+	} break;
+	case graph_para_curve: {
+		changed = changed || ImGui::InputFloat("tmin", &g->set.pdom.tmin);
+		changed = changed || ImGui::InputFloat("tmax", &g->set.pdom.tmax);
+		changed = changed || ImGui::InputInt("trez", &g->set.pdom.trez);
+	} break;
+	}
+
+	if(changed) {
+		regengraph(ui.settings_index);
+	}
+
+	ImGui::End();
+}
+
+void state::UIError() {
+	ImGui::SetNextWindowPos({0.2f * w, 0.0f});
+	ImGui::Begin("Error!", &ui.error_shown, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
+	ImGui::Text(ui.error.c_str());
+	if(ImGui::Button("Dismiss")) {
+		ui.error_shown = false;
+	}
+	ImGui::End();
+}
+
+void state::UIHelp() {
+	ImGui::SetNextWindowPos({0.2f * w, 0.0f});
+	ImGui::Begin("Help", &ui.help, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings);
+	ImGui::PushTextWrapPos(250);
+	ImGui::TextWrapped("");
+	ImGui::PopTextWrapPos();
+	ImGui::End();
+}
+
+void state::UI() {
+
+	ImGui_ImplSdlGL3_NewFrame(window);
+
+	ImGui::SetNextWindowPos({0, 0});
+	ImGui::SetNextWindowSize({0.2f * w, (float)h});
+	ImGui::Begin("Main", 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings);
+
+	if(ImGui::Button("Add a Graph")) {
+		ui.func = !ui.func;
+	}
+	ImGui::SameLine();
+	if(ImGui::Button("Camera")) {
+		ui.cam = !ui.cam;
+	}
+	ImGui::SameLine();
+	if(ImGui::Button("Help")) {
+		ui.help = !ui.help;
+	}
+
+	ImGui::Separator();
+
+	UIGraphs();
+
+	if(ui.cam) {
+		UICamera();
+	}
+
+	if(ui.func) {
+		UIFunc();
+	}
+
+	if(ui.settings) {
+		UISettings();
+	}
+
+	if(ui.error_shown) {
+		UIError();
+	}
+
+	if(ui.help) {
+		UIHelp();
 	}
 
 	ImGui::End();
@@ -445,7 +546,7 @@ void state::Events() {
 		} break;
 
 		case SDL_MOUSEMOTION: {
-			if(current == mode::cam) {
+			if(ui.current == mode::cam) {
 				int dx = (e.motion.x - mx);
 				int dy = (e.motion.y - my);
 				if (camtype == cam_3d) {
@@ -461,7 +562,7 @@ void state::Events() {
 
 		case SDL_MOUSEBUTTONDOWN: {
 			if(!io.WantCaptureMouse) {
-				current = mode::cam;
+				ui.current = mode::cam;
 				SDL_CaptureMouse(SDL_TRUE);
 				SDL_SetRelativeMouseMode(SDL_TRUE);
 			}
@@ -470,8 +571,8 @@ void state::Events() {
 		} break;
 
 		case SDL_MOUSEBUTTONUP: {
-			if(!io.WantCaptureMouse && current == mode::cam) {
-				current = mode::idle;
+			if(!io.WantCaptureMouse && ui.current == mode::cam) {
+				ui.current = mode::idle;
 				SDL_CaptureMouse(SDL_FALSE);
 				SDL_SetRelativeMouseMode(SDL_FALSE);
 				SDL_WarpMouseInWindow(window, last_mx, last_my);
@@ -496,7 +597,7 @@ void state::Events() {
 
 	float dT = (SDL_GetTicks() - c_3d.lastUpdate) / 1000.0f;
 	c_3d.lastUpdate = SDL_GetTicks();
-	if (camtype == cam_3d && current == mode::cam) {
+	if (camtype == cam_3d && ui.current == mode::cam) {
 		if (keys[SDL_SCANCODE_W]) {
 			c_3d.pos += c_3d.front * c_3d.speed * dT;
 		}

@@ -1,111 +1,5 @@
 
 
-GLfloat axes[] = {
-   -10.0f,  0.0f ,  0.0f ,		1.0f, 0.0f, 0.0f,
-	10.0f,  0.0f ,  0.0f ,		1.0f, 0.0f, 0.0f,
-
-	0.0f , -10.0f,  0.0f ,		0.0f, 1.0f, 0.0f,
-	0.0f ,  10.0f,  0.0f ,		0.0f, 1.0f, 0.0f,
-
-	0.0f ,  0.0f , -10.0f,		0.0f, 0.0f, 1.0f,
-	0.0f ,  0.0f ,  10.0f,		0.0f, 0.0f, 1.0f
-};
-
-void regengraph(state* s, int index) {
-
-	if (!s->graphs[index]->update_eq(s)) return;
-	printeq(cout, s->graphs[index]->eq);
-
-	Uint64 start = SDL_GetPerformanceCounter();
-	s->graphs[index]->generate(s);
-	Uint64 end = SDL_GetPerformanceCounter();
-	cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << endl;
-
-	updateAxes(s);
-	s->graphs[index]->send();
-}
-
-int getIndex(state* s, int ID) {
-	auto entry = find_if(s->graphs.begin(), s->graphs.end(), [ID](graph* g) -> bool {return g->ID == ID; });
-	if (entry == s->graphs.end()) {
-		return -1;
-	}
-	else {
-		int pos = (int)(entry - s->graphs.begin());
-		return pos;
-	}
-}
-
-void regenall(state* s) {
-	bool gen = false;
-	for (int i = 0; i < (int)s->graphs.size(); i++) {
-		regengraph(s, i);
-		if (s->graphs[i]->verticies.size()) {
-			gen = true;
-		}
-	}
-	if (gen) {
-		updateAxes(s);
-		//resetCam(s);
-	}
-}
-
-void updateAxes(state* s) {
-	float xmin = FLT_MAX, xmax = -FLT_MAX;
-	float ymin = FLT_MAX, ymax = -FLT_MAX;
-	float zmin = FLT_MAX, zmax = -FLT_MAX;
-
-	bool found_a_graph = false;
-	for (graph* g : s->graphs) {
-		if(g->verticies.size()) found_a_graph = true;
-		if (g->zmin < zmin) zmin = g->zmin;
-		if (g->zmax > zmax) zmax = g->zmax;
-		if (g->ymin < ymin) ymin = g->ymin;
-		if (g->ymax > ymax) ymax = g->ymax;
-		if (g->xmin < xmin) xmin = g->xmin;
-		if (g->xmax > xmax) xmax = g->xmax;			
-	}
-	if (zmin > 0) zmin = 0;
-	if (zmax < 0) zmax = 0;
-	if (ymin > 0) ymin = 0;
-	if (ymax < 0) ymax = 0;
-	if (xmin > 0) xmin = 0;
-	if (xmax < 0) xmax = 0;
-	
-	if(!found_a_graph) {
-		zmin = -10;
-		zmax = 10;
-		xmin = -10;
-		xmax = 10;
-		ymin = -10;
-		ymax = 10;
-	}
-
-	axes[x_min] = xmin;
-	axes[y_min] = ymin;
-	axes[z_min] = zmin;
-	axes[x_max] = xmax;
-	axes[y_max] = ymax;
-	axes[z_max] = zmax;
-
-	glBindVertexArray(s->axisVAO);
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, s->axisVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
-	}
-}
-
-void resetCam(state* s) {
-	s->c_3d_static.radius = std::max(axes[y_max] - axes[y_min], axes[x_max] - axes[x_min]);
-	s->c_3d_static.lookingAt.x = (axes[x_max] + axes[x_min]) / 2;
-	s->c_3d_static.lookingAt.z = (axes[y_max] + axes[y_min]) / -2;
-	s->c_3d_static.updatePos();
-
-	s->c_3d.pos.x = (axes[x_max] + axes[x_min]) / 2;
-	s->c_3d.pos.z = (axes[y_max] + axes[y_min]) / -2;
-	s->c_3d.updateFront();
-}
-
 graph::graph(int id) {
 	eq_str.resize(1000, 0);
 	ID = id;
@@ -147,8 +41,8 @@ bool graph::update_eq(state* s) {
 
 	try { in(utf8_to_wstring(eq_str), new_eq); }
 	catch (runtime_error e) {
-		s->error_shown = true;
-		s->error = e.what();
+		s->ui.error_shown = true;
+		s->ui.error = e.what();
 		return false;
 	}
 
@@ -311,8 +205,8 @@ void fxy_graph::genthread(gendata* g) {
 			float z;
 			try { z = eval(g->eq, { { 'x',x },{ 'y',y } }); }
 			catch (runtime_error e) {
-				g->s->error_shown = true;
-				g->s->error = e.what();
+				g->s->ui.error_shown = true;
+				g->s->ui.error = e.what();
 				g->success = false;
 				return;
 			}
@@ -417,8 +311,8 @@ void cyl_graph::genthread(gendata* g) {
 			float r;
 			try { r = eval(g->eq, { { 'z',z },{ 952,t } }); }
 			catch (runtime_error e) {
-				g->s->error_shown = true;
-				g->s->error = e.what();			
+				g->s->ui.error_shown = true;
+				g->s->ui.error = e.what();			
 				g->success = false;
 				return;
 			}
@@ -533,8 +427,8 @@ void spr_graph::genthread(gendata* g) {
 			float r;
 			try { r = eval(g->eq, { { 952,t },{ 966,p } }); }
 			catch (runtime_error e) {
-				g->s->error_shown = true;
-				g->s->error = e.what();				
+				g->s->ui.error_shown = true;
+				g->s->ui.error = e.what();				
 				g->success = false;
 				return;
 			}
@@ -661,8 +555,8 @@ bool para_curve::update_eq(state* s) {
 		in(utf8_to_wstring(sz), new_eqz);
 	}
 	catch (runtime_error e) {
-		s->error_shown = true;
-		s->error = e.what();		
+		s->ui.error_shown = true;
+		s->ui.error = e.what();		
 		return false;
 	}
 
@@ -687,8 +581,8 @@ void para_curve::generate(state* s) {
 			z = eval(eqz, { { 't',t } });
 		}
 		catch (runtime_error e) {
-			s->error_shown = true;
-			s->error = e.what();			
+			s->ui.error_shown = true;
+			s->ui.error = e.what();			
 			return;
 		}
 		if (z < zmin) zmin = z;

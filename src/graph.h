@@ -120,9 +120,3 @@ struct spr_graph : public graph {
 	void generate(state* s);
 	static void genthread(gendata* g);
 };
-
-void updateAxes(state* s);
-void resetCam(state* s);
-void regengraph(state* s, int index);
-void regenall(state* s);
-int getIndex(state* s, int ID);

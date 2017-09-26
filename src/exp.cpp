@@ -168,7 +168,10 @@ float eval(const vector<op>& EQ, vector<pair<wchar_t, float>> vars) {
 			wchar_t v = EQ[index + 1];
 			auto entry = find_if(vars.begin(), vars.end(), [v](const pair<wchar_t, float>& var) -> bool { return var.first == v; });
 			if (entry == vars.end()) {
-				throw runtime_error("Variable " + to_string((char)v) + " not recognized!");
+				wstring error = L"Variable '";
+				error += v;
+				error += L"' not recognized!";
+				throw runtime_error(wstring_to_utf8(error));
 			}
 			else {
 				s.push(entry->second);
