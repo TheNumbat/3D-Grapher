@@ -1,5 +1,6 @@
 
 #include <codecvt>
+#include <locale>
 #include <iostream>
 #include <sstream>
 #include <vector>
