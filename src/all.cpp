@@ -12,14 +12,16 @@
 #include <thread>
 #include <limits>
 
-#include <glm/include/glm.hpp>
-#include <glm/include/gtc/matrix_transform.hpp>
-#include <glm/include/gtc/type_ptr.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
+#ifdef _WIN32
 #include <SDL2/SDL_syswm.h>
+#endif
 
 #include <imgui/imgui.h>
 
@@ -62,5 +64,5 @@ int main(int, char**) {
 #include "imgui_impl.cpp"
 #include "state.cpp"
 
-#include "..\deps\imgui\imgui.cpp" 
-#include "..\deps\imgui\imgui_draw.cpp" 
+#include <imgui/imgui.cpp>
+#include <imgui/imgui_draw.cpp>
