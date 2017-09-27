@@ -1116,7 +1116,7 @@ void    ImFontAtlas::ClearInputData()
     for (int i = 0; i < ConfigData.Size; i++)
         if (ConfigData[i].FontData && ConfigData[i].FontDataOwnedByAtlas)
         {
-            ImGui::MemFree(ConfigData[i].FontData);
+            //ImGui::MemFree(ConfigData[i].FontData);
             ConfigData[i].FontData = NULL;
         }
 
