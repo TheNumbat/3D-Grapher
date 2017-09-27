@@ -40,7 +40,7 @@ state::state() {
 	ImGui::GetStyle().WindowRounding = 0.0f;
 
 	ImGuiIO& io = ImGui::GetIO();
-	const ImWchar range[] = {32, 127, 215, 215, 913, 969, 8592, 9654, 9881, 9881, 0};
+	static const ImWchar range[] = {32, 127, 215, 215, 913, 969, 8592, 9654, 9881, 9881, 0};
 	io.Fonts->AddFontFromFileTTF("font.ttf", 18, 0, range);
 
 	axes[3] = axes[9] = axes[16] = axes[22] = axes[29] = axes[35] = 1.0f;
