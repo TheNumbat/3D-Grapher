@@ -287,11 +287,16 @@ void in(wstring _str, vector<op>& EQ) {
 			break;
 		default: // Functions, variables, and numbers
 			if (!num(buf)) {
+#ifdef _MSC_VER
 				if (in.peek() != WCHAR_MAX && !isnonfunc(in.peek())) {
+#else
+				if (in.peek() != EOF && !isnonfunc(in.peek())) {
+#endif
 					wstring func;
 					getline(in, func, L'(');
 					func.insert(0, 1, buf);
 					// Test function name
+					cout << wstring_to_utf8(func) << endl;
 					{
 						if (func == L"sqrt")
 							s.push(op_sqrt);
