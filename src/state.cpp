@@ -459,26 +459,56 @@ void state::UIError() {
 }
 
 void state::UIHelp() {
-	ImGui::SetNextWindowPos({0.2f * w, 0.0f});
-	ImGui::Begin("Help", &ui.help, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings);
-	ImGui::PushTextWrapPos(450);
-	ImGui::Separator();
-	ImGui::TextWrapped("Equations");
-	ImGui::Indent();
-	ImGui::TextWrapped("Click the Add a Graph button to create a new function and enter its definition.");
-	ImGui::TextWrapped("To enter a math symbol, type the first letter of the symbol's English name and press tab. For example, to input θ, type 't' and press tab.");
-	ImGui::TextWrapped("You must add * to signify multiplication.");
-	ImGui::TextWrapped("Finally, press enter/click the ▶ button to render the graph, or click the ⚙ button to adjust domain and rendering settings.");
-	ImGui::Unindent();
-	ImGui::Separator();
-	ImGui::TextWrapped("Camera");
-	ImGui::Indent();
-	ImGui::TextWrapped("Click the Camera button to change the camera settings.");
-	ImGui::TextWrapped("The FOV (field of view) sets the zoom.");
-	ImGui::TextWrapped("The Free 3D camera allows you to fly around the scene in first person. Click and hold on the graph to navigate with W/A/S/D.");
-	ImGui::Unindent();
-	ImGui::PopTextWrapPos();
-	ImGui::End();
+	using namespace ImGui;
+
+	SetNextWindowPos({0.2f * w, 0.0f});
+	Begin("Help", &ui.help, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
+
+	PushTextWrapPos(400);
+	TextWrapped("Equations");
+	Separator();
+	Indent();
+	TextWrapped("Click the Add a Graph button to create a new function and enter its definition.");
+	TextWrapped("To enter a math symbol, type the first letter of the symbol's English name and press tab. For example, to input θ, type 't' and press tab.");
+	TextWrapped("You must add * to signify multiplication.");
+	TextWrapped("Finally, press enter/click the ▶ button to render the graph, or click the ⚙ button to adjust domain and rendering settings.");
+	Unindent();
+
+	Separator();
+	TextWrapped("Camera");
+	Indent();
+	TextWrapped("Click the Camera button to change the camera settings.");
+	TextWrapped("The FOV (field of view) sets the zoom.");
+	TextWrapped("The Free 3D camera allows you to fly around the scene in first person. Click and hold on the graph to navigate with W/A/S/D.");
+	Unindent();
+	PopTextWrapPos();
+	End();
+
+	SetNextWindowPos({0.2f * w + 400, 0.0f});
+	SetNextWindowContentWidth(85.0f);
+	Begin("Functions", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
+	Text("sqrt()");
+	Text("sin()");
+	Text("cos()");
+	Text("tan()");
+	Text("asin()");
+	Text("acos()");
+	Text("atan()");
+	Text("abs()");
+	Text("exp()");
+	Text("exptwo()");
+	Text("ceil()");
+	Text("floor()");
+	Text("ln()");
+	Text("log()");
+	Text("log2()");
+	Text("sec()");
+	Text("csc()");
+	Text("cot()");
+	Text("asec()");
+	Text("acsc()");
+	Text("acot()");
+	End();
 }
 
 void state::UI() {

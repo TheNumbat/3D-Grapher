@@ -1,6 +1,5 @@
 
 UI
-	Help Window
 	Don't need * for multiply
 
 Rendering
