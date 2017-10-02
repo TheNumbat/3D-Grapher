@@ -35,6 +35,7 @@ state::state() {
 	graph_s.load(graph_vertex, graph_fragment);
 	axis_s.load(axis_vertex, axis_fragment);
 	graph_s_light.load(graph_vertex_lighting, graph_fragment_lighting);
+	graph_s_norm.load(graph_vertex_norm, graph_fragment_norm);
 
 	ImGui_ImplSdlGL3_Init(window);
 	ImGui::GetStyle().WindowRounding = 0.0f;
@@ -404,6 +405,7 @@ void state::UISettings() {
 	if(g->type != graph_para_curve) {
 		ImGui::Checkbox("Wireframe", &g->set.wireframe);
 		ImGui::Checkbox("Lighting", &g->set.lighting);
+		ImGui::Checkbox("Normals as Colors", &g->set.normal_colors);
 		changed = changed || ImGui::Checkbox("Normalization", &g->set.axisnormalization);
 		ImGui::SliderFloat("Opacity", &g->set.opacity, 0.0f, 1.0f);
 		ImGui::SliderFloat("Ambient Light", &g->set.ambientLighting, 0.0f, 1.0f);

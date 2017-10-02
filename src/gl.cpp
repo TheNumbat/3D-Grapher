@@ -95,92 +95,133 @@ void setupFuns() {
 	_glBlendEquation			= (PFNGLBLENDEQUATIONPROC)				SDL_GL_GetProcAddress("glBlendEquation");
 }
 
-const GLchar* graph_vertex = {
-	"#version 330 core\n"
+const GLchar* graph_vertex = R"STR(
+	#version 330 core
 
-	"layout (location = 0) in vec3 position;\n"
+	layout (location = 0) in vec3 position;
+	
+	uniform mat4 modelviewproj;
+	
+	void main() {
+		gl_Position = modelviewproj * vec4(position, 1.0f);
+	}
+)STR";
 
-	"uniform mat4 modelviewproj;\n"
+const GLchar* graph_fragment = R"STR(
+	#version 330 core
 
-	"void main() {\n"
-	"	gl_Position = modelviewproj * vec4(position, 1.0f);\n"
-	"}\n"
-};
+	uniform vec4 vcolor;
+	out vec4 color;
 
-const GLchar* graph_fragment = {
-	"#version 330 core\n"
+	void main() {
+		color = vcolor;
+	}
+)STR";
 
-	"uniform vec4 vcolor;\n"
-	"out vec4 color;\n"
+const GLchar* graph_vertex_lighting = R"STR(
+	#version 330 core
 
-	"void main() {\n"
-	"	color = vcolor;\n"
-	"}\n"
-};
+	layout (location = 0) in vec3 position;
+	layout (location = 1) in vec3 normal;
 
-const GLchar* graph_vertex_lighting = {
-	"#version 330 core\n"
+	uniform mat4 modelviewproj;
+	uniform mat4 model;
+	
+	out vec3 norm;
+	out vec3 fragPos;
 
-	"layout (location = 0) in vec3 position;\n"
-	"layout (location = 1) in vec3 normal;\n"
+	void main() {
+		gl_Position = modelviewproj * vec4(position, 1.0f);
+		norm = vec3(model * vec4(normal, 1.0f));
+		fragPos = vec3(model * vec4(position, 1.0f));
+	}
+)STR";
 
-	"uniform mat4 modelviewproj;\n"
-	"uniform mat4 model;\n"
-	"out vec3 norm;\n"
-	"out vec3 fragPos;\n"
+const GLchar* graph_fragment_lighting = R"STR(
+	#version 330 core
 
-	"void main() {\n"
-	"	gl_Position = modelviewproj * vec4(position, 1.0f);\n"
-	"	norm = vec3(model * vec4(normal, 1.0f));;\n"
-	"   fragPos = vec3(model * vec4(position, 1.0f));\n"
-	"}\n"
-};
+	uniform vec4 vcolor;
+	uniform vec3 lightColor;
+	uniform vec3 lightPos;
+	uniform float ambientStrength;
+	uniform bool use_norm;
 
-const GLchar* graph_fragment_lighting = {
-	"#version 330 core\n"
+	in vec3 norm;
+	in vec3 fragPos;
+	out vec4 color;
 
-	"uniform vec4 vcolor;\n"
-	"uniform vec3 lightColor;\n"
-	"uniform vec3 lightPos;\n"
-	"uniform float ambientStrength;\n"
-	"in vec3 norm;\n"
-	"in vec3 fragPos;\n"
-	"out vec4 color;\n"
+	void main() {
+		vec3 ambient = ambientStrength * lightColor;
+		vec3 lightDir = normalize(lightPos - fragPos);
+		float diff = abs(dot(norm, lightDir));
+		vec3 diffuse = diff * lightColor;
+		color = vec4(ambient + diffuse, 1.0f) * vcolor;
+	}
+)STR";
 
-	"void main() {\n"
-	"	vec3 ambient = ambientStrength * lightColor;\n"
-	"   vec3 lightDir = normalize(lightPos - fragPos);\n"
-	"   float diff = abs(dot(norm, lightDir));\n"
-	"   vec3 diffuse = diff * lightColor;\n"							
-	"	color = vec4(ambient + diffuse, 1.0f) * vcolor;\n"
-	"}\n"
+const GLchar* graph_vertex_norm = R"STR(
+	#version 330 core
 
-	// abs is not correct, but lights both sides
-};
+	layout (location = 0) in vec3 position;
+	layout (location = 1) in vec3 normal;
 
-const GLchar* axis_vertex = {
-	"#version 330 core\n"
+	uniform mat4 modelviewproj;
+	uniform mat4 model;
+	
+	out vec3 norm;
+	out vec3 fragPos;
 
-	"layout (location = 0) in vec3 position;\n"
-	"layout (location = 1) in vec3 color;\n"
+	void main() {
+		gl_Position = modelviewproj * vec4(position, 1.0f);
+		norm = vec3(model * vec4(normal, 1.0f));
+		fragPos = vec3(model * vec4(position, 1.0f));
+	}
+)STR";
 
-	"out vec3 vcolor;\n"
+const GLchar* graph_fragment_norm = R"STR(
+	#version 330 core
 
-	"uniform mat4 modelviewproj;\n"
+	uniform vec4 vcolor;
+	uniform vec3 lightColor;
+	uniform vec3 lightPos;
+	uniform float ambientStrength;
 
-	"void main() {\n"
-	"	gl_Position = modelviewproj * vec4(position, 1.0f);\n"
-	"	vcolor = color;\n"
-	"}\n"
-};
+	in vec3 norm;
+	in vec3 fragPos;
+	out vec4 color;
 
-const GLchar* axis_fragment = {
-	"#version 330 core\n"
+	void main() {
+		vec3 ambient = ambientStrength * lightColor;
+		vec3 lightDir = normalize(lightPos - fragPos);
+		float diff = abs(dot(norm, lightDir));
+		vec3 diffuse = diff * lightColor;
+		color = vec4(ambient + diffuse, 1.0f) * abs(vec4(norm, 1.0));
+	}
+)STR";
 
-	"in vec3 vcolor;\n"
-	"out vec4 color;\n"
+const GLchar* axis_vertex = R"STR(
+	#version 330 core
 
-	"void main() {\n"
-	"	color = vec4(vcolor, 1.0f);\n"
-	"}\n"
-};
+	layout (location = 0) in vec3 position;
+	layout (location = 1) in vec3 color;
+
+	out vec3 vcolor;
+
+	uniform mat4 modelviewproj;
+
+	void main() {
+		gl_Position = modelviewproj * vec4(position, 1.0f);
+		vcolor = color;
+	}
+)STR";
+
+const GLchar* axis_fragment = R"STR(
+	#version 330 core
+
+	in vec3 vcolor;
+	out vec4 color;
+
+	void main() {
+		color = vec4(vcolor, 1.0f);
+	}
+)STR";

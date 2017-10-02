@@ -25,6 +25,7 @@ struct graph_settings {
 	bool wireframe         = false;
 	bool lighting          = true;
 	bool axisnormalization = false;
+	bool normal_colors	   = false;
 	float opacity     	   = 1.0f;
 	float ambientLighting  = 0.0f;
 	union {

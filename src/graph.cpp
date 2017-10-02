@@ -61,7 +61,11 @@ void graph::draw(state* s, mat4 model, mat4 view, mat4 proj) {
 		mat4 modelviewproj = proj * view * model;
 
 		if (set.lighting) {
-			s->graph_s_light.use();
+			if(set.normal_colors) {
+				s->graph_s_norm.use();
+			} else {
+				s->graph_s_light.use();
+			}
 
 			glBindBuffer(GL_ARRAY_BUFFER, VBO);
 			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);

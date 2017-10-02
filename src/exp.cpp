@@ -296,7 +296,6 @@ void in(wstring _str, vector<op>& EQ) {
 					getline(in, func, L'(');
 					func.insert(0, 1, buf);
 					// Test function name
-					cout << wstring_to_utf8(func) << endl;
 					{
 						if (func == L"sqrt")
 							s.push(op_sqrt);

@@ -53,7 +53,7 @@ struct state {
 
 	// OpenGL
 	GLuint axisVAO = 0, axisVBO = 0;
-	shader graph_s, axis_s, UI_s, rect_s, graph_s_light;
+	shader graph_s, axis_s, UI_s, rect_s, graph_s_light, graph_s_norm;
 	mat4 modelviewproj;
 
 	// camera
