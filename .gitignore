@@ -17,6 +17,7 @@ bld/
 Build/
 *.sublime-workspace
 *.ini
+src/3DGrapher
 
 # Visual Studio 2015 cache/options directory
 .vs/
