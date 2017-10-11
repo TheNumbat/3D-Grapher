@@ -1,5 +1,6 @@
 
 state::state() {
+
 	w = screen_w;
 	h = screen_h;
 	mx = w / 2;
@@ -18,7 +19,6 @@ state::state() {
 	window = SDL_CreateWindow("3D Grapher", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		screen_w, screen_h, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
 	context = SDL_GL_CreateContext(window);
-
 
 	glewInit();
 	SDL_GL_SetSwapInterval(0);

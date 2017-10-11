@@ -46,6 +46,8 @@ bool graph::update_eq(state* s) {
 		return false;
 	}
 
+	Symbolic test = toSymbolic(new_eq);
+
 	eq = new_eq;
 	return true;
 }

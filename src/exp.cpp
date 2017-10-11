@@ -13,13 +13,19 @@ bool num(wchar_t c) {
 	return c >= '0' && c <= '9' || c == '.';
 }
 
+Symbolic toSymbolic(const vector<op>& EQ) {
+
+	Symbolic eq;
+	return eq;
+}
+
 #define get2() if(s.size() > 1) {two = s.top();s.pop();one = s.top();s.pop();} \
 			   else {throw runtime_error("Malformed expression!");}
 
 #define get1() if(s.size()) {one = s.top();s.pop();} \
 			   else {throw runtime_error("Malformed expression!");}
 
-float eval(const vector<op>& EQ, vector<pair<wchar_t, float>> vars) {
+float eval(const vector<op>& EQ, const vector<pair<wchar_t, float>>& vars) {
 	if (!EQ.size()) throw runtime_error("Empty expression!");
 	stack<float> s;
 	float one = 0, two = 0, result = 0;
@@ -383,7 +389,7 @@ void in(wstring _str, vector<op>& EQ) {
 	}
 }
 
-void printeq(ostream& out, vector<op> eq) {
+void printeq(ostream& out, const vector<op>& eq) {
 	for (op c : eq) {
 		if (c == op_sqrt)
 			out << "sqrt";
@@ -432,7 +438,7 @@ void printeq(ostream& out, vector<op> eq) {
 		else if (c == var)
 			out << "var";
 		else
-			out << c;
+			out << (char)c;
 		out << " ";
 	}
 	out << endl;
