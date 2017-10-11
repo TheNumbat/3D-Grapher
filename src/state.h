@@ -33,7 +33,7 @@ struct state {
 	};
 	struct uistate {
 		bool cam = false, func = false, settings = false, error_shown = false, help = false;
-		int settings_index = 0;
+		unsigned int settings_index = 0;
 		string error;
 		mode current = mode::idle;
 	};

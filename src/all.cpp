@@ -17,9 +17,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
+#include <glew/glew.h>
+
 #ifdef _WIN32
 #include <SDL2/SDL_syswm.h>
 #endif

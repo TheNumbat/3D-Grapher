@@ -19,7 +19,8 @@ state::state() {
 		screen_w, screen_h, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
 	context = SDL_GL_CreateContext(window);
 
-	setupFuns();
+
+	glewInit();
 	SDL_GL_SetSwapInterval(0);
 
 	glEnable(GL_POLYGON_OFFSET_FILL);
@@ -138,7 +139,7 @@ void state::updateAxes() {
 }
 
 void state::resetCam() {
-	c_3d_static.radius = std::max(axes[y_max] - axes[y_min], axes[x_max] - axes[x_min]);
+	c_3d_static.radius = max(axes[y_max] - axes[y_min], axes[x_max] - axes[x_min]);
 	c_3d_static.lookingAt.x = (axes[x_max] + axes[x_min]) / 2;
 	c_3d_static.lookingAt.z = (axes[y_max] + axes[y_min]) / -2;
 	c_3d_static.updatePos();
@@ -254,7 +255,7 @@ void state::UIGraphs() {
 	ImGui::Columns(2);
 	ImGui::SetColumnWidth(-1, ImGui::GetWindowWidth() * 0.85f);
 
-	for(int i = 0; i < graphs.size(); i++) {
+	for(unsigned int i = 0; i < graphs.size(); i++) {
 		graph* g = graphs[i];
 		ImGui::PushID(g->ID);
 
