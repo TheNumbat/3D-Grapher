@@ -37,10 +37,10 @@ void graph::send() {
 }
 
 bool graph::update_eq(state* s) {
-	vector<op> new_eq;
+	std::vector<op> new_eq;
 
 	try { in(utf8_to_wstring(eq_str), new_eq); }
-	catch (runtime_error e) {
+	catch (std::runtime_error e) {
 		s->ui.error_shown = true;
 		s->ui.error = e.what();
 		return false;
@@ -208,7 +208,7 @@ void fxy_graph::genthread(gendata* g) {
 		for (int ty = 0; ty <= g->dom.yrez; ty++, y += g->dy) {
 			float z;
 			try { z = eval(g->eq, { { 'x',x },{ 'y',y } }); }
-			catch (runtime_error e) {
+			catch (std::runtime_error e) {
 				g->s->ui.error_shown = true;
 				g->s->ui.error = e.what();
 				g->success = false;
@@ -227,7 +227,7 @@ void fxy_graph::genthread(gendata* g) {
 }
 
 void fxy_graph::generate(state* s) {
-	unsigned int numthreads = thread::hardware_concurrency();
+	unsigned int numthreads = std::thread::hardware_concurrency();
 #ifdef _MSC_VER
 	int cpuinfo[4];
 	__cpuid(cpuinfo, 1);
@@ -250,8 +250,8 @@ void fxy_graph::generate(state* s) {
 
 	verticies.clear();
 
-	vector<thread> threads;
-	vector<gendata*> data;
+	std::vector<std::thread> threads;
+	std::vector<gendata*> data;
 	for (unsigned int i = 0; i < numthreads; i++) {
 		if (txDelta || i == numthreads - 1) {
 			gendata* d = new gendata;
@@ -270,7 +270,7 @@ void fxy_graph::generate(state* s) {
 			d->ID = ID;
 
 			data.push_back(d);
-			threads.push_back(thread(genthread, data.back()));
+			threads.push_back(std::thread(genthread, data.back()));
 
 			_xmin += txDelta * dx;
 		}
@@ -314,7 +314,7 @@ void cyl_graph::genthread(gendata* g) {
 		for (int tt = 0; tt <= g->dom.trez; tt++, t += g->dt) {
 			float r;
 			try { r = eval(g->eq, { { 'z',z },{ 952,t } }); }
-			catch (runtime_error e) {
+			catch (std::runtime_error e) {
 				g->s->ui.error_shown = true;
 				g->s->ui.error = e.what();			
 				g->success = false;
@@ -337,7 +337,7 @@ void cyl_graph::genthread(gendata* g) {
 }
 
 void cyl_graph::generate(state* s) {
-	unsigned int numthreads = thread::hardware_concurrency();
+	unsigned int numthreads = std::thread::hardware_concurrency();
 #ifdef _MSC_VER
 	int cpuinfo[4];
 	__cpuid(cpuinfo, 1);
@@ -358,8 +358,8 @@ void cyl_graph::generate(state* s) {
 
 	verticies.clear();
 
-	vector<thread> threads;
-	vector<gendata*> data;
+	std::vector<std::thread> threads;
+	std::vector<gendata*> data;
 	for (unsigned int i = 0; i < numthreads; i++) {
 		if (tzDelta || i == numthreads - 1) {
 			gendata* d = new gendata;
@@ -378,7 +378,7 @@ void cyl_graph::generate(state* s) {
 			d->ID = ID;
 
 			data.push_back(d);
-			threads.push_back(thread(genthread, data.back()));
+			threads.push_back(std::thread(genthread, data.back()));
 
 			_zmin += tzDelta * dz;
 		}
@@ -430,7 +430,7 @@ void spr_graph::genthread(gendata* g) {
 		for (int tt = 0; tt <= g->dom.trez; tt++, t += g->dt) {
 			float r;
 			try { r = eval(g->eq, { { 952,t },{ 966,p } }); }
-			catch (runtime_error e) {
+			catch (std::runtime_error e) {
 				g->s->ui.error_shown = true;
 				g->s->ui.error = e.what();				
 				g->success = false;
@@ -457,7 +457,7 @@ void spr_graph::genthread(gendata* g) {
 }
 
 void spr_graph::generate(state* s) {
-	unsigned int numthreads = thread::hardware_concurrency();
+	unsigned int numthreads = std::thread::hardware_concurrency();
 #ifdef _MSC_VER
 	int cpuinfo[4];
 	__cpuid(cpuinfo, 1);
@@ -476,8 +476,8 @@ void spr_graph::generate(state* s) {
 
 	verticies.clear();
 
-	vector<thread> threads;
-	vector<gendata*> data;
+	std::vector<std::thread> threads;
+	std::vector<gendata*> data;
 	for (unsigned int i = 0; i < numthreads; i++) {
 		if (tpDelta || i == numthreads - 1) {
 			gendata* d = new gendata;
@@ -496,7 +496,7 @@ void spr_graph::generate(state* s) {
 			d->ID = ID;
 
 			data.push_back(d);
-			threads.push_back(thread(genthread, data.back()));
+			threads.push_back(std::thread(genthread, data.back()));
 
 			pmin += tpDelta * dp;
 		}
@@ -551,14 +551,14 @@ para_curve::para_curve(int id) : graph(id) {
 }
 
 bool para_curve::update_eq(state* s) {
-	vector<op> new_eqx, new_eqy, new_eqz;
+	std::vector<op> new_eqx, new_eqy, new_eqz;
 
 	try {
 		in(utf8_to_wstring(sx), new_eqx);
 		in(utf8_to_wstring(sy), new_eqy);
 		in(utf8_to_wstring(sz), new_eqz);
 	}
-	catch (runtime_error e) {
+	catch (std::runtime_error e) {
 		s->ui.error_shown = true;
 		s->ui.error = e.what();		
 		return false;
@@ -584,7 +584,7 @@ void para_curve::generate(state* s) {
 			y = eval(eqy, { { 't',t } });
 			z = eval(eqz, { { 't',t } });
 		}
-		catch (runtime_error e) {
+		catch (std::runtime_error e) {
 			s->ui.error_shown = true;
 			s->ui.error = e.what();			
 			return;

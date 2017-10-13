@@ -1,16 +1,14 @@
 
 #pragma once
 
-using namespace std;
-
 const float val_e = 2.7182818284590452353602874713527f;
 const float val_pi = 3.141592653589793238462643383279f;
 
 typedef wchar_t op;
 
-float eval(const vector<op>& EQ, vector<pair<wchar_t, float>> vars = {});
-void in(wstring str, vector<op>& EQ);
-void printeq(ostream& out, vector<op> eq);
+float eval(const std::vector<op>& EQ, std::vector<std::pair<wchar_t, float>> vars = {});
+void in(std::wstring str, std::vector<op>& EQ);
+void printeq(std::ostream& out, std::vector<op> eq);
 
 enum operators : op {
 	// operators

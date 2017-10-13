@@ -69,12 +69,12 @@ state::~state() {
 void state::regengraph(int index) {
 
 	if (!graphs[index]->update_eq(this)) return;
-	printeq(cout, graphs[index]->eq);
+	printeq(std::cout, graphs[index]->eq);
 
 	Uint64 start = SDL_GetPerformanceCounter();
 	graphs[index]->generate(this);
 	Uint64 end = SDL_GetPerformanceCounter();
-	cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << endl;
+	std::cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << std::endl;
 
 	updateAxes();
 	graphs[index]->send();
@@ -139,7 +139,7 @@ void state::updateAxes() {
 }
 
 void state::resetCam() {
-	c_3d_static.radius = max(axes[y_max] - axes[y_min], axes[x_max] - axes[x_min]);
+	c_3d_static.radius = std::max(axes[y_max] - axes[y_min], axes[x_max] - axes[x_min]);
 	c_3d_static.lookingAt.x = (axes[x_max] + axes[x_min]) / 2;
 	c_3d_static.lookingAt.z = (axes[y_max] + axes[y_min]) / -2;
 	c_3d_static.updatePos();

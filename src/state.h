@@ -34,7 +34,7 @@ struct state {
 	struct uistate {
 		bool cam = false, func = false, settings = false, error_shown = false, help = false;
 		unsigned int settings_index = 0;
-		string error;
+		std::string error;
 		mode current = mode::idle;
 	};
 
@@ -48,7 +48,7 @@ struct state {
 	const unsigned char* keys;
 
 	// Math
-	vector<graph*> graphs;
+	std::vector<graph*> graphs;
 	GLfloat axes[36] = {};
 
 	// OpenGL

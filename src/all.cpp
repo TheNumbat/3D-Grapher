@@ -29,7 +29,6 @@
 #include "../asset/font.h"
 
 using namespace glm;
-using namespace std;
 
 #include "cam.h"
 #include "settings.h"
