@@ -47,6 +47,10 @@ bool graph::update_eq(state* s) {
 	}
 
 	Symbolic test = toSymbolic(new_eq);
+	Symbolic x("x");
+	Symbolic i = integrate(test, x);
+	double result = i[x==1];
+	std::cout << "Symbolic: " << result << std::endl;
 
 	eq = new_eq;
 	return true;

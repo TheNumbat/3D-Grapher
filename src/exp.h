@@ -8,7 +8,7 @@ const float val_pi = 3.141592653589793238462643383279f;
 
 typedef wchar_t op;
 
-Symbolic toSymbolic(const vector<op>& EQ); 
+Symbolic toSymbolic(const std::vector<op>& EQ); 
 float eval(const vector<op>& EQ, const vector<pair<wchar_t, float>>& vars = {});
 void in(wstring str, vector<op>& EQ);
 void printeq(ostream& out, const vector<op>& eq);

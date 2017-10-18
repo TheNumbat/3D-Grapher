@@ -6,8 +6,8 @@ state::state() {
 	mx = w / 2;
 	my = h / 2;
 	next_graph_id = 0;
-	last_mx = last_my = 0;
 
+	last_mx = last_my = 0;
 	SDL_Init(SDL_INIT_EVERYTHING);
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
