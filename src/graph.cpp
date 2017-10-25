@@ -1,5 +1,4 @@
 
-
 graph::graph(int id) {
 	eq_str.resize(1000, 0);
 	ID = id;
@@ -48,9 +47,19 @@ bool graph::update_eq(state* s) {
 
 	Symbolic test = toSymbolic(new_eq);
 	Symbolic x("x");
-	Symbolic i = integrate(test, x);
-	double result = i[x==1];
-	std::cout << "Symbolic: " << result << std::endl;
+	test = integrate(test, x);
+	std::stringstream ss;
+	ss << test[x==1];
+	std::string result = ss.str(); 
+
+	std::cout << result << std::endl;
+	new_eq.clear();
+	try { in(utf8_to_wstring(result), new_eq); }
+	catch (runtime_error e) {
+		s->ui.error_shown = true;
+		s->ui.error = e.what();
+		return false;
+	}
 
 	eq = new_eq;
 	return true;

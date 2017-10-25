@@ -12,6 +12,7 @@
 #include <cmath>
 #include <thread>
 #include <limits>
+#undef min
 
 #include <symbolicc++/symbolicc++.h>
 
@@ -21,10 +22,6 @@
 
 #include <SDL2/SDL.h>
 #include <glew/glew.h>
-
-#ifdef _WIN32
-#include <SDL2/SDL_syswm.h>
-#endif
 
 #include <imgui/imgui.h>
 
