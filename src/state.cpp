@@ -68,13 +68,10 @@ state::~state() {
 
 void state::regengraph(int index) {
 
-	if (!graphs[index]->update_eq(this)) return;
-	printeq(cout, graphs[index]->eq);
-
 	Uint64 start = SDL_GetPerformanceCounter();
 	graphs[index]->generate(this);
 	Uint64 end = SDL_GetPerformanceCounter();
-	cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << endl;
+	std::cout << "time: " << (float)(end - start) / SDL_GetPerformanceFrequency() << std::endl;
 
 	updateAxes();
 	graphs[index]->send();
@@ -282,15 +279,15 @@ void state::UIGraphs() {
 			para_curve* p = (para_curve*)g;
 			ImGui::Text("x(t) =");
 			ImGui::PushID(0);
-			ImGui::InputTextMultiline("", (char*)p->sx.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback);
+			ImGui::InputTextMultiline("", (char*)p->eqx.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback);
 			ImGui::PopID();
 			ImGui::Text("y(t) =");
 			ImGui::PushID(1);
-			ImGui::InputTextMultiline("", (char*)p->sy.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback);
+			ImGui::InputTextMultiline("", (char*)p->eqy.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback);
 			ImGui::PopID();
 			ImGui::Text("z(t) =");
 			ImGui::PushID(2);
-			ImGui::InputTextMultiline("", (char*)p->sz.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback);
+			ImGui::InputTextMultiline("", (char*)p->eqz.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback);
 			ImGui::PopID();
 		} break;
 		}

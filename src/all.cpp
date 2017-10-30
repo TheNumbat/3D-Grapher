@@ -14,7 +14,7 @@
 #include <limits>
 #undef min
 
-#include <symbolicc++/symbolicc++.h>
+#include <exprtk.hpp>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -28,15 +28,17 @@
 #include "../asset/font.h"
 
 using namespace glm;
-using namespace std;
 
 #include "cam.h"
 #include "settings.h"
 #include "gl.h"
-#include "exp.h"
 #include "graph.h"
 #include "imgui_impl.h"
 #include "state.h"
+
+std::string trim_end(std::string s) {
+	return s.substr(0, s.find_first_of('\0'));
+}
 
 std::wstring utf8_to_wstring(const std::string& str)
 {
@@ -58,7 +60,6 @@ int main(int, char**) {
 	return 0;
 }
 
-#include "exp.cpp"
 #include "gl.cpp"
 #include "graph.cpp"
 #include "imgui_impl.cpp"

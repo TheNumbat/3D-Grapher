@@ -35,36 +35,6 @@ void graph::send() {
 	glBindVertexArray(0);
 }
 
-bool graph::update_eq(state* s) {
-	vector<op> new_eq;
-
-	try { in(utf8_to_wstring(eq_str), new_eq); }
-	catch (runtime_error e) {
-		s->ui.error_shown = true;
-		s->ui.error = e.what();
-		return false;
-	}
-
-	Symbolic test = toSymbolic(new_eq);
-	Symbolic x("x");
-	test = integrate(test, x);
-	std::stringstream ss;
-	ss << test[x==1];
-	std::string result = ss.str(); 
-
-	std::cout << result << std::endl;
-	new_eq.clear();
-	try { in(utf8_to_wstring(result), new_eq); }
-	catch (runtime_error e) {
-		s->ui.error_shown = true;
-		s->ui.error = e.what();
-		return false;
-	}
-
-	eq = new_eq;
-	return true;
-}
-
 void graph::draw(state* s, mat4 model, mat4 view, mat4 proj) {
 	if(!verticies.size()) return;
 
@@ -218,17 +188,27 @@ fxy_graph::fxy_graph(int id) : graph(id) {
 void fxy_graph::genthread(gendata* g) {
 
 	float x = g->xmin;
+	float y = g->dom.ymin;
+
+	exprtk::expression<float> expr;
+	exprtk::symbol_table<float> table;
+	exprtk::parser<float> parser;
+	table.add_constants();
+	table.add_variable("x",x);
+	table.add_variable("y",y);
+	expr.register_symbol_table(table);
+
+	if(!parser.compile(trim_end(g->eq), expr)) {
+		g->s->ui.error_shown = true;
+		g->s->ui.error = parser.error();
+		g->success = false;
+		return;
+	}
+
 	for (int tx = 0; tx < g->txrez; tx++, x += g->dx) {
-		float y = g->dom.ymin;
+		y = g->dom.ymin;
 		for (int ty = 0; ty <= g->dom.yrez; ty++, y += g->dy) {
-			float z;
-			try { z = eval(g->eq, { { 'x',x },{ 'y',y } }); }
-			catch (runtime_error e) {
-				g->s->ui.error_shown = true;
-				g->s->ui.error = e.what();
-				g->success = false;
-				return;
-			}
+			float z = expr.value();
 
 			if (z < g->zmin) g->zmin = z;
 			if (z > g->zmax) g->zmax = z;
@@ -242,7 +222,7 @@ void fxy_graph::genthread(gendata* g) {
 }
 
 void fxy_graph::generate(state* s) {
-	unsigned int numthreads = thread::hardware_concurrency();
+	unsigned int numthreads = std::thread::hardware_concurrency();
 #ifdef _MSC_VER
 	int cpuinfo[4];
 	__cpuid(cpuinfo, 1);
@@ -265,8 +245,8 @@ void fxy_graph::generate(state* s) {
 
 	verticies.clear();
 
-	vector<thread> threads;
-	vector<gendata*> data;
+	std::vector<std::thread> threads;
+	std::vector<gendata*> data;
 	for (unsigned int i = 0; i < numthreads; i++) {
 		if (txDelta || i == numthreads - 1) {
 			gendata* d = new gendata;
@@ -278,14 +258,14 @@ void fxy_graph::generate(state* s) {
 
 			d->s = s;
 			d->dom = set.rdom;
-			d->eq = eq;
+			d->eq = eq_str;
 			d->dx = dx;
 			d->dy = dy;
 			d->xmin = _xmin;
 			d->ID = ID;
 
 			data.push_back(d);
-			threads.push_back(thread(genthread, data.back()));
+			threads.push_back(std::thread(genthread, data.back()));
 
 			_xmin += txDelta * dx;
 		}
@@ -319,22 +299,33 @@ void fxy_graph::generate(state* s) {
 
 cyl_graph::cyl_graph(int id) : graph(id) {
 	type = graph_cylindrical;
-	set.cdom = { 0, 1, 0, 2 * val_pi, 200, 200 };
+	set.cdom = { 0, 1, 0, 2 * (float)M_PI, 200, 200 };
 }
 
 void cyl_graph::genthread(gendata* g) {
+	
 	float z = g->zmin;
+	float t = g->dom.tmin;
+
+	exprtk::expression<float> expr;
+	exprtk::symbol_table<float> table;
+	exprtk::parser<float> parser;
+	table.add_constants();
+	table.add_variable("z",z);
+	table.add_variable("θ",t);
+	expr.register_symbol_table(table);
+
+	if(!parser.compile(trim_end(g->eq), expr)) {
+		g->s->ui.error_shown = true;
+		g->s->ui.error = parser.error();
+		g->success = false;
+		return;
+	}
+
 	for (int tz = 0; tz < g->tzrez; tz++, z += g->dz) {
-		float t = g->dom.tmin;
+		t = g->dom.tmin;
 		for (int tt = 0; tt <= g->dom.trez; tt++, t += g->dt) {
-			float r;
-			try { r = eval(g->eq, { { 'z',z },{ 952,t } }); }
-			catch (runtime_error e) {
-				g->s->ui.error_shown = true;
-				g->s->ui.error = e.what();			
-				g->success = false;
-				return;
-			}
+			float r = expr.value();
 
 			float x = r * cos(t);
 			float y = r * sin(t);
@@ -352,7 +343,7 @@ void cyl_graph::genthread(gendata* g) {
 }
 
 void cyl_graph::generate(state* s) {
-	unsigned int numthreads = thread::hardware_concurrency();
+	unsigned int numthreads = std::thread::hardware_concurrency();
 #ifdef _MSC_VER
 	int cpuinfo[4];
 	__cpuid(cpuinfo, 1);
@@ -373,8 +364,8 @@ void cyl_graph::generate(state* s) {
 
 	verticies.clear();
 
-	vector<thread> threads;
-	vector<gendata*> data;
+	std::vector<std::thread> threads;
+	std::vector<gendata*> data;
 	for (unsigned int i = 0; i < numthreads; i++) {
 		if (tzDelta || i == numthreads - 1) {
 			gendata* d = new gendata;
@@ -385,7 +376,7 @@ void cyl_graph::generate(state* s) {
 				d->tzrez = tzDelta;
 
 			d->s = s;
-			d->eq = eq;
+			d->eq = eq_str;
 			d->dom = set.cdom;
 			d->dz = dz;
 			d->dt = dt;
@@ -393,7 +384,7 @@ void cyl_graph::generate(state* s) {
 			d->ID = ID;
 
 			data.push_back(d);
-			threads.push_back(thread(genthread, data.back()));
+			threads.push_back(std::thread(genthread, data.back()));
 
 			_zmin += tzDelta * dz;
 		}
@@ -434,23 +425,33 @@ void cyl_graph::generate(state* s) {
 
 spr_graph::spr_graph(int id) : graph(id) {
 	type = graph_spherical;
-	set.sdom = { 0, 2 * val_pi, 0, val_pi, 200, 200 };
+	set.sdom = { 0, 2 * (float)M_PI, 0, (float)M_PI, 200, 200 };
 }
 
 void spr_graph::genthread(gendata* g) {
 
 	float p = g->pmin;
+	float t = g->dom.tmin;
+
+	exprtk::expression<float> expr;
+	exprtk::symbol_table<float> table;
+	exprtk::parser<float> parser;
+	table.add_constants();
+	table.add_variable("φ",p);
+	table.add_variable("θ",t);
+	expr.register_symbol_table(table);
+
+	if(!parser.compile(trim_end(g->eq), expr)) {
+		g->s->ui.error_shown = true;
+		g->s->ui.error = parser.error();
+		g->success = false;
+		return;
+	}
+
 	for (int tp = 0; tp < g->tprez; tp++, p += g->dp) {
-		float t = g->dom.tmin;
+		t = g->dom.tmin;
 		for (int tt = 0; tt <= g->dom.trez; tt++, t += g->dt) {
-			float r;
-			try { r = eval(g->eq, { { 952,t },{ 966,p } }); }
-			catch (runtime_error e) {
-				g->s->ui.error_shown = true;
-				g->s->ui.error = e.what();				
-				g->success = false;
-				return;
-			}
+			float r = expr.value();
 
 			float x = r * cos(t) * sin(p);
 			float y = r * sin(t) * sin(p);
@@ -472,7 +473,7 @@ void spr_graph::genthread(gendata* g) {
 }
 
 void spr_graph::generate(state* s) {
-	unsigned int numthreads = thread::hardware_concurrency();
+	unsigned int numthreads = std::thread::hardware_concurrency();
 #ifdef _MSC_VER
 	int cpuinfo[4];
 	__cpuid(cpuinfo, 1);
@@ -491,8 +492,8 @@ void spr_graph::generate(state* s) {
 
 	verticies.clear();
 
-	vector<thread> threads;
-	vector<gendata*> data;
+	std::vector<std::thread> threads;
+	std::vector<gendata*> data;
 	for (unsigned int i = 0; i < numthreads; i++) {
 		if (tpDelta || i == numthreads - 1) {
 			gendata* d = new gendata;
@@ -504,14 +505,14 @@ void spr_graph::generate(state* s) {
 
 			d->s = s;
 			d->dom = set.sdom;
-			d->eq = eq;
+			d->eq = eq_str;
 			d->dt = dt;
 			d->dp = dp;
 			d->pmin = pmin;
 			d->ID = ID;
 
 			data.push_back(d);
-			threads.push_back(thread(genthread, data.back()));
+			threads.push_back(std::thread(genthread, data.back()));
 
 			pmin += tpDelta * dp;
 		}
@@ -559,30 +560,10 @@ void spr_graph::generate(state* s) {
 
 para_curve::para_curve(int id) : graph(id) {
 	type = graph_para_curve;
-	sx.resize(1000, 0);
-	sy.resize(1000, 0);
-	sz.resize(1000, 0);
+	eqx.resize(1000, 0);
+	eqy.resize(1000, 0);
+	eqz.resize(1000, 0);
 	set.pdom = { 0, 10, 100 };
-}
-
-bool para_curve::update_eq(state* s) {
-	vector<op> new_eqx, new_eqy, new_eqz;
-
-	try {
-		in(utf8_to_wstring(sx), new_eqx);
-		in(utf8_to_wstring(sy), new_eqy);
-		in(utf8_to_wstring(sz), new_eqz);
-	}
-	catch (runtime_error e) {
-		s->ui.error_shown = true;
-		s->ui.error = e.what();		
-		return false;
-	}
-
-	eqx = new_eqx;
-	eqy = new_eqy;
-	eqz = new_eqz;
-	return true;
 }
 
 void para_curve::generate(state* s) {
@@ -592,18 +573,37 @@ void para_curve::generate(state* s) {
 
 	verticies.clear();
 	float t = set.pdom.tmin;
+
+	exprtk::expression<float> expr_x, expr_y, expr_z;
+	exprtk::symbol_table<float> table;
+	exprtk::parser<float> parser;
+	table.add_constants();
+	table.add_variable("t",t);
+	expr_x.register_symbol_table(table);
+	expr_y.register_symbol_table(table);
+	expr_z.register_symbol_table(table);
+
+	if(!parser.compile(trim_end(eqx), expr_x)) {
+		s->ui.error_shown = true;
+		s->ui.error = parser.error();
+		return;
+	}
+	if(!parser.compile(trim_end(eqy), expr_y)) {
+		s->ui.error_shown = true;
+		s->ui.error = parser.error();
+		return;
+	}
+	if(!parser.compile(trim_end(eqz), expr_z)) {
+		s->ui.error_shown = true;
+		s->ui.error = parser.error();
+		return;
+	}
+
 	for (int tstep = 0; tstep < set.pdom.trez; tstep++, t += (set.pdom.tmax - set.pdom.tmin) / set.pdom.trez) {
-		float x, y, z;
-		try { 
-			x = eval(eqx, { { 't',t } });
-			y = eval(eqy, { { 't',t } });
-			z = eval(eqz, { { 't',t } });
-		}
-		catch (runtime_error e) {
-			s->ui.error_shown = true;
-			s->ui.error = e.what();			
-			return;
-		}
+		float x = expr_x.value();
+		float y = expr_y.value();
+		float z = expr_z.value();
+
 		if (z < zmin) zmin = z;
 		if (z > zmax) zmax = z;
 		if (y < ymin) ymin = y;

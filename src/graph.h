@@ -31,18 +31,17 @@ struct graph {
 
 	virtual void generate(state* s) = 0;
 	virtual void draw(state* s, mat4 model, mat4 view, mat4 proj);
-	virtual bool update_eq(state* s);
 
 	void gen();
 	void send();
 
-	vector<GLfloat> verticies;
-	vector<GLuint> indicies;
-	vector<vec3> normals;
+	std::vector<GLfloat> verticies;
+	std::vector<GLuint> indicies;
+	std::vector<vec3> normals;
 
 	int ID;
-	string eq_str;
-	vector<op> eq;
+	std::string eq_str;
+
 	graph_type type;
 	
 	float xmin, xmax, ymin, ymax, zmin, zmax; // set after generation
@@ -56,9 +55,7 @@ struct para_curve : public graph {
 	void generate(state* s);
 	void draw(state* s, mat4 model, mat4 view, mat4 proj);
 	void generateIndiciesAndNormals();
-	bool update_eq(state* s);
-	string sx, sy, sz;
-	vector<op> eqx, eqy, eqz;
+	std::string eqx, eqy, eqz;
 };
 
 struct fxy_graph : public graph {
@@ -67,8 +64,8 @@ struct fxy_graph : public graph {
 			zmin = FLT_MAX;
 			zmax = -FLT_MAX;
 		};
-		vector<float> ret;
-		vector<op> eq;
+		std::vector<float> ret;
+		std::string eq;
 		rect_domain dom;
 		float zmin, zmax, xmin, dx, dy;
 		int txrez, ID;
@@ -87,8 +84,8 @@ struct cyl_graph : public graph {
 			gxmin = gymin = FLT_MAX;
 			gxmax = gymax = -FLT_MAX;
 		};
-		vector<float> ret;
-		vector<op> eq;
+		std::vector<float> ret;
+		std::string eq;
 		cyl_domain dom;
 		float gxmin, gxmax, gymin, gymax, zmin, dz, dt;
 		int tzrez, ID;
@@ -107,8 +104,8 @@ struct spr_graph : public graph {
 			gxmin = gymin = gzmin = FLT_MAX;
 			gxmax = gymax = gzmax = -FLT_MAX;
 		};
-		vector<float> ret;
-		vector<op> eq;
+		std::vector<float> ret;
+		std::string eq;
 		spr_domain dom;
 		float gxmin, gxmax, gymin, gymax, gzmin, gzmax, pmin, dt, dp;
 		int tprez, ID;
