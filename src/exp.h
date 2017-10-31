@@ -1,8 +1,6 @@
 
 #pragma once
 
-using namespace std;
-
 const float val_e = 2.7182818284590452353602874713527f;
 const float val_pi = 3.141592653589793238462643383279f;
 

@@ -15,14 +15,15 @@ bool num(wchar_t c) {
 }
 
 #define get2() if(s.size() > 1) {two = s.top();s.pop();one = s.top();s.pop();} \
-			   else {throw runtime_error("Malformed expression!");}
+			   else {throw std::runtime_error("Malformed expression!");}
 
 #define get1() if(s.size()) {one = s.top();s.pop();} \
-			   else {throw runtime_error("Malformed expression!");}
+			   else {throw std::runtime_error("Malformed expression!");}
 
 float eval(const vector<op>& EQ, const vector<pair<wchar_t, float>>& vars) {
 	if (!EQ.size()) throw runtime_error("Empty expression!");
 	stack<float> s;
+
 	float one = 0, two = 0, result = 0;
 	for (unsigned int index = 0; index < EQ.size(); index++) {
 		switch (EQ[index]) {
@@ -167,12 +168,12 @@ float eval(const vector<op>& EQ, const vector<pair<wchar_t, float>>& vars) {
 			break;
 		case var: {
 			wchar_t v = EQ[index + 1];
-			auto entry = find_if(vars.begin(), vars.end(), [v](const pair<wchar_t, float>& var) -> bool { return var.first == v; });
+			auto entry = std::find_if(vars.begin(), vars.end(), [v](const std::pair<wchar_t, float>& var) -> bool { return var.first == v; });
 			if (entry == vars.end()) {
-				wstring error = L"Variable '";
+				std::wstring error = L"Variable '";
 				error += v;
 				error += L"' not recognized!";
-				throw runtime_error(wstring_to_utf8(error));
+				throw std::runtime_error(wstring_to_utf8(error));
 			}
 			else {
 				s.push(entry->second);
@@ -188,7 +189,7 @@ float eval(const vector<op>& EQ, const vector<pair<wchar_t, float>>& vars) {
 			break;
 		default:
 			int i2 = index;
-			string num;
+			std::string num;
 			while (EQ[i2] != num_break) {
 				num.push_back((char)EQ[i2]);
 				i2++;
@@ -200,7 +201,7 @@ float eval(const vector<op>& EQ, const vector<pair<wchar_t, float>>& vars) {
 	}
 	result = s.top();
 	s.pop();
-	if (s.size()) throw runtime_error("Malformed expression!");
+	if (s.size()) throw std::runtime_error("Malformed expression!");
 	return result;
 }
 
@@ -218,9 +219,9 @@ int precedence(wchar_t c) {
 	}
 }
 
-void in(wstring _str, vector<op>& EQ) {
+void in(std::wstring _str, std::vector<op>& EQ) {
 
-	wstring str;
+	std::wstring str;
 
 	for (int ind = 0; ind < (int)_str.length() && _str[ind]; ind++) {
 		if (_str[ind] == '-' && (ind == 0 || isop(_str[ind - 1]))) _str[ind] = op_neg;
@@ -232,9 +233,9 @@ void in(wstring _str, vector<op>& EQ) {
 	}
 
 	wchar_t buf = 0;
-	stack<op> s;
-	queue<op> q;
-	wstringstream in;
+	std::stack<op> s;
+	std::queue<op> q;
+	std::wstringstream in;
 	in << str;
 	bool added = false, ins = true;
 	while (!in.eof()) {
@@ -293,7 +294,7 @@ void in(wstring _str, vector<op>& EQ) {
 #else
 				if (in.peek() != EOF && !isnonfunc(in.peek())) {
 #endif
-					wstring func;
+					std::wstring func;
 					getline(in, func, L'(');
 					func.insert(0, 1, buf);
 					// Test function name
@@ -342,15 +343,15 @@ void in(wstring _str, vector<op>& EQ) {
 							s.push(op_acot);
 						else {
 							if (!in.good())
-								throw runtime_error("Unknown name '" + wstring_to_utf8(func) + "'!");
+								throw std::runtime_error("Unknown name '" + wstring_to_utf8(func) + "'!");
 							else
-								throw runtime_error("Unknown function '" + wstring_to_utf8(func) + "()'!");
+								throw std::runtime_error("Unknown function '" + wstring_to_utf8(func) + "()'!");
 						}
 						if(!in.good()) {
-							throw runtime_error("No parenthesis after '" + wstring_to_utf8(func) + "'!");
+							throw std::runtime_error("No parenthesis after '" + wstring_to_utf8(func) + "'!");
 						}
 						if(in.peek() == ')') {
-							throw runtime_error("No arguments in '" + wstring_to_utf8(func) + "'!");	
+							throw std::runtime_error("No arguments in '" + wstring_to_utf8(func) + "'!");	
 						}
 					}
 					s.push('(');
@@ -374,17 +375,19 @@ void in(wstring _str, vector<op>& EQ) {
 	}
 	while (s.size()) {
 		if (s.top() == '(' || s.top() == ')') {
-			throw runtime_error("Unbalanced parenthesis!");
+			throw std::runtime_error("Unbalanced parenthesis!");
 		}
 		EQ.push_back(s.top());
 		s.pop();
 	}
 	if (!EQ.size()) {
-		throw runtime_error("Empty expression!");
+		throw std::runtime_error("Empty expression!");
 	}
 }
 
+
 void printeq(ostream& out, const vector<op>& eq) {
+
 	for (op c : eq) {
 		if (c == op_sqrt)
 			out << "sqrt";
@@ -436,5 +439,5 @@ void printeq(ostream& out, const vector<op>& eq) {
 			out << (char)c;
 		out << " ";
 	}
-	out << endl;
+	out << std::endl;
 }

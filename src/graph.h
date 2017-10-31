@@ -41,7 +41,6 @@ struct graph {
 
 	int ID;
 	std::string eq_str;
-
 	graph_type type;
 	
 	float xmin, xmax, ymin, ymax, zmin, zmax; // set after generation
