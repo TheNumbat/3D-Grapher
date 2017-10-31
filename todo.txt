@@ -1,6 +1,7 @@
 
 UI
 	Don't need * for multiply
+	Change help screen for exprtk syntax
 
 Rendering
 	animate through settings / equation changes
@@ -8,6 +9,7 @@ Rendering
 		also can use to highlight math features (e.g. gradient)
 
 Camera
+	Scroll to change radius, not FOV
 	Set camera to rotate about axis
 	Keys & ability to align camera XY, XZ, YZ (currently XY will not go fully orthogonal)
 
