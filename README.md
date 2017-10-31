@@ -4,8 +4,6 @@ This is a visualization tool for graphing 3D functions, particularly useful for 
 
 Download the latest release [here](https://github.com/TheNumbat/3D-Grapher/releases).  
 
-The code is rather messy...I make no claims as to correctness. Will eventually refactor to be more like [exile](https://github.com/TheNumbat/exile).  
-
 ### Features
 Current
   - rectangular functions
@@ -32,11 +30,9 @@ Planned
   - SDL2.0 for windowing, events, and OpenGL setup
   - GLM for vector/matrix math
   - Dear ImGui for GUI
+  - exprtk math expression parsing/evaluation
 
 ### Technical Features
-  - Infix-to-prefix expression parsing
-    - operator precedence, parenthesis, etc.
-  - Stack-based prefix expression evaluation
   - Multithreaded graph generation
   - Basic lighting shaders
   - Pretty nice interface
