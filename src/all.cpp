@@ -12,6 +12,9 @@
 #include <cmath>
 #include <thread>
 #include <limits>
+#undef min
+
+#include <exprtk.hpp>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -19,10 +22,6 @@
 
 #include <SDL2/SDL.h>
 #include <glew/glew.h>
-
-#ifdef _WIN32
-#include <SDL2/SDL_syswm.h>
-#endif
 
 #include <imgui/imgui.h>
 
@@ -33,10 +32,13 @@ using namespace glm;
 #include "cam.h"
 #include "settings.h"
 #include "gl.h"
-#include "exp.h"
 #include "graph.h"
 #include "imgui_impl.h"
 #include "state.h"
+
+std::string trim_end(std::string s) {
+	return s.substr(0, s.find_first_of('\0'));
+}
 
 std::wstring utf8_to_wstring(const std::string& str)
 {
@@ -58,7 +60,6 @@ int main(int, char**) {
 	return 0;
 }
 
-#include "exp.cpp"
 #include "gl.cpp"
 #include "graph.cpp"
 #include "imgui_impl.cpp"

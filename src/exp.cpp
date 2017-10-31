@@ -1,4 +1,5 @@
 
+
 bool isop(wchar_t c) {
 	return c == open_p || c == add || c == subtract || c == op_neg ||
 		   c == multiply || c == modulo || c == divide || c == power;
@@ -19,9 +20,10 @@ bool num(wchar_t c) {
 #define get1() if(s.size()) {one = s.top();s.pop();} \
 			   else {throw std::runtime_error("Malformed expression!");}
 
-float eval(const std::vector<op>& EQ, std::vector<std::pair<wchar_t, float>> vars) {
-	if (!EQ.size()) throw std::runtime_error("Empty expression!");
-	std::stack<float> s;
+float eval(const vector<op>& EQ, const vector<pair<wchar_t, float>>& vars) {
+	if (!EQ.size()) throw runtime_error("Empty expression!");
+	stack<float> s;
+
 	float one = 0, two = 0, result = 0;
 	for (unsigned int index = 0; index < EQ.size(); index++) {
 		switch (EQ[index]) {
@@ -383,7 +385,9 @@ void in(std::wstring _str, std::vector<op>& EQ) {
 	}
 }
 
-void printeq(std::ostream& out, std::vector<op> eq) {
+
+void printeq(ostream& out, const vector<op>& eq) {
+
 	for (op c : eq) {
 		if (c == op_sqrt)
 			out << "sqrt";
@@ -432,7 +436,7 @@ void printeq(std::ostream& out, std::vector<op> eq) {
 		else if (c == var)
 			out << "var";
 		else
-			out << c;
+			out << (char)c;
 		out << " ";
 	}
 	out << std::endl;

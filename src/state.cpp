@@ -1,12 +1,13 @@
 
 state::state() {
+
 	w = screen_w;
 	h = screen_h;
 	mx = w / 2;
 	my = h / 2;
 	next_graph_id = 0;
-	last_mx = last_my = 0;
 
+	last_mx = last_my = 0;
 	SDL_Init(SDL_INIT_EVERYTHING);
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
@@ -18,7 +19,6 @@ state::state() {
 	window = SDL_CreateWindow("3D Grapher", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		screen_w, screen_h, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
 	context = SDL_GL_CreateContext(window);
-
 
 	glewInit();
 	SDL_GL_SetSwapInterval(0);
@@ -67,9 +67,6 @@ state::~state() {
 }
 
 void state::regengraph(int index) {
-
-	if (!graphs[index]->update_eq(this)) return;
-	printeq(std::cout, graphs[index]->eq);
 
 	Uint64 start = SDL_GetPerformanceCounter();
 	graphs[index]->generate(this);
@@ -282,15 +279,15 @@ void state::UIGraphs() {
 			para_curve* p = (para_curve*)g;
 			ImGui::Text("x(t) =");
 			ImGui::PushID(0);
-			ImGui::InputTextMultiline("", (char*)p->sx.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback);
+			ImGui::InputTextMultiline("", (char*)p->eqx.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback);
 			ImGui::PopID();
 			ImGui::Text("y(t) =");
 			ImGui::PushID(1);
-			ImGui::InputTextMultiline("", (char*)p->sy.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback);
+			ImGui::InputTextMultiline("", (char*)p->eqy.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback);
 			ImGui::PopID();
 			ImGui::Text("z(t) =");
 			ImGui::PushID(2);
-			ImGui::InputTextMultiline("", (char*)p->sz.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback);
+			ImGui::InputTextMultiline("", (char*)p->eqz.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback);
 			ImGui::PopID();
 		} break;
 		}
