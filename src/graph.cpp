@@ -1,4 +1,7 @@
 
+#define CONST_E  2.71828182845f
+#define CONST_PI 3.14159265359f
+
 graph::graph(int id) {
 	eq_str.resize(1000, 0);
 	ID = id;
@@ -193,6 +196,9 @@ void fxy_graph::genthread(gendata* g) {
 	exprtk::expression<float> expr;
 	exprtk::symbol_table<float> table;
 	exprtk::parser<float> parser;
+	table.add_constant(L"e", CONST_E);
+	std::string pi_utf("π");
+	table.add_constant(utf8_to_wstring(pi_utf),CONST_PI);
 	table.add_constants();
 	table.add_variable(L"x",x);
 	table.add_variable(L"y",y);
@@ -223,7 +229,7 @@ void fxy_graph::genthread(gendata* g) {
 }
 
 void fxy_graph::generate(state* s) {
-	unsigned int numthreads = std::thread::hardware_concurrency();
+	unsigned int numthreads = 2;// std::thread::hardware_concurrency();
 #ifdef _MSC_VER
 	int cpuinfo[4];
 	__cpuid(cpuinfo, 1);
@@ -300,7 +306,7 @@ void fxy_graph::generate(state* s) {
 
 cyl_graph::cyl_graph(int id) : graph(id) {
 	type = graph_cylindrical;
-	set.cdom = { 0, 1, 0, 2 * (float)M_PI, 200, 200 };
+	set.cdom = { 0, 1, 0, 2 * (float)CONST_PI, 200, 200 };
 }
 
 void cyl_graph::genthread(gendata* g) {
@@ -311,9 +317,14 @@ void cyl_graph::genthread(gendata* g) {
 	exprtk::expression<float> expr;
 	exprtk::symbol_table<float> table;
 	exprtk::parser<float> parser;
+	table.add_constant(L"e", CONST_E);
+	std::string pi_utf("π");
+	table.add_constant(utf8_to_wstring(pi_utf),CONST_PI);
 	table.add_constants();
 	table.add_variable(L"z",z);
-	table.add_variable(L"θ",t);
+	std::string theta_utf("θ");
+	table.add_variable(utf8_to_wstring(theta_utf),t);
+
 	expr.register_symbol_table(table);
 
 	if(!parser.compile(utf8_to_wstring(trim_end(g->eq)), expr)) {
@@ -345,7 +356,7 @@ void cyl_graph::genthread(gendata* g) {
 }
 
 void cyl_graph::generate(state* s) {
-	unsigned int numthreads = std::thread::hardware_concurrency();
+	unsigned int numthreads = 2;// std::thread::hardware_concurrency();
 #ifdef _MSC_VER
 	int cpuinfo[4];
 	__cpuid(cpuinfo, 1);
@@ -427,7 +438,7 @@ void cyl_graph::generate(state* s) {
 
 spr_graph::spr_graph(int id) : graph(id) {
 	type = graph_spherical;
-	set.sdom = { 0, 2 * (float)M_PI, 0, (float)M_PI, 200, 200 };
+	set.sdom = { 0, 2 * (float)CONST_PI, 0, (float)CONST_PI, 200, 200 };
 }
 
 void spr_graph::genthread(gendata* g) {
@@ -438,9 +449,14 @@ void spr_graph::genthread(gendata* g) {
 	exprtk::expression<float> expr;
 	exprtk::symbol_table<float> table;
 	exprtk::parser<float> parser;
+	table.add_constant(L"e", CONST_E);
+	std::string pi_utf("π");
+	table.add_constant(utf8_to_wstring(pi_utf),CONST_PI);
 	table.add_constants();
-	table.add_variable(L"φ",p);
-	table.add_variable(L"θ",t);
+	std::string phi_utf("φ");
+	table.add_variable(utf8_to_wstring(phi_utf),p);
+	std::string theta_utf("θ");
+	table.add_variable(utf8_to_wstring(theta_utf),t);
 	expr.register_symbol_table(table);
 
 	if(!parser.compile(utf8_to_wstring(trim_end(g->eq)), expr)) {
@@ -476,7 +492,7 @@ void spr_graph::genthread(gendata* g) {
 }
 
 void spr_graph::generate(state* s) {
-	unsigned int numthreads = std::thread::hardware_concurrency();
+	unsigned int numthreads = 2;// std::thread::hardware_concurrency();
 #ifdef _MSC_VER
 	int cpuinfo[4];
 	__cpuid(cpuinfo, 1);
@@ -580,6 +596,9 @@ void para_curve::generate(state* s) {
 	exprtk::expression<float> expr_x, expr_y, expr_z;
 	exprtk::symbol_table<float> table;
 	exprtk::parser<float> parser;
+	table.add_constant(L"e", CONST_E);
+	std::string pi_utf("π");
+	table.add_constant(utf8_to_wstring(pi_utf),CONST_PI);
 	table.add_constants();
 	table.add_variable(L"t",t);
 	expr_x.register_symbol_table(table);
