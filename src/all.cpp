@@ -12,9 +12,27 @@
 #include <cmath>
 #include <thread>
 #include <limits>
+#include <mutex>
 #undef min
 
+std::string trim_end(std::string s) {
+	return s.substr(0, s.find_first_of('\0'));
+}
+
+std::wstring utf8_to_wstring(const std::string& str)
+{
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
+    return myconv.from_bytes(str);
+}
+
+std::string wstring_to_utf8(const std::wstring& str)
+{
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
+    return myconv.to_bytes(str);
+}
+
 #include <exprtk.hpp>
+#undef string
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -35,22 +53,6 @@ using namespace glm;
 #include "graph.h"
 #include "imgui_impl.h"
 #include "state.h"
-
-std::string trim_end(std::string s) {
-	return s.substr(0, s.find_first_of('\0'));
-}
-
-std::wstring utf8_to_wstring(const std::string& str)
-{
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
-    return myconv.from_bytes(str);
-}
-
-std::string wstring_to_utf8(const std::wstring& str)
-{
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
-    return myconv.to_bytes(str);
-}
 
 int main(int, char**) {
 

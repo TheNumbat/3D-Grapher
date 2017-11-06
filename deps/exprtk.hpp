@@ -55,7 +55,6 @@
 #include <utility>
 #include <vector>
 
-
 namespace exprtk
 {
    #ifdef exprtk_enable_debugging
@@ -65,13 +64,13 @@ namespace exprtk
    #endif
 
    #define exprtk_error_location             \
-   "exprtk.hpp:" + details::to_str(__LINE__) \
+   L"exprtk.hpp:" + details::to_str(__LINE__) \
 
    #if __GNUC__  >= 7
 
       #define exprtk_disable_fallthrough_begin                      \
-      _Pragma ("GCC diagnostic push")                               \
-      _Pragma ("GCC diagnostic ignored \"-Wimplicit-fallthrough\"") \
+      _Pragma (L"GCC diagnostic push")                               \
+      _Pragma (L"GCC diagnostic ignored \"-Wimplicit-fallthrough\"") \
 
       #define exprtk_disable_fallthrough_end                        \
       _Pragma ("GCC diagnostic pop")                                \
@@ -83,12 +82,12 @@ namespace exprtk
 
    namespace details
    {
-      typedef unsigned char uchar_t;
-      typedef char           char_t;
+      typedef wchar_t uchar_t;
+      typedef wchar_t char_t;
 
       inline bool is_whitespace(const char_t c)
       {
-         return (' '  == c) || ('\n' == c) ||
+         return (L' '  == c) || ('\n' == c) ||
                 ('\r' == c) || ('\t' == c) ||
                 ('\b' == c) || ('\v' == c) ||
                 ('\f' == c) ;
@@ -96,28 +95,29 @@ namespace exprtk
 
       inline bool is_operator_char(const char_t c)
       {
-         return ('+' == c) || ('-' == c) ||
-                ('*' == c) || ('/' == c) ||
-                ('^' == c) || ('<' == c) ||
-                ('>' == c) || ('=' == c) ||
-                (',' == c) || ('!' == c) ||
-                ('(' == c) || (')' == c) ||
-                ('[' == c) || (']' == c) ||
-                ('{' == c) || ('}' == c) ||
-                ('%' == c) || (':' == c) ||
-                ('?' == c) || ('&' == c) ||
-                ('|' == c) || (';' == c) ;
+         return (L'+' == c) || (L'-' == c) ||
+                (L'*' == c) || (L'/' == c) ||
+                (L'^' == c) || (L'<' == c) ||
+                (L'>' == c) || (L'=' == c) ||
+                (L',' == c) || (L'!' == c) ||
+                (L'(' == c) || (L')' == c) ||
+                (L'[' == c) || (L']' == c) ||
+                (L'{' == c) || (L'}' == c) ||
+                (L'%' == c) || (L':' == c) ||
+                (L'?' == c) || (L'&' == c) ||
+                (L'|' == c) || (L';' == c) ;
       }
 
       inline bool is_letter(const char_t c)
       {
-         return (('a' <= c) && (c <= 'z')) ||
-                (('A' <= c) && (c <= 'Z')) ;
+         return ((L'a' <= c) && (c <= L'z')) ||
+                ((L'A' <= c) && (c <= L'Z')) ||
+                ((c >= 0x0391) && (c <= 0x03E1));
       }
 
       inline bool is_digit(const char_t c)
       {
-         return ('0' <= c) && (c <= '9');
+         return (L'0' <= c) && (c <= L'9');
       }
 
       inline bool is_letter_or_digit(const char_t c)
@@ -127,12 +127,12 @@ namespace exprtk
 
       inline bool is_left_bracket(const char_t c)
       {
-         return ('(' == c) || ('[' == c) || ('{' == c);
+         return (L'(' == c) || (L'[' == c) || (L'{' == c);
       }
 
       inline bool is_right_bracket(const char_t c)
       {
-         return (')' == c) || (']' == c) || ('}' == c);
+         return (L')' == c) || (L']' == c) || (L'}' == c);
       }
 
       inline bool is_bracket(const char_t c)
@@ -142,7 +142,7 @@ namespace exprtk
 
       inline bool is_sign(const char_t c)
       {
-         return ('+' == c) || ('-' == c);
+         return (L'+' == c) || (L'-' == c);
       }
 
       inline bool is_invalid(const char_t c)
@@ -151,19 +151,19 @@ namespace exprtk
                 !is_operator_char(c) &&
                 !is_letter       (c) &&
                 !is_digit        (c) &&
-                ('.'  != c)          &&
-                ('_'  != c)          &&
-                ('$'  != c)          &&
-                ('~'  != c)          &&
-                ('\'' != c);
+                (L'.'  != c)          &&
+                (L'_'  != c)          &&
+                (L'$'  != c)          &&
+                (L'~'  != c)          &&
+                (L'\'' != c);
       }
 
       #ifndef exprtk_disable_caseinsensitivity
-      inline void case_normalise(std::string& s)
+      inline void case_normalise(std::wstring& s)
       {
          for (std::size_t i = 0; i < s.size(); ++i)
          {
-            s[i] = static_cast<std::string::value_type>(std::tolower(s[i]));
+            s[i] = static_cast<std::wstring::value_type>(std::tolower(s[i]));
          }
       }
 
@@ -172,7 +172,7 @@ namespace exprtk
          return std::tolower(c1) == std::tolower(c2);
       }
 
-      inline bool imatch(const std::string& s1, const std::string& s2)
+      inline bool imatch(const std::wstring& s1, const std::wstring& s2)
       {
          if (s1.size() == s2.size())
          {
@@ -192,7 +192,7 @@ namespace exprtk
 
       struct ilesscompare
       {
-         inline bool operator() (const std::string& s1, const std::string& s2) const
+         inline bool operator() (const std::wstring& s1, const std::wstring& s2) const
          {
             const std::size_t length = std::min(s1.size(),s2.size());
 
@@ -212,7 +212,7 @@ namespace exprtk
       };
 
       #else
-      inline void case_normalise(std::string&)
+      inline void case_normalise(std::wstring&)
       {}
 
       inline bool imatch(const char_t c1, const char_t c2)
@@ -220,61 +220,61 @@ namespace exprtk
          return c1 == c2;
       }
 
-      inline bool imatch(const std::string& s1, const std::string& s2)
+      inline bool imatch(const std::wstring& s1, const std::wstring& s2)
       {
          return s1 == s2;
       }
 
       struct ilesscompare
       {
-         inline bool operator() (const std::string& s1, const std::string& s2) const
+         inline bool operator() (const std::wstring& s1, const std::wstring& s2) const
          {
             return s1 < s2;
          }
       };
       #endif
 
-      inline bool is_valid_sf_symbol(const std::string& symbol)
+      inline bool is_valid_sf_symbol(const std::wstring& symbol)
       {
          // Special function: $f12 or $F34
          return (4 == symbol.size())  &&
-                ('$' == symbol[0])    &&
-                imatch('f',symbol[1]) &&
+                (L'$' == symbol[0])    &&
+                imatch(L'f',symbol[1]) &&
                 is_digit(symbol[2])   &&
                 is_digit(symbol[3]);
       }
 
-      inline const char_t& front(const std::string& s)
+      inline const char_t& front(const std::wstring& s)
       {
          return s[0];
       }
 
-      inline const char_t& back(const std::string& s)
+      inline const char_t& back(const std::wstring& s)
       {
          return s[s.size() - 1];
       }
 
-      inline std::string to_str(int i)
+      inline std::wstring to_str(int i)
       {
          if (0 == i)
-            return std::string("0");
+            return std::wstring(L"0");
 
-         std::string result;
+         std::wstring result;
 
          if (i < 0)
          {
             for ( ; i; i /= 10)
             {
-               result += '0' + char(-(i % 10));
+               result += L'0' + char(-(i % 10));
             }
 
-            result += '-';
+            result += L'-';
          }
          else
          {
             for ( ; i; i /= 10)
             {
-               result += '0' + char(i % 10);
+               result += L'0' + char(i % 10);
             }
          }
 
@@ -283,33 +283,33 @@ namespace exprtk
          return result;
       }
 
-      inline bool is_hex_digit(const std::string::value_type digit)
+      inline bool is_hex_digit(const std::wstring::value_type digit)
       {
-         return (('0' <= digit) && (digit <= '9')) ||
-                (('A' <= digit) && (digit <= 'F')) ||
-                (('a' <= digit) && (digit <= 'f')) ;
+         return ((L'0' <= digit) && (digit <= L'9')) ||
+                ((L'A' <= digit) && (digit <= L'F')) ||
+                ((L'a' <= digit) && (digit <= L'f')) ;
       }
 
       inline uchar_t hex_to_bin(uchar_t h)
       {
-         if (('0' <= h) && (h <= '9'))
-            return (h - '0');
+         if ((L'0' <= h) && (h <= L'9'))
+            return (h - L'0');
          else
-            return static_cast<unsigned char>(std::toupper(h) - 'A');
+            return static_cast<unsigned char>(std::toupper(h) - L'A');
       }
 
       template <typename Iterator>
-      inline void parse_hex(Iterator& itr, Iterator end, std::string::value_type& result)
+      inline void parse_hex(Iterator& itr, Iterator end, std::wstring::value_type& result)
       {
          if (
               (end !=  (itr    )) &&
               (end !=  (itr + 1)) &&
               (end !=  (itr + 2)) &&
               (end !=  (itr + 3)) &&
-              ('0' == *(itr    )) &&
+              (L'0' == *(itr    )) &&
               (
-                ('x' == *(itr + 1)) ||
-                ('X' == *(itr + 1))
+                (L'x' == *(itr + 1)) ||
+                (L'X' == *(itr + 1))
               ) &&
               (is_hex_digit(*(itr + 2))) &&
               (is_hex_digit(*(itr + 3)))
@@ -323,9 +323,9 @@ namespace exprtk
             result = '\0';
       }
 
-      inline void cleanup_escapes(std::string& s)
+      inline void cleanup_escapes(std::wstring& s)
       {
-         typedef std::string::iterator str_itr_t;
+         typedef std::wstring::iterator str_itr_t;
 
          str_itr_t itr1 = s.begin();
          str_itr_t itr2 = s.begin();
@@ -345,10 +345,10 @@ namespace exprtk
                {
                   switch (*itr1)
                   {
-                     case 'n' : (*itr1) = '\n'; break;
-                     case 'r' : (*itr1) = '\r'; break;
-                     case 't' : (*itr1) = '\t'; break;
-                     case '0' : parse_hex(itr1, end, (*itr1));
+                     case L'n' : (*itr1) = '\n'; break;
+                     case L'r' : (*itr1) = '\r'; break;
+                     case L't' : (*itr1) = '\t'; break;
+                     case L'0' : parse_hex(itr1, end, (*itr1));
                                 removal_count += 3;
                                 break;
                   }
@@ -378,7 +378,7 @@ namespace exprtk
             data_.reserve(initial_size);
          }
 
-         inline build_string& operator << (const std::string& s)
+         inline build_string& operator << (const std::wstring& s)
          {
             data_ += s;
             return (*this);
@@ -386,109 +386,109 @@ namespace exprtk
 
          inline build_string& operator << (const char_t* s)
          {
-            data_ += std::string(s);
+            data_ += std::wstring(s);
             return (*this);
          }
 
-         inline operator std::string () const
+         inline operator std::wstring () const
          {
             return data_;
          }
 
-         inline std::string as_string() const
+         inline std::wstring as_string() const
          {
             return data_;
          }
 
       private:
 
-         std::string data_;
+         std::wstring data_;
       };
 
-      static const std::string reserved_words[] =
+      static const std::wstring reserved_words[] =
                                   {
-                                    "break",  "case",  "continue",  "default",  "false",  "for",
-                                    "if", "else", "ilike",  "in", "like", "and",  "nand", "nor",
-                                    "not",  "null",  "or",   "repeat", "return",  "shl",  "shr",
-                                    "swap", "switch", "true",  "until", "var",  "while", "xnor",
-                                    "xor", "&", "|"
+                                    L"break",  L"case",  L"continue",  L"default",  L"false",  L"for",
+                                    L"if", L"else", L"ilike",  L"in", L"like", L"and",  L"nand", L"nor",
+                                    L"not",  L"null",  L"or",   L"repeat", L"return",  L"shl",  L"shr",
+                                    L"swap", L"switch", L"true",  L"until", L"var",  L"while", L"xnor",
+                                    L"xor", L"&", L"|"
                                   };
 
-      static const std::size_t reserved_words_size = sizeof(reserved_words) / sizeof(std::string);
+      static const std::size_t reserved_words_size = sizeof(reserved_words) / sizeof(std::wstring);
 
-      static const std::string reserved_symbols[] =
+      static const std::wstring reserved_symbols[] =
                                   {
-                                    "abs",  "acos",  "acosh",  "and",  "asin",  "asinh", "atan",
-                                    "atanh", "atan2", "avg",  "break", "case", "ceil",  "clamp",
-                                    "continue",   "cos",   "cosh",   "cot",   "csc",  "default",
-                                    "deg2grad",  "deg2rad",   "equal",  "erf",   "erfc",  "exp",
-                                    "expm1",  "false",   "floor",  "for",   "frac",  "grad2deg",
-                                    "hypot", "iclamp", "if",  "else", "ilike", "in",  "inrange",
-                                    "like",  "log",  "log10", "log2",  "logn",  "log1p", "mand",
-                                    "max", "min",  "mod", "mor",  "mul", "ncdf",  "nand", "nor",
-                                    "not",   "not_equal",   "null",   "or",   "pow",  "rad2deg",
-                                    "repeat", "return", "root", "round", "roundn", "sec", "sgn",
-                                    "shl", "shr", "sin", "sinc", "sinh", "sqrt",  "sum", "swap",
-                                    "switch", "tan",  "tanh", "true",  "trunc", "until",  "var",
-                                    "while", "xnor", "xor", "&", "|"
+                                    L"abs",  L"acos",  L"acosh",  L"and",  L"asin",  L"asinh", L"atan",
+                                    L"atanh", L"atan2", L"avg",  L"break", L"case", L"ceil",  L"clamp",
+                                    L"continue",   L"cos",   L"cosh",   L"cot",   L"csc",  L"default",
+                                    L"deg2grad",  L"deg2rad",   L"equal",  L"erf",   L"erfc",  L"exp",
+                                    L"expm1",  L"false",   L"floor",  L"for",   L"frac",  L"grad2deg",
+                                    L"hypot", L"iclamp", L"if",  L"else", L"ilike", L"in",  L"inrange",
+                                    L"like",  L"log",  L"log10", L"log2",  L"logn",  L"log1p", L"mand",
+                                    L"max", L"min",  L"mod", L"mor",  L"mul", L"ncdf",  L"nand", L"nor",
+                                    L"not",   L"not_equal",   L"null",   L"or",   L"pow",  L"rad2deg",
+                                    L"repeat", L"return", L"root", L"round", L"roundn", L"sec", L"sgn",
+                                    L"shl", L"shr", L"sin", L"sinc", L"sinh", L"sqrt",  L"sum", L"swap",
+                                    L"switch", L"tan",  L"tanh", L"true",  L"trunc", L"until",  L"var",
+                                    L"while", L"xnor", L"xor", L"&", L"|"
                                   };
 
-      static const std::size_t reserved_symbols_size = sizeof(reserved_symbols) / sizeof(std::string);
+      static const std::size_t reserved_symbols_size = sizeof(reserved_symbols) / sizeof(std::wstring);
 
-      static const std::string base_function_list[] =
+      static const std::wstring base_function_list[] =
                                   {
-                                    "abs", "acos",  "acosh", "asin",  "asinh", "atan",  "atanh",
-                                    "atan2",  "avg",  "ceil",  "clamp",  "cos",  "cosh",  "cot",
-                                    "csc",  "equal",  "erf",  "erfc",  "exp",  "expm1", "floor",
-                                    "frac", "hypot", "iclamp",  "like", "log", "log10",  "log2",
-                                    "logn", "log1p", "mand", "max", "min", "mod", "mor",  "mul",
-                                    "ncdf",  "pow",  "root",  "round",  "roundn",  "sec", "sgn",
-                                    "sin", "sinc", "sinh", "sqrt", "sum", "swap", "tan", "tanh",
-                                    "trunc",  "not_equal",  "inrange",  "deg2grad",   "deg2rad",
-                                    "rad2deg", "grad2deg"
+                                    L"abs", L"acos",  L"acosh", L"asin",  L"asinh", L"atan",  L"atanh",
+                                    L"atan2",  L"avg",  L"ceil",  L"clamp",  L"cos",  L"cosh",  L"cot",
+                                    L"csc",  L"equal",  L"erf",  L"erfc",  L"exp",  L"expm1", L"floor",
+                                    L"frac", L"hypot", L"iclamp",  L"like", L"log", L"log10",  L"log2",
+                                    L"logn", L"log1p", L"mand", L"max", L"min", L"mod", L"mor",  L"mul",
+                                    L"ncdf",  L"pow",  L"root",  L"round",  L"roundn",  L"sec", L"sgn",
+                                    L"sin", L"sinc", L"sinh", L"sqrt", L"sum", L"swap", L"tan", L"tanh",
+                                    L"trunc",  L"not_equal",  L"inrange",  L"deg2grad",   L"deg2rad",
+                                    L"rad2deg", L"grad2deg"
                                   };
 
-      static const std::size_t base_function_list_size = sizeof(base_function_list) / sizeof(std::string);
+      static const std::size_t base_function_list_size = sizeof(base_function_list) / sizeof(std::wstring);
 
-      static const std::string logic_ops_list[] =
+      static const std::wstring logic_ops_list[] =
                                   {
-                                    "and", "nand", "nor", "not", "or",  "xnor", "xor", "&", "|"
+                                    L"and", L"nand", L"nor", L"not", L"or",  L"xnor", L"xor", L"&", L"|"
                                   };
 
-      static const std::size_t logic_ops_list_size = sizeof(logic_ops_list) / sizeof(std::string);
+      static const std::size_t logic_ops_list_size = sizeof(logic_ops_list) / sizeof(std::wstring);
 
-      static const std::string cntrl_struct_list[] =
+      static const std::wstring cntrl_struct_list[] =
                                   {
-                                     "if", "switch", "for", "while", "repeat", "return"
+                                     L"if", L"switch", L"for", L"while", L"repeat", L"return"
                                   };
 
-      static const std::size_t cntrl_struct_list_size = sizeof(cntrl_struct_list) / sizeof(std::string);
+      static const std::size_t cntrl_struct_list_size = sizeof(cntrl_struct_list) / sizeof(std::wstring);
 
-      static const std::string arithmetic_ops_list[] =
+      static const std::wstring arithmetic_ops_list[] =
                                   {
-                                    "+", "-", "*", "/", "%", "^"
+                                    L"+", L"-", L"*", L"/", L"%", L"^"
                                   };
 
-      static const std::size_t arithmetic_ops_list_size = sizeof(arithmetic_ops_list) / sizeof(std::string);
+      static const std::size_t arithmetic_ops_list_size = sizeof(arithmetic_ops_list) / sizeof(std::wstring);
 
-      static const std::string assignment_ops_list[] =
+      static const std::wstring assignment_ops_list[] =
                                   {
-                                    ":=", "+=", "-=",
-                                    "*=", "/=", "%="
+                                    L":=", L"+=", L"-=",
+                                    L"*=", L"/=", L"%="
                                   };
 
-      static const std::size_t assignment_ops_list_size = sizeof(assignment_ops_list) / sizeof(std::string);
+      static const std::size_t assignment_ops_list_size = sizeof(assignment_ops_list) / sizeof(std::wstring);
 
-      static const std::string inequality_ops_list[] =
+      static const std::wstring inequality_ops_list[] =
                                   {
-                                     "<",  "<=", "==",
-                                     "=",  "!=", "<>",
-                                    ">=",  ">"
+                                     L"<",  L"<=", L"==",
+                                     L"=",  L"!=", L"<>",
+                                    L">=",  L">"
                                   };
 
-      static const std::size_t inequality_ops_list_size = sizeof(inequality_ops_list) / sizeof(std::string);
+      static const std::size_t inequality_ops_list_size = sizeof(inequality_ops_list) / sizeof(std::wstring);
 
-      inline bool is_reserved_word(const std::string& symbol)
+      inline bool is_reserved_word(const std::wstring& symbol)
       {
          for (std::size_t i = 0; i < reserved_words_size; ++i)
          {
@@ -501,7 +501,7 @@ namespace exprtk
          return false;
       }
 
-      inline bool is_reserved_symbol(const std::string& symbol)
+      inline bool is_reserved_symbol(const std::wstring& symbol)
       {
          for (std::size_t i = 0; i < reserved_symbols_size; ++i)
          {
@@ -514,7 +514,7 @@ namespace exprtk
          return false;
       }
 
-      inline bool is_base_function(const std::string& function_name)
+      inline bool is_base_function(const std::wstring& function_name)
       {
          for (std::size_t i = 0; i < base_function_list_size; ++i)
          {
@@ -527,7 +527,7 @@ namespace exprtk
          return false;
       }
 
-      inline bool is_control_struct(const std::string& cntrl_strct)
+      inline bool is_control_struct(const std::wstring& cntrl_strct)
       {
          for (std::size_t i = 0; i < cntrl_struct_list_size; ++i)
          {
@@ -540,7 +540,7 @@ namespace exprtk
          return false;
       }
 
-      inline bool is_logic_opr(const std::string& lgc_opr)
+      inline bool is_logic_opr(const std::wstring& lgc_opr)
       {
          for (std::size_t i = 0; i < logic_ops_list_size; ++i)
          {
@@ -628,41 +628,41 @@ namespace exprtk
          return (p_itr == pattern_end);
       }
 
-      inline bool wc_match(const std::string& wild_card,
-                           const std::string& str)
+      inline bool wc_match(const std::wstring& wild_card,
+                           const std::wstring& str)
       {
          return match_impl<const char_t*,cs_match>(wild_card.data(),
                                                    wild_card.data() + wild_card.size(),
                                                    str.data(),
                                                    str.data() + str.size(),
-                                                   '*',
-                                                   '?');
+                                                   L'*',
+                                                   L'?');
       }
 
-      inline bool wc_imatch(const std::string& wild_card,
-                            const std::string& str)
+      inline bool wc_imatch(const std::wstring& wild_card,
+                            const std::wstring& str)
       {
          return match_impl<const char_t*,cis_match>(wild_card.data(),
                                                     wild_card.data() + wild_card.size(),
                                                     str.data(),
                                                     str.data() + str.size(),
-                                                    '*',
-                                                    '?');
+                                                    L'*',
+                                                    L'?');
       }
 
-      inline bool sequence_match(const std::string& pattern,
-                                 const std::string& str,
+      inline bool sequence_match(const std::wstring& pattern,
+                                 const std::wstring& str,
                                  std::size_t&       diff_index,
                                  char_t&            diff_value)
       {
          if (str.empty())
          {
-            return ("Z" == pattern);
+            return (L"Z" == pattern);
          }
-         else if ('*' == pattern[0])
+         else if (L'*' == pattern[0])
             return false;
 
-         typedef std::string::const_iterator itr_t;
+         typedef std::wstring::const_iterator itr_t;
 
          itr_t p_itr = pattern.begin();
          itr_t s_itr = str    .begin();
@@ -672,11 +672,11 @@ namespace exprtk
 
          while ((s_end != s_itr) && (p_end != p_itr))
          {
-            if ('*' == (*p_itr))
+            if (L'*' == (*p_itr))
             {
                const char_t target = static_cast<char>(std::toupper(*(p_itr - 1)));
 
-               if ('*' == target)
+               if (L'*' == target)
                {
                   diff_index = static_cast<std::size_t>(std::distance(str.begin(),s_itr));
                   diff_value = static_cast<char>(std::toupper(*p_itr));
@@ -697,7 +697,7 @@ namespace exprtk
                continue;
             }
             else if (
-                      ('?' != *p_itr) &&
+                      (L'?' != *p_itr) &&
                       std::toupper(*p_itr) != std::toupper(*s_itr)
                     )
             {
@@ -715,7 +715,7 @@ namespace exprtk
                   (s_end == s_itr) &&
                   (
                     (p_end ==  p_itr) ||
-                    ('*'   == *p_itr)
+                    (L'*'   == *p_itr)
                   )
                 );
       }
@@ -1664,15 +1664,15 @@ namespace exprtk
          if (itr == end)
             return false;
 
-         const bool negative = ('-' == (*itr));
+         const bool negative = (L'-' == (*itr));
 
-         if (negative || ('+' == (*itr)))
+         if (negative || (L'+' == (*itr)))
          {
             if (end == ++itr)
                return false;
          }
 
-         static const uchar_t zero = static_cast<uchar_t>('0');
+         static const uchar_t zero = static_cast<uchar_t>(L'0');
 
          while ((end != itr) && (zero == (*itr))) ++itr;
 
@@ -1741,19 +1741,19 @@ namespace exprtk
          if (std::distance(itr,end) != static_cast<int>(nan_length))
             return false;
 
-         if (static_cast<type>('n') == (*itr))
+         if (static_cast<type>(L'n') == (*itr))
          {
             if (
-                 (static_cast<type>('a') != *(itr + 1)) ||
-                 (static_cast<type>('n') != *(itr + 2))
+                 (static_cast<type>(L'a') != *(itr + 1)) ||
+                 (static_cast<type>(L'n') != *(itr + 2))
                )
             {
                return false;
             }
          }
          else if (
-                   (static_cast<type>('A') != *(itr + 1)) ||
-                   (static_cast<type>('N') != *(itr + 2))
+                   (static_cast<type>(L'A') != *(itr + 1)) ||
+                   (static_cast<type>(L'N') != *(itr + 2))
                  )
          {
             return false;
@@ -1767,8 +1767,8 @@ namespace exprtk
       template <typename Iterator, typename T>
       static inline bool parse_inf(Iterator& itr, const Iterator end, T& t, bool negative)
       {
-         static const char_t inf_uc[] = "INFINITY";
-         static const char_t inf_lc[] = "infinity";
+         static const char_t inf_uc[] = L"INFINITY";
+         static const char_t inf_lc[] = L"infinity";
          static const std::size_t inf_length = 8;
 
          const std::size_t length = static_cast<std::size_t>(std::distance(itr,end));
@@ -1776,7 +1776,7 @@ namespace exprtk
          if ((3 != length) && (inf_length != length))
             return false;
 
-         const char_t* inf_itr = ('i' == (*itr)) ? inf_lc : inf_uc;
+         const char_t* inf_itr = (L'i' == (*itr)) ? inf_lc : inf_uc;
 
          while (end != itr)
          {
@@ -1807,9 +1807,9 @@ namespace exprtk
 
          T d = T(0);
 
-         const bool negative = ('-' == (*itr));
+         const bool negative = (L'-' == (*itr));
 
-         if (negative || '+' == (*itr))
+         if (negative || L'+' == (*itr))
          {
             if (end == ++itr)
                return false;
@@ -1817,7 +1817,7 @@ namespace exprtk
 
          bool instate = false;
 
-         static const char zero = static_cast<uchar_t>('0');
+         static const char zero = static_cast<uchar_t>(L'0');
 
          #define parse_digit_1(d)          \
          if ((digit = (*itr - zero)) < 10) \
@@ -1832,7 +1832,7 @@ namespace exprtk
          else { break; }                   \
             ++itr;                         \
 
-         if ('.' != (*itr))
+         if (L'.' != (*itr))
          {
             const Iterator curr = itr;
 
@@ -1860,7 +1860,7 @@ namespace exprtk
 
          if (end != itr)
          {
-            if ('.' == (*itr))
+            if (L'.' == (*itr))
             {
                const Iterator curr = ++itr;
                unsigned int digit;
@@ -1892,7 +1892,7 @@ namespace exprtk
             {
                typename std::iterator_traits<Iterator>::value_type c = (*itr);
 
-               if (('e' == c) || ('E' == c))
+               if ((L'e' == c) || (L'E' == c))
                {
                   int exp = 0;
 
@@ -1909,19 +1909,19 @@ namespace exprtk
 
                if (end != itr)
                {
-                  if (('f' == c) || ('F' == c) || ('l' == c) || ('L' == c))
+                  if ((L'f' == c) || (L'F' == c) || (L'l' == c) || (L'L' == c))
                      ++itr;
-                  else if ('#' == c)
+                  else if (L'#' == c)
                   {
                      if (end == ++itr)
                         return false;
-                     else if (('I' <= (*itr)) && ((*itr) <= 'n'))
+                     else if ((L'I' <= (*itr)) && ((*itr) <= L'n'))
                      {
-                        if (('i' == (*itr)) || ('I' == (*itr)))
+                        if ((L'i' == (*itr)) || (L'I' == (*itr)))
                         {
                            return parse_inf(itr, end, t, negative);
                         }
-                        else if (('n' == (*itr)) || ('N' == (*itr)))
+                        else if ((L'n' == (*itr)) || (L'N' == (*itr)))
                         {
                            return parse_nan(itr, end, t);
                         }
@@ -1931,13 +1931,13 @@ namespace exprtk
                      else
                         return false;
                   }
-                  else if (('I' <= (*itr)) && ((*itr) <= 'n'))
+                  else if ((L'I' <= (*itr)) && ((*itr) <= L'n'))
                   {
-                     if (('i' == (*itr)) || ('I' == (*itr)))
+                     if ((L'i' == (*itr)) || (L'I' == (*itr)))
                      {
                         return parse_inf(itr, end, t, negative);
                      }
-                     else if (('n' == (*itr)) || ('N' == (*itr)))
+                     else if ((L'n' == (*itr)) || (L'N' == (*itr)))
                      {
                         return parse_nan(itr, end, t);
                      }
@@ -1960,7 +1960,7 @@ namespace exprtk
       }
 
       template <typename T>
-      inline bool string_to_real(const std::string& s, T& t)
+      inline bool string_to_real(const std::wstring& s, T& t)
       {
          const typename numeric::details::number_type<T>::type num_type;
 
@@ -2003,25 +2003,25 @@ namespace exprtk
             e_subass      =  12, e_mulass      =  13, e_divass      =  14,
             e_modass      =  15, e_shr         =  16, e_shl         =  17,
             e_lte         =  18, e_ne          =  19, e_gte         =  20,
-            e_swap        =  21, e_lt          = '<', e_gt          = '>',
-            e_eq          = '=', e_rbracket    = ')', e_lbracket    = '(',
-            e_rsqrbracket = ']', e_lsqrbracket = '[', e_rcrlbracket = '}',
-            e_lcrlbracket = '{', e_comma       = ',', e_add         = '+',
-            e_sub         = '-', e_div         = '/', e_mul         = '*',
-            e_mod         = '%', e_pow         = '^', e_colon       = ':',
-            e_ternary     = '?'
+            e_swap        =  21, e_lt          = L'<', e_gt          = L'>',
+            e_eq          = L'=', e_rbracket    = L')', e_lbracket    = L'(',
+            e_rsqrbracket = L']', e_lsqrbracket = L'[', e_rcrlbracket = L'}',
+            e_lcrlbracket = L'{', e_comma       = L',', e_add         = L'+',
+            e_sub         = L'-', e_div         = L'/', e_mul         = L'*',
+            e_mod         = L'%', e_pow         = L'^', e_colon       = L':',
+            e_ternary     = L'?'
          };
 
          token()
          : type(e_none),
-           value(""),
+           value(L""),
            position(std::numeric_limits<std::size_t>::max())
          {}
 
          void clear()
          {
             type     = e_none;
-            value    = "";
+            value    = L"";
             position = std::numeric_limits<std::size_t>::max();
          }
 
@@ -2067,7 +2067,7 @@ namespace exprtk
             return (*this);
          }
 
-         inline token& set_string(const std::string& s, const std::size_t p)
+         inline token& set_string(const std::wstring& s, const std::size_t p)
          {
             type     = e_string;
             value    = s;
@@ -2101,50 +2101,50 @@ namespace exprtk
             return (*this);
          }
 
-         static inline std::string to_str(token_type t)
+         static inline std::wstring to_str(token_type t)
          {
             switch (t)
             {
-               case e_none        : return "NONE";
-               case e_error       : return "ERROR";
-               case e_err_symbol  : return "ERROR_SYMBOL";
-               case e_err_number  : return "ERROR_NUMBER";
-               case e_err_string  : return "ERROR_STRING";
-               case e_eof         : return "EOF";
-               case e_number      : return "NUMBER";
-               case e_symbol      : return "SYMBOL";
-               case e_string      : return "STRING";
-               case e_assign      : return ":=";
-               case e_addass      : return "+=";
-               case e_subass      : return "-=";
-               case e_mulass      : return "*=";
-               case e_divass      : return "/=";
-               case e_modass      : return "%=";
-               case e_shr         : return ">>";
-               case e_shl         : return "<<";
-               case e_lte         : return "<=";
-               case e_ne          : return "!=";
-               case e_gte         : return ">=";
-               case e_lt          : return "<";
-               case e_gt          : return ">";
-               case e_eq          : return "=";
-               case e_rbracket    : return ")";
-               case e_lbracket    : return "(";
-               case e_rsqrbracket : return "]";
-               case e_lsqrbracket : return "[";
-               case e_rcrlbracket : return "}";
-               case e_lcrlbracket : return "{";
-               case e_comma       : return ",";
-               case e_add         : return "+";
-               case e_sub         : return "-";
-               case e_div         : return "/";
-               case e_mul         : return "*";
-               case e_mod         : return "%";
-               case e_pow         : return "^";
-               case e_colon       : return ":";
-               case e_ternary     : return "?";
-               case e_swap        : return "<=>";
-               default            : return "UNKNOWN";
+               case e_none        : return L"NONE";
+               case e_error       : return L"ERROR";
+               case e_err_symbol  : return L"ERROR_SYMBOL";
+               case e_err_number  : return L"ERROR_NUMBER";
+               case e_err_string  : return L"ERROR_STRING";
+               case e_eof         : return L"EOF";
+               case e_number      : return L"NUMBER";
+               case e_symbol      : return L"SYMBOL";
+               case e_string      : return L"STRING";
+               case e_assign      : return L":=";
+               case e_addass      : return L"+=";
+               case e_subass      : return L"-=";
+               case e_mulass      : return L"*=";
+               case e_divass      : return L"/=";
+               case e_modass      : return L"%=";
+               case e_shr         : return L">>";
+               case e_shl         : return L"<<";
+               case e_lte         : return L"<=";
+               case e_ne          : return L"!=";
+               case e_gte         : return L">=";
+               case e_lt          : return L"<";
+               case e_gt          : return L">";
+               case e_eq          : return L"=";
+               case e_rbracket    : return L")";
+               case e_lbracket    : return L"(";
+               case e_rsqrbracket : return L"]";
+               case e_lsqrbracket : return L"[";
+               case e_rcrlbracket : return L"}";
+               case e_lcrlbracket : return L"{";
+               case e_comma       : return L",";
+               case e_add         : return L"+";
+               case e_sub         : return L"-";
+               case e_div         : return L"/";
+               case e_mul         : return L"*";
+               case e_mod         : return L"%";
+               case e_pow         : return L"^";
+               case e_colon       : return L":";
+               case e_ternary     : return L"?";
+               case e_swap        : return L"<=>";
+               default            : return L"UNKNOWN";
             }
          }
 
@@ -2160,7 +2160,7 @@ namespace exprtk
          }
 
          token_type type;
-         std::string value;
+         std::wstring value;
          std::size_t position;
       };
 
@@ -2191,7 +2191,7 @@ namespace exprtk
             store_token_itr_ = token_list_.end();
          }
 
-         inline bool process(const std::string& str)
+         inline bool process(const std::wstring& str)
          {
             base_itr_ = str.data();
             s_itr_    = str.data();
@@ -2294,22 +2294,22 @@ namespace exprtk
             }
          }
 
-         inline std::string substr(const std::size_t& begin, const std::size_t& end)
+         inline std::wstring substr(const std::size_t& begin, const std::size_t& end)
          {
             const char_t* begin_itr = ((base_itr_ + begin) < s_end_) ? (base_itr_ + begin) : s_end_;
             const char_t* end_itr   = ((base_itr_ +   end) < s_end_) ? (base_itr_ +   end) : s_end_;
 
-            return std::string(begin_itr,end_itr);
+            return std::wstring(begin_itr,end_itr);
          }
 
-         inline std::string remaining() const
+         inline std::wstring remaining() const
          {
             if (finished())
-               return "";
+               return L"";
             else if (token_list_.begin() != token_itr_)
-               return std::string(base_itr_ + (token_itr_ - 1)->position,s_end_);
+               return std::wstring(base_itr_ + (token_itr_ - 1)->position,s_end_);
             else
-               return std::string(base_itr_ + token_itr_->position,s_end_);
+               return std::wstring(base_itr_ + token_itr_->position,s_end_);
          }
 
       private:
@@ -2339,11 +2339,11 @@ namespace exprtk
                static inline bool comment_start(const char_t c0, const char_t c1, int& mode, int& incr)
                {
                   mode = 0;
-                       if ('#' == c0)    { mode = 1; incr = 1; }
-                  else if ('/' == c0)
+                       if (L'#' == c0)    { mode = 1; incr = 1; }
+                  else if (L'/' == c0)
                   {
-                          if ('/' == c1) { mode = 1; incr = 2; }
-                     else if ('*' == c1) { mode = 2; incr = 2; }
+                          if (L'/' == c1) { mode = 1; incr = 2; }
+                     else if (L'*' == c1) { mode = 2; incr = 2; }
                   }
                   return (0 != mode);
                }
@@ -2352,7 +2352,7 @@ namespace exprtk
                {
                   return (
                            ((1 == mode) && ('\n' == c0)) ||
-                           ((2 == mode) && ( '*' == c0) && ('/' == c1))
+                           ((2 == mode) && ( L'*' == c0) && (L'/' == c1))
                          );
                }
             };
@@ -2401,24 +2401,24 @@ namespace exprtk
                scan_symbol();
                return;
             }
-            else if (details::is_digit((*s_itr_)) || ('.' == (*s_itr_)))
+            else if (details::is_digit((*s_itr_)) || (L'.' == (*s_itr_)))
             {
                scan_number();
                return;
             }
-            else if ('$' == (*s_itr_))
+            else if (L'$' == (*s_itr_))
             {
                scan_special_function();
                return;
             }
             #ifndef exprtk_disable_string_capabilities
-            else if ('\'' == (*s_itr_))
+            else if (L'\'' == (*s_itr_))
             {
                scan_string();
                return;
             }
             #endif
-            else if ('~' == (*s_itr_))
+            else if (L'~' == (*s_itr_))
             {
                token_t t;
                t.set_symbol(s_itr_, s_itr_ + 1, base_itr_);
@@ -2449,7 +2449,7 @@ namespace exprtk
                {
                   const char_t c2 = s_itr_[2];
 
-                  if ((c0 == '<') && (c1 == '=') && (c2 == '>'))
+                  if ((c0 == L'<') && (c1 == L'=') && (c2 == L'>'))
                   {
                      t.set_operator(token_t::e_swap, s_itr_, s_itr_ + 3, base_itr_);
                      token_list_.push_back(t);
@@ -2460,19 +2460,19 @@ namespace exprtk
 
                token_t::token_type ttype = token_t::e_none;
 
-                    if ((c0 == '<') && (c1 == '=')) ttype = token_t::e_lte;
-               else if ((c0 == '>') && (c1 == '=')) ttype = token_t::e_gte;
-               else if ((c0 == '<') && (c1 == '>')) ttype = token_t::e_ne;
-               else if ((c0 == '!') && (c1 == '=')) ttype = token_t::e_ne;
-               else if ((c0 == '=') && (c1 == '=')) ttype = token_t::e_eq;
-               else if ((c0 == ':') && (c1 == '=')) ttype = token_t::e_assign;
-               else if ((c0 == '<') && (c1 == '<')) ttype = token_t::e_shl;
-               else if ((c0 == '>') && (c1 == '>')) ttype = token_t::e_shr;
-               else if ((c0 == '+') && (c1 == '=')) ttype = token_t::e_addass;
-               else if ((c0 == '-') && (c1 == '=')) ttype = token_t::e_subass;
-               else if ((c0 == '*') && (c1 == '=')) ttype = token_t::e_mulass;
-               else if ((c0 == '/') && (c1 == '=')) ttype = token_t::e_divass;
-               else if ((c0 == '%') && (c1 == '=')) ttype = token_t::e_modass;
+                    if ((c0 == L'<') && (c1 == L'=')) ttype = token_t::e_lte;
+               else if ((c0 == L'>') && (c1 == L'=')) ttype = token_t::e_gte;
+               else if ((c0 == L'<') && (c1 == L'>')) ttype = token_t::e_ne;
+               else if ((c0 == L'!') && (c1 == L'=')) ttype = token_t::e_ne;
+               else if ((c0 == L'=') && (c1 == L'=')) ttype = token_t::e_eq;
+               else if ((c0 == L':') && (c1 == L'=')) ttype = token_t::e_assign;
+               else if ((c0 == L'<') && (c1 == L'<')) ttype = token_t::e_shl;
+               else if ((c0 == L'>') && (c1 == L'>')) ttype = token_t::e_shr;
+               else if ((c0 == L'+') && (c1 == L'=')) ttype = token_t::e_addass;
+               else if ((c0 == L'-') && (c1 == L'=')) ttype = token_t::e_subass;
+               else if ((c0 == L'*') && (c1 == L'=')) ttype = token_t::e_mulass;
+               else if ((c0 == L'/') && (c1 == L'=')) ttype = token_t::e_divass;
+               else if ((c0 == L'%') && (c1 == L'=')) ttype = token_t::e_modass;
 
                if (token_t::e_none != ttype)
                {
@@ -2483,15 +2483,15 @@ namespace exprtk
                }
             }
 
-            if ('<' == c0)
+            if (L'<' == c0)
                t.set_operator(token_t::e_lt , s_itr_, s_itr_ + 1, base_itr_);
-            else if ('>' == c0)
+            else if (L'>' == c0)
                t.set_operator(token_t::e_gt , s_itr_, s_itr_ + 1, base_itr_);
-            else if (';' == c0)
+            else if (L';' == c0)
                t.set_operator(token_t::e_eof, s_itr_, s_itr_ + 1, base_itr_);
-            else if ('&' == c0)
+            else if (L'&' == c0)
                t.set_symbol(s_itr_, s_itr_ + 1, base_itr_);
-            else if ('|' == c0)
+            else if (L'|' == c0)
                t.set_symbol(s_itr_, s_itr_ + 1, base_itr_);
             else
                t.set_operator(token_t::token_type(c0), s_itr_, s_itr_ + 1, base_itr_);
@@ -2506,9 +2506,9 @@ namespace exprtk
 
             while (!is_end(s_itr_))
             {
-               if (!details::is_letter_or_digit(*s_itr_) && ('_' != (*s_itr_)))
+               if (!details::is_letter_or_digit(*s_itr_) && (L'_' != (*s_itr_)))
                {
-                  if ('.' != (*s_itr_))
+                  if (L'.' != (*s_itr_))
                      break;
                   /*
                      Permit symbols that contain a 'dot'
@@ -2519,7 +2519,7 @@ namespace exprtk
                        (s_itr_ != initial_itr)                     &&
                        !is_end(s_itr_ + 1)                         &&
                        !details::is_letter_or_digit(*(s_itr_ + 1)) &&
-                       ('_' != (*(s_itr_ + 1)))
+                       (L'_' != (*(s_itr_ + 1)))
                      )
                      break;
                }
@@ -2562,7 +2562,7 @@ namespace exprtk
 
             while (!is_end(s_itr_))
             {
-               if ('.' == (*s_itr_))
+               if (L'.' == (*s_itr_))
                {
                   if (dot_found)
                   {
@@ -2576,7 +2576,7 @@ namespace exprtk
 
                   continue;
                }
-               else if ('e' == std::tolower(*s_itr_))
+               else if (L'e' == std::tolower(*s_itr_))
                {
                   const char_t& c = *(s_itr_ + 1);
 
@@ -2588,8 +2588,8 @@ namespace exprtk
                      return;
                   }
                   else if (
-                            ('+' != c) &&
-                            ('-' != c) &&
+                            (L'+' != c) &&
+                            (L'-' != c) &&
                             !details::is_digit(c)
                           )
                   {
@@ -2626,7 +2626,7 @@ namespace exprtk
 
                   continue;
                }
-               else if (('.' != (*s_itr_)) && !details::is_digit(*s_itr_))
+               else if ((L'.' != (*s_itr_)) && !details::is_digit(*s_itr_))
                   break;
                else
                   ++s_itr_;
@@ -2653,8 +2653,8 @@ namespace exprtk
             }
 
             if (
-                 !(('$' == *s_itr_)                       &&
-                   (details::imatch  ('f',*(s_itr_ + 1))) &&
+                 !((L'$' == *s_itr_)                       &&
+                   (details::imatch  (L'f',*(s_itr_ + 1))) &&
                    (details::is_digit(*(s_itr_ + 2)))     &&
                    (details::is_digit(*(s_itr_ + 3))))
                )
@@ -2703,12 +2703,12 @@ namespace exprtk
                }
                else if (!escaped)
                {
-                  if ('\'' == *s_itr_)
+                  if (L'\'' == *s_itr_)
                      break;
                }
                else if (escaped)
                {
-                  if (!is_end(s_itr_) && ('0' == *(s_itr_)))
+                  if (!is_end(s_itr_) && (L'0' == *(s_itr_)))
                   {
                      /*
                         Note: The following 'awkward' conditional is
@@ -2723,8 +2723,8 @@ namespace exprtk
                                                !is_end(s_itr_ + 3) ;
                      #endif
 
-                     const bool x_seperator  = ('x' == *(s_itr_ + 1)) ||
-                                               ('X' == *(s_itr_ + 1)) ;
+                     const bool x_seperator  = (L'x' == *(s_itr_ + 1)) ||
+                                               (L'X' == *(s_itr_ + 1)) ;
 
                      const bool both_digits  = details::is_hex_digit(*(s_itr_ + 2)) &&
                                                details::is_hex_digit(*(s_itr_ + 3)) ;
@@ -2758,7 +2758,7 @@ namespace exprtk
                t.set_string(initial_itr, s_itr_, base_itr_);
             else
             {
-               std::string parsed_string(initial_itr,s_itr_);
+               std::wstring parsed_string(initial_itr,s_itr_);
 
                details::cleanup_escapes(parsed_string);
 
@@ -3102,7 +3102,7 @@ namespace exprtk
             for (std::size_t i = 0; i < generator.size(); ++i)
             {
                lexer::token t = generator[i];
-               printf("Token[%02d] @ %03d  %6s  -->  '%s'\n",
+               printf("Token[%02d] @ %03d  %6ls  -->  '%ls'\n",
                       static_cast<int>(i),
                       static_cast<int>(t.position),
                       t.to_str(t.type).c_str(),
@@ -3120,7 +3120,7 @@ namespace exprtk
             : lexer::token_inserter(2)
             {}
 
-            inline void ignore_symbol(const std::string& symbol)
+            inline void ignore_symbol(const std::wstring& symbol)
             {
                ignore_set_.insert(symbol);
             }
@@ -3129,7 +3129,7 @@ namespace exprtk
             {
                bool match         = false;
                new_token.type     = lexer::token::e_mul;
-               new_token.value    = "*";
+               new_token.value    = L"*";
                new_token.position = t1.position;
 
                if (t0.type == lexer::token::e_symbol)
@@ -3138,7 +3138,7 @@ namespace exprtk
                   {
                      return -1;
                   }
-                  else if (!t0.value.empty() && ('$' == t0.value[0]))
+                  else if (!t0.value.empty() && (L'$' == t0.value[0]))
                   {
                      return -1;
                   }
@@ -3168,7 +3168,7 @@ namespace exprtk
 
          private:
 
-            std::set<std::string,details::ilesscompare> ignore_set_;
+            std::set<std::wstring,details::ilesscompare> ignore_set_;
          };
 
          class operator_joiner : public token_joiner
@@ -3185,7 +3185,7 @@ namespace exprtk
                if ((t0.type == lexer::token::e_colon) && (t1.type == lexer::token::e_eq))
                {
                   t.type     = lexer::token::e_assign;
-                  t.value    = ":=";
+                  t.value    = L":=";
                   t.position = t0.position;
 
                   return true;
@@ -3194,7 +3194,7 @@ namespace exprtk
                else if ((t0.type == lexer::token::e_add) && (t1.type == lexer::token::e_eq))
                {
                   t.type     = lexer::token::e_addass;
-                  t.value    = "+=";
+                  t.value    = L"+=";
                   t.position = t0.position;
 
                   return true;
@@ -3203,7 +3203,7 @@ namespace exprtk
                else if ((t0.type == lexer::token::e_sub) && (t1.type == lexer::token::e_eq))
                {
                   t.type     = lexer::token::e_subass;
-                  t.value    = "-=";
+                  t.value    = L"-=";
                   t.position = t0.position;
 
                   return true;
@@ -3212,7 +3212,7 @@ namespace exprtk
                else if ((t0.type == lexer::token::e_mul) && (t1.type == lexer::token::e_eq))
                {
                   t.type     = lexer::token::e_mulass;
-                  t.value    = "*=";
+                  t.value    = L"*=";
                   t.position = t0.position;
 
                   return true;
@@ -3221,7 +3221,7 @@ namespace exprtk
                else if ((t0.type == lexer::token::e_div) && (t1.type == lexer::token::e_eq))
                {
                   t.type     = lexer::token::e_divass;
-                  t.value    = "/=";
+                  t.value    = L"/=";
                   t.position = t0.position;
 
                   return true;
@@ -3230,7 +3230,7 @@ namespace exprtk
                else if ((t0.type == lexer::token::e_mod) && (t1.type == lexer::token::e_eq))
                {
                   t.type     = lexer::token::e_modass;
-                  t.value    = "%=";
+                  t.value    = L"%=";
                   t.position = t0.position;
 
                   return true;
@@ -3239,7 +3239,7 @@ namespace exprtk
                else if ((t0.type == lexer::token::e_gt) && (t1.type == lexer::token::e_eq))
                {
                   t.type     = lexer::token::e_gte;
-                  t.value    = ">=";
+                  t.value    = L">=";
                   t.position = t0.position;
 
                   return true;
@@ -3248,7 +3248,7 @@ namespace exprtk
                else if ((t0.type == lexer::token::e_lt) && (t1.type == lexer::token::e_eq))
                {
                   t.type     = lexer::token::e_lte;
-                  t.value    = "<=";
+                  t.value    = L"<=";
                   t.position = t0.position;
 
                   return true;
@@ -3257,16 +3257,16 @@ namespace exprtk
                else if ((t0.type == lexer::token::e_eq) && (t1.type == lexer::token::e_eq))
                {
                   t.type     = lexer::token::e_eq;
-                  t.value    = "==";
+                  t.value    = L"==";
                   t.position = t0.position;
 
                   return true;
                }
                // '! =' --> '!='
-               else if ((static_cast<char>(t0.type) == '!') && (t1.type == lexer::token::e_eq))
+               else if ((static_cast<char>(t0.type) == L'!') && (t1.type == lexer::token::e_eq))
                {
                   t.type     = lexer::token::e_ne;
-                  t.value    = "!=";
+                  t.value    = L"!=";
                   t.position = t0.position;
 
                   return true;
@@ -3275,7 +3275,7 @@ namespace exprtk
                else if ((t0.type == lexer::token::e_lt) && (t1.type == lexer::token::e_gt))
                {
                   t.type     = lexer::token::e_ne;
-                  t.value    = "<>";
+                  t.value    = L"<>";
                   t.position = t0.position;
 
                   return true;
@@ -3284,30 +3284,30 @@ namespace exprtk
                else if ((t0.type == lexer::token::e_lte) && (t1.type == lexer::token::e_gt))
                {
                   t.type     = lexer::token::e_swap;
-                  t.value    = "<=>";
+                  t.value    = L"<=>";
                   t.position = t0.position;
 
                   return true;
                }
-               // '+ -' --> '-'
+               // '+ -' --> L'-'
                else if ((t0.type == lexer::token::e_add) && (t1.type == lexer::token::e_sub))
                {
                   t.type     = lexer::token::e_sub;
-                  t.value    = "-";
+                  t.value    = L"-";
                   t.position = t0.position;
 
                   return true;
                }
-               // '- +' --> '-'
+               // '- +' --> L'-'
                else if ((t0.type == lexer::token::e_sub) && (t1.type == lexer::token::e_add))
                {
                   t.type     = lexer::token::e_sub;
-                  t.value    = "-";
+                  t.value    = L"-";
                   t.position = t0.position;
 
                   return true;
                }
-               // '- -' --> '-'
+               // '- -' --> L'-'
                else if ((t0.type == lexer::token::e_sub) && (t1.type == lexer::token::e_sub))
                {
                   /*
@@ -3315,7 +3315,7 @@ namespace exprtk
                      pre/postfix decrement operator
                   */
                   t.type     = lexer::token::e_add;
-                  t.value    = "+";
+                  t.value    = L"+";
                   t.position = t0.position;
 
                   return true;
@@ -3334,7 +3334,7 @@ namespace exprtk
                   )
                {
                   t.type     = lexer::token::e_symbol;
-                  t.value    = "[*]";
+                  t.value    = L"[*]";
                   t.position = t0.position;
 
                   return true;
@@ -3379,7 +3379,7 @@ namespace exprtk
             void reset()
             {
                // Why? because msvc doesn't support swap properly.
-               stack_ = std::stack<std::pair<char,std::size_t> >();
+               stack_ = std::stack<std::pair<details::char_t,std::size_t> >();
                state_ = true;
                error_token_.clear();
             }
@@ -3395,9 +3395,9 @@ namespace exprtk
                {
                   details::char_t c = t.value[0];
 
-                       if (t.type == lexer::token::e_lbracket   ) stack_.push(std::make_pair(')',t.position));
-                  else if (t.type == lexer::token::e_lcrlbracket) stack_.push(std::make_pair('}',t.position));
-                  else if (t.type == lexer::token::e_lsqrbracket) stack_.push(std::make_pair(']',t.position));
+                       if (t.type == lexer::token::e_lbracket   ) stack_.push(std::make_pair(L')',t.position));
+                  else if (t.type == lexer::token::e_lcrlbracket) stack_.push(std::make_pair(L'}',t.position));
+                  else if (t.type == lexer::token::e_lsqrbracket) stack_.push(std::make_pair(L']',t.position));
                   else if (exprtk::details::is_right_bracket(c))
                   {
                      if (stack_.empty())
@@ -3425,7 +3425,7 @@ namespace exprtk
          private:
 
             bool state_;
-            std::stack<std::pair<char,std::size_t> > stack_;
+            std::stack<std::pair<details::char_t,std::size_t> > stack_;
             lexer::token error_token_;
          };
 
@@ -3496,11 +3496,11 @@ namespace exprtk
          {
          private:
 
-            typedef std::map<std::string,std::pair<std::string,token::token_type>,details::ilesscompare> replace_map_t;
+            typedef std::map<std::wstring,std::pair<std::wstring,token::token_type>,details::ilesscompare> replace_map_t;
 
          public:
 
-            bool remove(const std::string& target_symbol)
+            bool remove(const std::wstring& target_symbol)
             {
                const replace_map_t::iterator itr = replace_map_.find(target_symbol);
 
@@ -3512,8 +3512,8 @@ namespace exprtk
                return true;
             }
 
-            bool add_replace(const std::string& target_symbol,
-                             const std::string& replace_symbol,
+            bool add_replace(const std::wstring& target_symbol,
+                             const std::wstring& replace_symbol,
                              const lexer::token::token_type token_type = lexer::token::e_symbol)
             {
                const replace_map_t::iterator itr = replace_map_.find(target_symbol);
@@ -3673,7 +3673,7 @@ namespace exprtk
                {
                   switch (t)
                   {
-                     case lexer::token::e_assign : return (']' != base);
+                     case lexer::token::e_assign : return (L']' != base);
                      case lexer::token::e_string : return true;
                      default                     : return false;
                   }
@@ -3895,7 +3895,7 @@ namespace exprtk
          typedef token         token_t;
          typedef generator generator_t;
 
-         inline bool init(const std::string& str)
+         inline bool init(const std::wstring& str)
          {
             if (!lexer_.process(str))
             {
@@ -3968,7 +3968,7 @@ namespace exprtk
          }
 
          inline bool token_is(const token_t::token_type& ttype,
-                              const std::string& value,
+                              const std::wstring& value,
                               const token_advance_mode mode = e_advance)
          {
             if (
@@ -3985,7 +3985,7 @@ namespace exprtk
          }
 
          inline bool token_is_then_assign(const token_t::token_type& ttype,
-                                          std::string& token,
+                                          std::wstring& token,
                                           const token_advance_mode mode = e_advance)
          {
             if (current_token_.type != ttype)
@@ -4003,7 +4003,7 @@ namespace exprtk
          template <typename Allocator,
                    template <typename,typename> class Container>
          inline bool token_is_then_assign(const token_t::token_type& ttype,
-                                          Container<std::string,Allocator>& token_list,
+                                          Container<std::wstring,Allocator>& token_list,
                                           const token_advance_mode mode = e_advance)
          {
             if (current_token_.type != ttype)
@@ -4023,7 +4023,7 @@ namespace exprtk
             return (lexer_.peek_next_token().type == ttype);
          }
 
-         inline bool peek_token_is(const std::string& s)
+         inline bool peek_token_is(const std::wstring& s)
          {
             return (exprtk::details::imatch(lexer_.peek_next_token().value,s));
          }
@@ -4295,9 +4295,9 @@ namespace exprtk
    };
 
    template <typename StringView>
-   inline std::string to_str(const StringView& view)
+   inline std::wstring to_str(const StringView& view)
    {
-      return std::string(view.begin(),view.size());
+      return std::wstring(view.begin(),view.size());
    }
 
    #ifndef exprtk_disable_return_statement
@@ -4436,31 +4436,31 @@ namespace exprtk
          e_sf4ext60 = 2060, e_sf4ext61 = 2061
       };
 
-      inline std::string to_str(const operator_type opr)
+      inline std::wstring to_str(const operator_type opr)
       {
          switch (opr)
          {
-            case e_add    : return  "+";
-            case e_sub    : return  "-";
-            case e_mul    : return  "*";
-            case e_div    : return  "/";
-            case e_mod    : return  "%";
-            case e_pow    : return  "^";
-            case e_assign : return ":=";
-            case e_addass : return "+=";
-            case e_subass : return "-=";
-            case e_mulass : return "*=";
-            case e_divass : return "/=";
-            case e_modass : return "%=";
-            case e_lt     : return  "<";
-            case e_lte    : return "<=";
-            case e_eq     : return "==";
-            case e_equal  : return  "=";
-            case e_ne     : return "!=";
-            case e_nequal : return "<>";
-            case e_gte    : return ">=";
-            case e_gt     : return  ">";
-            default       : return"N/A";
+            case e_add    : return  L"+";
+            case e_sub    : return  L"-";
+            case e_mul    : return  L"*";
+            case e_div    : return  L"/";
+            case e_mod    : return  L"%";
+            case e_pow    : return  L"^";
+            case e_assign : return L":=";
+            case e_addass : return L"+=";
+            case e_subass : return L"-=";
+            case e_mulass : return L"*=";
+            case e_divass : return L"/=";
+            case e_modass : return L"%=";
+            case e_lt     : return  L"<";
+            case e_lte    : return L"<=";
+            case e_eq     : return L"==";
+            case e_equal  : return  L"=";
+            case e_ne     : return L"!=";
+            case e_nequal : return L"<>";
+            case e_gte    : return L">=";
+            case e_gt     : return  L">";
+            default       : return L"N/A";
          }
       }
 
@@ -4499,19 +4499,19 @@ namespace exprtk
       }
 
       #ifdef exprtk_enable_debugging
-      inline void dump_ptr(const std::string& s, const void* ptr, const std::size_t size = 0)
+      inline void dump_ptr(const std::wstring& s, const void* ptr, const std::size_t size = 0)
       {
          if (size)
-            exprtk_debug(("%s - addr: %p\n",s.c_str(),ptr));
+            exprtk_debug((L"%ls - addr: %p\n",s.c_str(),ptr));
          else
-            exprtk_debug(("%s - addr: %p size: %d\n",
+            exprtk_debug((L"%ls - addr: %p size: %d\n",
                           s.c_str(),
                           ptr,
                           static_cast<unsigned int>(size)));
       }
       #else
-      inline void dump_ptr(const std::string&, const void*) {}
-      inline void dump_ptr(const std::string&, const void*, const std::size_t) {}
+      inline void dump_ptr(const std::wstring&, const void*) {}
+      inline void dump_ptr(const std::wstring&, const void*, const std::size_t) {}
       #endif
 
       template <typename T>
@@ -4551,7 +4551,7 @@ namespace exprtk
             {
                if (data && destruct && (0 == ref_count))
                {
-                  dump_ptr("~control_block() data",data);
+                  dump_ptr(L"~control_block() data",data);
                   delete[] data;
                   data = reinterpret_cast<data_t>(0);
                }
@@ -4601,7 +4601,7 @@ namespace exprtk
                destruct = true;
                data     = new T[size];
                std::fill_n(data,size,T(0));
-               dump_ptr("control_block::create_data() - data",data,size);
+               dump_ptr(L"control_block::create_data() - data",data,size);
             }
          };
 
@@ -4679,19 +4679,19 @@ namespace exprtk
          inline void dump() const
          {
             #ifdef exprtk_enable_debugging
-            exprtk_debug(("size: %d\taddress:%p\tdestruct:%c\n",
+            exprtk_debug((L"size: %d\taddress:%p\tdestruct:%c\n",
                           size(),
                           data(),
-                          (control_block_->destruct ? 'T' : 'F')));
+                          (control_block_->destruct ? L'T' : L'F')));
 
             for (std::size_t i = 0; i < size(); ++i)
             {
                if (5 == i)
-                  exprtk_debug(("\n"));
+                  exprtk_debug((L"\n"));
 
-               exprtk_debug(("%15.10f ",data()[i]));
+               exprtk_debug((L"%15.10f ",data()[i]));
             }
-            exprtk_debug(("\n"));
+            exprtk_debug((L"\n"));
             #endif
          }
 
@@ -4768,7 +4768,7 @@ namespace exprtk
                   case e_frac  : return numeric::frac (arg);
                   case e_trunc : return numeric::trunc(arg);
 
-                  default      : exprtk_debug(("numeric::details::process_impl<T> - Invalid unary operation.\n"));
+                  default      : exprtk_debug((L"numeric::details::process_impl<T> - Invalid unary operation.\n"));
                                  return std::numeric_limits<T>::quiet_NaN();
                }
             }
@@ -4808,7 +4808,7 @@ namespace exprtk
                   case e_shr    : return shr<T>     (arg0,arg1);
                   case e_shl    : return shl<T>     (arg0,arg1);
 
-                  default       : exprtk_debug(("numeric::details::process_impl<T> - Invalid binary operation.\n"));
+                  default       : exprtk_debug((L"numeric::details::process_impl<T> - Invalid binary operation.\n"));
                                   return std::numeric_limits<T>::quiet_NaN();
                }
             }
@@ -4846,7 +4846,7 @@ namespace exprtk
                   case e_shr    : return arg0 >> arg1;
                   case e_shl    : return arg0 << arg1;
 
-                  default       : exprtk_debug(("numeric::details::process_impl<IntType> - Invalid binary operation.\n"));
+                  default       : exprtk_debug((L"numeric::details::process_impl<IntType> - Invalid binary operation.\n"));
                                   return std::numeric_limits<T>::quiet_NaN();
                }
             }
@@ -5546,7 +5546,7 @@ namespace exprtk
          virtual ~string_base_node()
          {}
 
-         virtual std::string str () const = 0;
+         virtual std::wstring str () const = 0;
 
          virtual const char_t* base() const = 0;
 
@@ -5562,7 +5562,7 @@ namespace exprtk
 
          typedef range_pack<T> range_t;
 
-         explicit string_literal_node(const std::string& v)
+         explicit string_literal_node(const std::wstring& v)
          : value_(v)
          {
             rp_.n0_c = std::make_pair<bool,std::size_t>(true,0);
@@ -5586,7 +5586,7 @@ namespace exprtk
             return reinterpret_cast<expression_node<T>*>(0);
          }
 
-         std::string str() const
+         std::wstring str() const
          {
             return value_;
          }
@@ -5616,7 +5616,7 @@ namespace exprtk
          string_literal_node(const string_literal_node<T>&);
          string_literal_node<T>& operator=(const string_literal_node<T>&);
 
-         const std::string value_;
+         const std::wstring value_;
          range_t rp_;
       };
       #endif
@@ -5898,7 +5898,7 @@ namespace exprtk
                                    return ((T(2) * arg1  <= (arg2 + arg0)) ? arg0 : arg2);
 
                default        : {
-                                   exprtk_debug(("trinary_node::value() - Error: Invalid operation\n"));
+                                   exprtk_debug((L"trinary_node::value() - Error: Invalid operation\n"));
                                    return std::numeric_limits<T>::quiet_NaN();
                                 }
             }
@@ -7465,13 +7465,13 @@ namespace exprtk
 
          typedef range_pack<T> range_t;
 
-         static std::string null_value;
+         static std::wstring null_value;
 
          explicit stringvar_node()
          : value_(&null_value)
          {}
 
-         explicit stringvar_node(std::string& v)
+         explicit stringvar_node(std::wstring& v)
          : value_(&v)
          {
             rp_.n0_c = std::make_pair<bool,std::size_t>(true,0);
@@ -7493,7 +7493,7 @@ namespace exprtk
             return std::numeric_limits<T>::quiet_NaN();
          }
 
-         std::string str() const
+         std::wstring str() const
          {
             return ref();
          }
@@ -7508,12 +7508,12 @@ namespace exprtk
             return ref().size();
          }
 
-         std::string& ref()
+         std::wstring& ref()
          {
             return (*value_);
          }
 
-         const std::string& ref() const
+         const std::wstring& ref() const
          {
             return (*value_);
          }
@@ -7535,12 +7535,12 @@ namespace exprtk
 
       private:
 
-         std::string* value_;
+         std::wstring* value_;
          mutable range_t rp_;
       };
 
       template <typename T>
-      std::string stringvar_node<T>::null_value = std::string("");
+      std::wstring stringvar_node<T>::null_value = std::wstring(L"");
 
       template <typename T>
       class string_range_node : public expression_node <T>,
@@ -7551,9 +7551,9 @@ namespace exprtk
 
          typedef range_pack<T> range_t;
 
-         static std::string null_value;
+         static std::wstring null_value;
 
-         explicit string_range_node(std::string& v, const range_t& rp)
+         explicit string_range_node(std::wstring& v, const range_t& rp)
          : value_(&v),
            rp_(rp)
          {}
@@ -7573,7 +7573,7 @@ namespace exprtk
             return std::numeric_limits<T>::quiet_NaN();
          }
 
-         inline std::string str() const
+         inline std::wstring str() const
          {
             return (*value_);
          }
@@ -7593,12 +7593,12 @@ namespace exprtk
             return rp_;
          }
 
-         inline virtual std::string& ref()
+         inline virtual std::wstring& ref()
          {
             return (*value_);
          }
 
-         inline virtual const std::string& ref() const
+         inline virtual const std::wstring& ref() const
          {
             return (*value_);
          }
@@ -7620,12 +7620,12 @@ namespace exprtk
 
       private:
 
-         std::string* value_;
+         std::wstring* value_;
          range_t      rp_;
       };
 
       template <typename T>
-      std::string string_range_node<T>::null_value = std::string("");
+      std::wstring string_range_node<T>::null_value = std::wstring(L"");
 
       template <typename T>
       class const_string_range_node : public expression_node <T>,
@@ -7636,7 +7636,7 @@ namespace exprtk
 
          typedef range_pack<T> range_t;
 
-         explicit const_string_range_node(const std::string& v, const range_t& rp)
+         explicit const_string_range_node(const std::wstring& v, const range_t& rp)
          : value_(v),
            rp_(rp)
          {}
@@ -7651,7 +7651,7 @@ namespace exprtk
             return std::numeric_limits<T>::quiet_NaN();
          }
 
-         std::string str() const
+         std::wstring str() const
          {
             return value_;
          }
@@ -7690,7 +7690,7 @@ namespace exprtk
 
          const_string_range_node<T>& operator=(const const_string_range_node<T>&);
 
-         const std::string value_;
+         const std::wstring value_;
          range_t rp_;
       };
 
@@ -7781,7 +7781,7 @@ namespace exprtk
             return std::numeric_limits<T>::quiet_NaN();
          }
 
-         std::string str() const
+         std::wstring str() const
          {
             return value_;
          }
@@ -7820,7 +7820,7 @@ namespace exprtk
          irange_ptr        str_range_ptr_;
          mutable range_t      base_range_;
          mutable range_t           range_;
-         mutable std::string       value_;
+         mutable std::wstring       value_;
       };
 
       template <typename T>
@@ -7920,7 +7920,7 @@ namespace exprtk
             return std::numeric_limits<T>::quiet_NaN();
          }
 
-         std::string str() const
+         std::wstring str() const
          {
             return value_;
          }
@@ -7958,7 +7958,7 @@ namespace exprtk
          irange_ptr   str0_range_ptr_;
          irange_ptr   str1_range_ptr_;
          mutable range_t     range_;
-         mutable std::string value_;
+         mutable std::wstring value_;
       };
 
       template <typename T>
@@ -8008,7 +8008,7 @@ namespace exprtk
             return std::numeric_limits<T>::quiet_NaN();
          }
 
-         std::string str() const
+         std::wstring str() const
          {
             return str0_node_ptr_->str();
          }
@@ -8204,13 +8204,13 @@ namespace exprtk
       {
       public:
 
-         static std::string null_value;
+         static std::wstring null_value;
 
          explicit stringvar_size_node()
          : value_(&null_value)
          {}
 
-         explicit stringvar_size_node(std::string& v)
+         explicit stringvar_size_node(std::wstring& v)
          : value_(&v)
          {}
 
@@ -8226,11 +8226,11 @@ namespace exprtk
 
       private:
 
-         std::string* value_;
+         std::wstring* value_;
       };
 
       template <typename T>
-      std::string stringvar_size_node<T>::null_value = std::string("");
+      std::wstring stringvar_size_node<T>::null_value = std::wstring(L"");
 
       template <typename T>
       class string_size_node : public expression_node<T>
@@ -8289,13 +8289,13 @@ namespace exprtk
 
       struct asn_assignment
       {
-         static inline void execute(std::string& s, const char_t* data, const std::size_t size)
+         static inline void execute(std::wstring& s, const char_t* data, const std::size_t size)
          { s.assign(data,size); }
       };
 
       struct asn_addassignment
       {
-         static inline void execute(std::string& s, const char_t* data, const std::size_t size)
+         static inline void execute(std::wstring& s, const char_t* data, const std::size_t size)
          { s.append(data,size); }
       };
 
@@ -8376,7 +8376,7 @@ namespace exprtk
             return std::numeric_limits<T>::quiet_NaN();
          }
 
-         std::string str() const
+         std::wstring str() const
          {
             return str0_node_ptr_->str();
          }
@@ -8509,7 +8509,7 @@ namespace exprtk
             return std::numeric_limits<T>::quiet_NaN();
          }
 
-         std::string str() const
+         std::wstring str() const
          {
             return str0_node_ptr_->str();
          }
@@ -8663,7 +8663,7 @@ namespace exprtk
             return std::numeric_limits<T>::quiet_NaN();
          }
 
-         std::string str() const
+         std::wstring str() const
          {
             return value_;
          }
@@ -8701,7 +8701,7 @@ namespace exprtk
          irange_ptr   str0_range_ptr_;
          irange_ptr   str1_range_ptr_;
          mutable range_t     range_;
-         mutable std::string value_;
+         mutable std::wstring value_;
 
          expression_ptr test_;
          expression_ptr consequent_;
@@ -8783,7 +8783,7 @@ namespace exprtk
             return std::numeric_limits<T>::quiet_NaN();
          }
 
-         std::string str() const
+         std::wstring str() const
          {
             return value_;
          }
@@ -8819,7 +8819,7 @@ namespace exprtk
          str_base_ptr str0_base_ptr_;
          irange_ptr   str0_range_ptr_;
          mutable range_t     range_;
-         mutable std::string value_;
+         mutable std::wstring value_;
 
          expression_ptr test_;
          expression_ptr consequent_;
@@ -8917,7 +8917,7 @@ namespace exprtk
             return std::numeric_limits<T>::quiet_NaN();
          }
 
-         std::string str() const
+         std::wstring str() const
          {
             return str_base_ptr_->str();
          }
@@ -8993,60 +8993,60 @@ namespace exprtk
          {                                               \
             return (OP0);                                \
          }                                               \
-         static inline std::string id()                  \
+         static inline std::wstring id()                  \
          {                                               \
             return OP1;                                  \
          }                                               \
       };                                                 \
 
-      define_sfop3(00,(x + y) / z       ,"(t+t)/t")
-      define_sfop3(01,(x + y) * z       ,"(t+t)*t")
-      define_sfop3(02,(x + y) - z       ,"(t+t)-t")
-      define_sfop3(03,(x + y) + z       ,"(t+t)+t")
-      define_sfop3(04,(x - y) + z       ,"(t-t)+t")
-      define_sfop3(05,(x - y) / z       ,"(t-t)/t")
-      define_sfop3(06,(x - y) * z       ,"(t-t)*t")
-      define_sfop3(07,(x * y) + z       ,"(t*t)+t")
-      define_sfop3(08,(x * y) - z       ,"(t*t)-t")
-      define_sfop3(09,(x * y) / z       ,"(t*t)/t")
-      define_sfop3(10,(x * y) * z       ,"(t*t)*t")
-      define_sfop3(11,(x / y) + z       ,"(t/t)+t")
-      define_sfop3(12,(x / y) - z       ,"(t/t)-t")
-      define_sfop3(13,(x / y) / z       ,"(t/t)/t")
-      define_sfop3(14,(x / y) * z       ,"(t/t)*t")
-      define_sfop3(15,x / (y + z)       ,"t/(t+t)")
-      define_sfop3(16,x / (y - z)       ,"t/(t-t)")
-      define_sfop3(17,x / (y * z)       ,"t/(t*t)")
-      define_sfop3(18,x / (y / z)       ,"t/(t/t)")
-      define_sfop3(19,x * (y + z)       ,"t*(t+t)")
-      define_sfop3(20,x * (y - z)       ,"t*(t-t)")
-      define_sfop3(21,x * (y * z)       ,"t*(t*t)")
-      define_sfop3(22,x * (y / z)       ,"t*(t/t)")
-      define_sfop3(23,x - (y + z)       ,"t-(t+t)")
-      define_sfop3(24,x - (y - z)       ,"t-(t-t)")
-      define_sfop3(25,x - (y / z)       ,"t-(t/t)")
-      define_sfop3(26,x - (y * z)       ,"t-(t*t)")
-      define_sfop3(27,x + (y * z)       ,"t+(t*t)")
-      define_sfop3(28,x + (y / z)       ,"t+(t/t)")
-      define_sfop3(29,x + (y + z)       ,"t+(t+t)")
-      define_sfop3(30,x + (y - z)       ,"t+(t-t)")
-      define_sfop3(31,(axnb<T,2>(x,y,z)),"       ")
-      define_sfop3(32,(axnb<T,3>(x,y,z)),"       ")
-      define_sfop3(33,(axnb<T,4>(x,y,z)),"       ")
-      define_sfop3(34,(axnb<T,5>(x,y,z)),"       ")
-      define_sfop3(35,(axnb<T,6>(x,y,z)),"       ")
-      define_sfop3(36,(axnb<T,7>(x,y,z)),"       ")
-      define_sfop3(37,(axnb<T,8>(x,y,z)),"       ")
-      define_sfop3(38,(axnb<T,9>(x,y,z)),"       ")
-      define_sfop3(39,x * numeric::log(y)   + z,"")
-      define_sfop3(40,x * numeric::log(y)   - z,"")
-      define_sfop3(41,x * numeric::log10(y) + z,"")
-      define_sfop3(42,x * numeric::log10(y) - z,"")
-      define_sfop3(43,x * numeric::sin(y) + z  ,"")
-      define_sfop3(44,x * numeric::sin(y) - z  ,"")
-      define_sfop3(45,x * numeric::cos(y) + z  ,"")
-      define_sfop3(46,x * numeric::cos(y) - z  ,"")
-      define_sfop3(47,details::is_true(x) ? y : z,"")
+      define_sfop3(00,(x + y) / z       ,L"(t+t)/t")
+      define_sfop3(01,(x + y) * z       ,L"(t+t)*t")
+      define_sfop3(02,(x + y) - z       ,L"(t+t)-t")
+      define_sfop3(03,(x + y) + z       ,L"(t+t)+t")
+      define_sfop3(04,(x - y) + z       ,L"(t-t)+t")
+      define_sfop3(05,(x - y) / z       ,L"(t-t)/t")
+      define_sfop3(06,(x - y) * z       ,L"(t-t)*t")
+      define_sfop3(07,(x * y) + z       ,L"(t*t)+t")
+      define_sfop3(08,(x * y) - z       ,L"(t*t)-t")
+      define_sfop3(09,(x * y) / z       ,L"(t*t)/t")
+      define_sfop3(10,(x * y) * z       ,L"(t*t)*t")
+      define_sfop3(11,(x / y) + z       ,L"(t/t)+t")
+      define_sfop3(12,(x / y) - z       ,L"(t/t)-t")
+      define_sfop3(13,(x / y) / z       ,L"(t/t)/t")
+      define_sfop3(14,(x / y) * z       ,L"(t/t)*t")
+      define_sfop3(15,x / (y + z)       ,L"t/(t+t)")
+      define_sfop3(16,x / (y - z)       ,L"t/(t-t)")
+      define_sfop3(17,x / (y * z)       ,L"t/(t*t)")
+      define_sfop3(18,x / (y / z)       ,L"t/(t/t)")
+      define_sfop3(19,x * (y + z)       ,L"t*(t+t)")
+      define_sfop3(20,x * (y - z)       ,L"t*(t-t)")
+      define_sfop3(21,x * (y * z)       ,L"t*(t*t)")
+      define_sfop3(22,x * (y / z)       ,L"t*(t/t)")
+      define_sfop3(23,x - (y + z)       ,L"t-(t+t)")
+      define_sfop3(24,x - (y - z)       ,L"t-(t-t)")
+      define_sfop3(25,x - (y / z)       ,L"t-(t/t)")
+      define_sfop3(26,x - (y * z)       ,L"t-(t*t)")
+      define_sfop3(27,x + (y * z)       ,L"t+(t*t)")
+      define_sfop3(28,x + (y / z)       ,L"t+(t/t)")
+      define_sfop3(29,x + (y + z)       ,L"t+(t+t)")
+      define_sfop3(30,x + (y - z)       ,L"t+(t-t)")
+      define_sfop3(31,(axnb<T,2>(x,y,z)),L"       ")
+      define_sfop3(32,(axnb<T,3>(x,y,z)),L"       ")
+      define_sfop3(33,(axnb<T,4>(x,y,z)),L"       ")
+      define_sfop3(34,(axnb<T,5>(x,y,z)),L"       ")
+      define_sfop3(35,(axnb<T,6>(x,y,z)),L"       ")
+      define_sfop3(36,(axnb<T,7>(x,y,z)),L"       ")
+      define_sfop3(37,(axnb<T,8>(x,y,z)),L"       ")
+      define_sfop3(38,(axnb<T,9>(x,y,z)),L"       ")
+      define_sfop3(39,x * numeric::log(y)   + z,L"")
+      define_sfop3(40,x * numeric::log(y)   - z,L"")
+      define_sfop3(41,x * numeric::log10(y) + z,L"")
+      define_sfop3(42,x * numeric::log10(y) - z,L"")
+      define_sfop3(43,x * numeric::sin(y) + z  ,L"")
+      define_sfop3(44,x * numeric::sin(y) - z  ,L"")
+      define_sfop3(45,x * numeric::cos(y) + z  ,L"")
+      define_sfop3(46,x * numeric::cos(y) - z  ,L"")
+      define_sfop3(47,details::is_true(x) ? y : z,L"")
 
       #define define_sfop4(NN,OP0,OP1)                           \
       template <typename T>                                      \
@@ -9057,125 +9057,125 @@ namespace exprtk
          {                                                       \
             return (OP0);                                        \
          }                                                       \
-         static inline std::string id() { return OP1; }          \
+         static inline std::wstring id() { return OP1; }          \
       };                                                         \
 
-      define_sfop4(48,(x + ((y + z) / w)),"t+((t+t)/t)")
-      define_sfop4(49,(x + ((y + z) * w)),"t+((t+t)*t)")
-      define_sfop4(50,(x + ((y - z) / w)),"t+((t-t)/t)")
-      define_sfop4(51,(x + ((y - z) * w)),"t+((t-t)*t)")
-      define_sfop4(52,(x + ((y * z) / w)),"t+((t*t)/t)")
-      define_sfop4(53,(x + ((y * z) * w)),"t+((t*t)*t)")
-      define_sfop4(54,(x + ((y / z) + w)),"t+((t/t)+t)")
-      define_sfop4(55,(x + ((y / z) / w)),"t+((t/t)/t)")
-      define_sfop4(56,(x + ((y / z) * w)),"t+((t/t)*t)")
-      define_sfop4(57,(x - ((y + z) / w)),"t-((t+t)/t)")
-      define_sfop4(58,(x - ((y + z) * w)),"t-((t+t)*t)")
-      define_sfop4(59,(x - ((y - z) / w)),"t-((t-t)/t)")
-      define_sfop4(60,(x - ((y - z) * w)),"t-((t-t)*t)")
-      define_sfop4(61,(x - ((y * z) / w)),"t-((t*t)/t)")
-      define_sfop4(62,(x - ((y * z) * w)),"t-((t*t)*t)")
-      define_sfop4(63,(x - ((y / z) / w)),"t-((t/t)/t)")
-      define_sfop4(64,(x - ((y / z) * w)),"t-((t/t)*t)")
-      define_sfop4(65,(((x + y) * z) - w),"((t+t)*t)-t")
-      define_sfop4(66,(((x - y) * z) - w),"((t-t)*t)-t")
-      define_sfop4(67,(((x * y) * z) - w),"((t*t)*t)-t")
-      define_sfop4(68,(((x / y) * z) - w),"((t/t)*t)-t")
-      define_sfop4(69,(((x + y) / z) - w),"((t+t)/t)-t")
-      define_sfop4(70,(((x - y) / z) - w),"((t-t)/t)-t")
-      define_sfop4(71,(((x * y) / z) - w),"((t*t)/t)-t")
-      define_sfop4(72,(((x / y) / z) - w),"((t/t)/t)-t")
-      define_sfop4(73,((x * y) + (z * w)),"(t*t)+(t*t)")
-      define_sfop4(74,((x * y) - (z * w)),"(t*t)-(t*t)")
-      define_sfop4(75,((x * y) + (z / w)),"(t*t)+(t/t)")
-      define_sfop4(76,((x * y) - (z / w)),"(t*t)-(t/t)")
-      define_sfop4(77,((x / y) + (z / w)),"(t/t)+(t/t)")
-      define_sfop4(78,((x / y) - (z / w)),"(t/t)-(t/t)")
-      define_sfop4(79,((x / y) - (z * w)),"(t/t)-(t*t)")
-      define_sfop4(80,(x / (y + (z * w))),"t/(t+(t*t))")
-      define_sfop4(81,(x / (y - (z * w))),"t/(t-(t*t))")
-      define_sfop4(82,(x * (y + (z * w))),"t*(t+(t*t))")
-      define_sfop4(83,(x * (y - (z * w))),"t*(t-(t*t))")
+      define_sfop4(48,(x + ((y + z) / w)),L"t+((t+t)/t)")
+      define_sfop4(49,(x + ((y + z) * w)),L"t+((t+t)*t)")
+      define_sfop4(50,(x + ((y - z) / w)),L"t+((t-t)/t)")
+      define_sfop4(51,(x + ((y - z) * w)),L"t+((t-t)*t)")
+      define_sfop4(52,(x + ((y * z) / w)),L"t+((t*t)/t)")
+      define_sfop4(53,(x + ((y * z) * w)),L"t+((t*t)*t)")
+      define_sfop4(54,(x + ((y / z) + w)),L"t+((t/t)+t)")
+      define_sfop4(55,(x + ((y / z) / w)),L"t+((t/t)/t)")
+      define_sfop4(56,(x + ((y / z) * w)),L"t+((t/t)*t)")
+      define_sfop4(57,(x - ((y + z) / w)),L"t-((t+t)/t)")
+      define_sfop4(58,(x - ((y + z) * w)),L"t-((t+t)*t)")
+      define_sfop4(59,(x - ((y - z) / w)),L"t-((t-t)/t)")
+      define_sfop4(60,(x - ((y - z) * w)),L"t-((t-t)*t)")
+      define_sfop4(61,(x - ((y * z) / w)),L"t-((t*t)/t)")
+      define_sfop4(62,(x - ((y * z) * w)),L"t-((t*t)*t)")
+      define_sfop4(63,(x - ((y / z) / w)),L"t-((t/t)/t)")
+      define_sfop4(64,(x - ((y / z) * w)),L"t-((t/t)*t)")
+      define_sfop4(65,(((x + y) * z) - w),L"((t+t)*t)-t")
+      define_sfop4(66,(((x - y) * z) - w),L"((t-t)*t)-t")
+      define_sfop4(67,(((x * y) * z) - w),L"((t*t)*t)-t")
+      define_sfop4(68,(((x / y) * z) - w),L"((t/t)*t)-t")
+      define_sfop4(69,(((x + y) / z) - w),L"((t+t)/t)-t")
+      define_sfop4(70,(((x - y) / z) - w),L"((t-t)/t)-t")
+      define_sfop4(71,(((x * y) / z) - w),L"((t*t)/t)-t")
+      define_sfop4(72,(((x / y) / z) - w),L"((t/t)/t)-t")
+      define_sfop4(73,((x * y) + (z * w)),L"(t*t)+(t*t)")
+      define_sfop4(74,((x * y) - (z * w)),L"(t*t)-(t*t)")
+      define_sfop4(75,((x * y) + (z / w)),L"(t*t)+(t/t)")
+      define_sfop4(76,((x * y) - (z / w)),L"(t*t)-(t/t)")
+      define_sfop4(77,((x / y) + (z / w)),L"(t/t)+(t/t)")
+      define_sfop4(78,((x / y) - (z / w)),L"(t/t)-(t/t)")
+      define_sfop4(79,((x / y) - (z * w)),L"(t/t)-(t*t)")
+      define_sfop4(80,(x / (y + (z * w))),L"t/(t+(t*t))")
+      define_sfop4(81,(x / (y - (z * w))),L"t/(t-(t*t))")
+      define_sfop4(82,(x * (y + (z * w))),L"t*(t+(t*t))")
+      define_sfop4(83,(x * (y - (z * w))),L"t*(t-(t*t))")
 
-      define_sfop4(84,(axn<T,2>(x,y) + axn<T,2>(z,w)),"")
-      define_sfop4(85,(axn<T,3>(x,y) + axn<T,3>(z,w)),"")
-      define_sfop4(86,(axn<T,4>(x,y) + axn<T,4>(z,w)),"")
-      define_sfop4(87,(axn<T,5>(x,y) + axn<T,5>(z,w)),"")
-      define_sfop4(88,(axn<T,6>(x,y) + axn<T,6>(z,w)),"")
-      define_sfop4(89,(axn<T,7>(x,y) + axn<T,7>(z,w)),"")
-      define_sfop4(90,(axn<T,8>(x,y) + axn<T,8>(z,w)),"")
-      define_sfop4(91,(axn<T,9>(x,y) + axn<T,9>(z,w)),"")
-      define_sfop4(92,((details::is_true(x) && details::is_true(y)) ? z : w),"")
-      define_sfop4(93,((details::is_true(x) || details::is_true(y)) ? z : w),"")
-      define_sfop4(94,((x <  y) ? z : w),"")
-      define_sfop4(95,((x <= y) ? z : w),"")
-      define_sfop4(96,((x >  y) ? z : w),"")
-      define_sfop4(97,((x >= y) ? z : w),"")
-      define_sfop4(98,(details::is_true(numeric::equal(x,y)) ? z : w),"")
-      define_sfop4(99,(x * numeric::sin(y) + z * numeric::cos(w)),"")
+      define_sfop4(84,(axn<T,2>(x,y) + axn<T,2>(z,w)),L"")
+      define_sfop4(85,(axn<T,3>(x,y) + axn<T,3>(z,w)),L"")
+      define_sfop4(86,(axn<T,4>(x,y) + axn<T,4>(z,w)),L"")
+      define_sfop4(87,(axn<T,5>(x,y) + axn<T,5>(z,w)),L"")
+      define_sfop4(88,(axn<T,6>(x,y) + axn<T,6>(z,w)),L"")
+      define_sfop4(89,(axn<T,7>(x,y) + axn<T,7>(z,w)),L"")
+      define_sfop4(90,(axn<T,8>(x,y) + axn<T,8>(z,w)),L"")
+      define_sfop4(91,(axn<T,9>(x,y) + axn<T,9>(z,w)),L"")
+      define_sfop4(92,((details::is_true(x) && details::is_true(y)) ? z : w),L"")
+      define_sfop4(93,((details::is_true(x) || details::is_true(y)) ? z : w),L"")
+      define_sfop4(94,((x <  y) ? z : w),L"")
+      define_sfop4(95,((x <= y) ? z : w),L"")
+      define_sfop4(96,((x >  y) ? z : w),L"")
+      define_sfop4(97,((x >= y) ? z : w),L"")
+      define_sfop4(98,(details::is_true(numeric::equal(x,y)) ? z : w),L"")
+      define_sfop4(99,(x * numeric::sin(y) + z * numeric::cos(w)),L"")
 
-      define_sfop4(ext00,((x + y) - (z * w)),"(t+t)-(t*t)")
-      define_sfop4(ext01,((x + y) - (z / w)),"(t+t)-(t/t)")
-      define_sfop4(ext02,((x + y) + (z * w)),"(t+t)+(t*t)")
-      define_sfop4(ext03,((x + y) + (z / w)),"(t+t)+(t/t)")
-      define_sfop4(ext04,((x - y) + (z * w)),"(t-t)+(t*t)")
-      define_sfop4(ext05,((x - y) + (z / w)),"(t-t)+(t/t)")
-      define_sfop4(ext06,((x - y) - (z * w)),"(t-t)-(t*t)")
-      define_sfop4(ext07,((x - y) - (z / w)),"(t-t)-(t/t)")
-      define_sfop4(ext08,((x + y) - (z - w)),"(t+t)-(t-t)")
-      define_sfop4(ext09,((x + y) + (z - w)),"(t+t)+(t-t)")
-      define_sfop4(ext10,((x + y) + (z + w)),"(t+t)+(t+t)")
-      define_sfop4(ext11,((x + y) * (z - w)),"(t+t)*(t-t)")
-      define_sfop4(ext12,((x + y) / (z - w)),"(t+t)/(t-t)")
-      define_sfop4(ext13,((x - y) - (z + w)),"(t-t)-(t+t)")
-      define_sfop4(ext14,((x - y) + (z + w)),"(t-t)+(t+t)")
-      define_sfop4(ext15,((x - y) * (z + w)),"(t-t)*(t+t)")
-      define_sfop4(ext16,((x - y) / (z + w)),"(t-t)/(t+t)")
-      define_sfop4(ext17,((x * y) - (z + w)),"(t*t)-(t+t)")
-      define_sfop4(ext18,((x / y) - (z + w)),"(t/t)-(t+t)")
-      define_sfop4(ext19,((x * y) + (z + w)),"(t*t)+(t+t)")
-      define_sfop4(ext20,((x / y) + (z + w)),"(t/t)+(t+t)")
-      define_sfop4(ext21,((x * y) + (z - w)),"(t*t)+(t-t)")
-      define_sfop4(ext22,((x / y) + (z - w)),"(t/t)+(t-t)")
-      define_sfop4(ext23,((x * y) - (z - w)),"(t*t)-(t-t)")
-      define_sfop4(ext24,((x / y) - (z - w)),"(t/t)-(t-t)")
-      define_sfop4(ext25,((x + y) * (z * w)),"(t+t)*(t*t)")
-      define_sfop4(ext26,((x + y) * (z / w)),"(t+t)*(t/t)")
-      define_sfop4(ext27,((x + y) / (z * w)),"(t+t)/(t*t)")
-      define_sfop4(ext28,((x + y) / (z / w)),"(t+t)/(t/t)")
-      define_sfop4(ext29,((x - y) / (z * w)),"(t-t)/(t*t)")
-      define_sfop4(ext30,((x - y) / (z / w)),"(t-t)/(t/t)")
-      define_sfop4(ext31,((x - y) * (z * w)),"(t-t)*(t*t)")
-      define_sfop4(ext32,((x - y) * (z / w)),"(t-t)*(t/t)")
-      define_sfop4(ext33,((x * y) * (z + w)),"(t*t)*(t+t)")
-      define_sfop4(ext34,((x / y) * (z + w)),"(t/t)*(t+t)")
-      define_sfop4(ext35,((x * y) / (z + w)),"(t*t)/(t+t)")
-      define_sfop4(ext36,((x / y) / (z + w)),"(t/t)/(t+t)")
-      define_sfop4(ext37,((x * y) / (z - w)),"(t*t)/(t-t)")
-      define_sfop4(ext38,((x / y) / (z - w)),"(t/t)/(t-t)")
-      define_sfop4(ext39,((x * y) * (z - w)),"(t*t)*(t-t)")
-      define_sfop4(ext40,((x * y) / (z * w)),"(t*t)/(t*t)")
-      define_sfop4(ext41,((x / y) * (z / w)),"(t/t)*(t/t)")
-      define_sfop4(ext42,((x / y) * (z - w)),"(t/t)*(t-t)")
-      define_sfop4(ext43,((x * y) * (z * w)),"(t*t)*(t*t)")
-      define_sfop4(ext44,(x + (y * (z / w))),"t+(t*(t/t))")
-      define_sfop4(ext45,(x - (y * (z / w))),"t-(t*(t/t))")
-      define_sfop4(ext46,(x + (y / (z * w))),"t+(t/(t*t))")
-      define_sfop4(ext47,(x - (y / (z * w))),"t-(t/(t*t))")
-      define_sfop4(ext48,(((x - y) - z) * w),"((t-t)-t)*t")
-      define_sfop4(ext49,(((x - y) - z) / w),"((t-t)-t)/t")
-      define_sfop4(ext50,(((x - y) + z) * w),"((t-t)+t)*t")
-      define_sfop4(ext51,(((x - y) + z) / w),"((t-t)+t)/t")
-      define_sfop4(ext52,((x + (y - z)) * w),"(t+(t-t))*t")
-      define_sfop4(ext53,((x + (y - z)) / w),"(t+(t-t))/t")
-      define_sfop4(ext54,((x + y) / (z + w)),"(t+t)/(t+t)")
-      define_sfop4(ext55,((x - y) / (z - w)),"(t-t)/(t-t)")
-      define_sfop4(ext56,((x + y) * (z + w)),"(t+t)*(t+t)")
-      define_sfop4(ext57,((x - y) * (z - w)),"(t-t)*(t-t)")
-      define_sfop4(ext58,((x - y) + (z - w)),"(t-t)+(t-t)")
-      define_sfop4(ext59,((x - y) - (z - w)),"(t-t)-(t-t)")
-      define_sfop4(ext60,((x / y) + (z * w)),"(t/t)+(t*t)")
-      define_sfop4(ext61,(((x * y) * z) / w),"((t*t)*t)/t")
+      define_sfop4(ext00,((x + y) - (z * w)),L"(t+t)-(t*t)")
+      define_sfop4(ext01,((x + y) - (z / w)),L"(t+t)-(t/t)")
+      define_sfop4(ext02,((x + y) + (z * w)),L"(t+t)+(t*t)")
+      define_sfop4(ext03,((x + y) + (z / w)),L"(t+t)+(t/t)")
+      define_sfop4(ext04,((x - y) + (z * w)),L"(t-t)+(t*t)")
+      define_sfop4(ext05,((x - y) + (z / w)),L"(t-t)+(t/t)")
+      define_sfop4(ext06,((x - y) - (z * w)),L"(t-t)-(t*t)")
+      define_sfop4(ext07,((x - y) - (z / w)),L"(t-t)-(t/t)")
+      define_sfop4(ext08,((x + y) - (z - w)),L"(t+t)-(t-t)")
+      define_sfop4(ext09,((x + y) + (z - w)),L"(t+t)+(t-t)")
+      define_sfop4(ext10,((x + y) + (z + w)),L"(t+t)+(t+t)")
+      define_sfop4(ext11,((x + y) * (z - w)),L"(t+t)*(t-t)")
+      define_sfop4(ext12,((x + y) / (z - w)),L"(t+t)/(t-t)")
+      define_sfop4(ext13,((x - y) - (z + w)),L"(t-t)-(t+t)")
+      define_sfop4(ext14,((x - y) + (z + w)),L"(t-t)+(t+t)")
+      define_sfop4(ext15,((x - y) * (z + w)),L"(t-t)*(t+t)")
+      define_sfop4(ext16,((x - y) / (z + w)),L"(t-t)/(t+t)")
+      define_sfop4(ext17,((x * y) - (z + w)),L"(t*t)-(t+t)")
+      define_sfop4(ext18,((x / y) - (z + w)),L"(t/t)-(t+t)")
+      define_sfop4(ext19,((x * y) + (z + w)),L"(t*t)+(t+t)")
+      define_sfop4(ext20,((x / y) + (z + w)),L"(t/t)+(t+t)")
+      define_sfop4(ext21,((x * y) + (z - w)),L"(t*t)+(t-t)")
+      define_sfop4(ext22,((x / y) + (z - w)),L"(t/t)+(t-t)")
+      define_sfop4(ext23,((x * y) - (z - w)),L"(t*t)-(t-t)")
+      define_sfop4(ext24,((x / y) - (z - w)),L"(t/t)-(t-t)")
+      define_sfop4(ext25,((x + y) * (z * w)),L"(t+t)*(t*t)")
+      define_sfop4(ext26,((x + y) * (z / w)),L"(t+t)*(t/t)")
+      define_sfop4(ext27,((x + y) / (z * w)),L"(t+t)/(t*t)")
+      define_sfop4(ext28,((x + y) / (z / w)),L"(t+t)/(t/t)")
+      define_sfop4(ext29,((x - y) / (z * w)),L"(t-t)/(t*t)")
+      define_sfop4(ext30,((x - y) / (z / w)),L"(t-t)/(t/t)")
+      define_sfop4(ext31,((x - y) * (z * w)),L"(t-t)*(t*t)")
+      define_sfop4(ext32,((x - y) * (z / w)),L"(t-t)*(t/t)")
+      define_sfop4(ext33,((x * y) * (z + w)),L"(t*t)*(t+t)")
+      define_sfop4(ext34,((x / y) * (z + w)),L"(t/t)*(t+t)")
+      define_sfop4(ext35,((x * y) / (z + w)),L"(t*t)/(t+t)")
+      define_sfop4(ext36,((x / y) / (z + w)),L"(t/t)/(t+t)")
+      define_sfop4(ext37,((x * y) / (z - w)),L"(t*t)/(t-t)")
+      define_sfop4(ext38,((x / y) / (z - w)),L"(t/t)/(t-t)")
+      define_sfop4(ext39,((x * y) * (z - w)),L"(t*t)*(t-t)")
+      define_sfop4(ext40,((x * y) / (z * w)),L"(t*t)/(t*t)")
+      define_sfop4(ext41,((x / y) * (z / w)),L"(t/t)*(t/t)")
+      define_sfop4(ext42,((x / y) * (z - w)),L"(t/t)*(t-t)")
+      define_sfop4(ext43,((x * y) * (z * w)),L"(t*t)*(t*t)")
+      define_sfop4(ext44,(x + (y * (z / w))),L"t+(t*(t/t))")
+      define_sfop4(ext45,(x - (y * (z / w))),L"t-(t*(t/t))")
+      define_sfop4(ext46,(x + (y / (z * w))),L"t+(t/(t*t))")
+      define_sfop4(ext47,(x - (y / (z * w))),L"t-(t/(t*t))")
+      define_sfop4(ext48,(((x - y) - z) * w),L"((t-t)-t)*t")
+      define_sfop4(ext49,(((x - y) - z) / w),L"((t-t)-t)/t")
+      define_sfop4(ext50,(((x - y) + z) * w),L"((t-t)+t)*t")
+      define_sfop4(ext51,(((x - y) + z) / w),L"((t-t)+t)/t")
+      define_sfop4(ext52,((x + (y - z)) * w),L"(t+(t-t))*t")
+      define_sfop4(ext53,((x + (y - z)) / w),L"(t+(t-t))/t")
+      define_sfop4(ext54,((x + y) / (z + w)),L"(t+t)/(t+t)")
+      define_sfop4(ext55,((x - y) / (z - w)),L"(t-t)/(t-t)")
+      define_sfop4(ext56,((x + y) * (z + w)),L"(t+t)*(t+t)")
+      define_sfop4(ext57,((x - y) * (z - w)),L"(t-t)*(t-t)")
+      define_sfop4(ext58,((x - y) + (z - w)),L"(t-t)+(t-t)")
+      define_sfop4(ext59,((x - y) - (z - w)),L"(t-t)-(t-t)")
+      define_sfop4(ext60,((x / y) + (z * w)),L"(t/t)+(t*t)")
+      define_sfop4(ext61,(((x * y) * z) / w),L"((t*t)*t)/t")
 
       #undef define_sfop3
       #undef define_sfop4
@@ -11628,7 +11628,7 @@ namespace exprtk
             return expression_node<T>::e_strfunction;
          }
 
-         std::string str() const
+         std::wstring str() const
          {
             return ret_string_;
          }
@@ -11656,7 +11656,7 @@ namespace exprtk
       protected:
 
          mutable range_t     range_;
-         mutable std::string ret_string_;
+         mutable std::wstring ret_string_;
       };
       #endif
 
@@ -12029,7 +12029,7 @@ namespace exprtk
       {
          typedef typename opr_base<T>::Type Type;
          static inline T process(Type t1, Type t2) { return ((t1 < t2) ? T(1) : T(0)); }
-         static inline T process(const std::string& t1, const std::string& t2) { return ((t1 < t2) ? T(1) : T(0)); }
+         static inline T process(const std::wstring& t1, const std::wstring& t2) { return ((t1 < t2) ? T(1) : T(0)); }
          static inline typename expression_node<T>::node_type type() { return expression_node<T>::e_lt; }
          static inline details::operator_type operation() { return details::e_lt; }
       };
@@ -12039,7 +12039,7 @@ namespace exprtk
       {
          typedef typename opr_base<T>::Type Type;
          static inline T process(Type t1, Type t2) { return ((t1 <= t2) ? T(1) : T(0)); }
-         static inline T process(const std::string& t1, const std::string& t2) { return ((t1 <= t2) ? T(1) : T(0)); }
+         static inline T process(const std::wstring& t1, const std::wstring& t2) { return ((t1 <= t2) ? T(1) : T(0)); }
          static inline typename expression_node<T>::node_type type() { return expression_node<T>::e_lte; }
          static inline details::operator_type operation() { return details::e_lte; }
       };
@@ -12049,7 +12049,7 @@ namespace exprtk
       {
          typedef typename opr_base<T>::Type Type;
          static inline T process(Type t1, Type t2) { return ((t1 > t2) ? T(1) : T(0)); }
-         static inline T process(const std::string& t1, const std::string& t2) { return ((t1 > t2) ? T(1) : T(0)); }
+         static inline T process(const std::wstring& t1, const std::wstring& t2) { return ((t1 > t2) ? T(1) : T(0)); }
          static inline typename expression_node<T>::node_type type() { return expression_node<T>::e_gt; }
          static inline details::operator_type operation() { return details::e_gt; }
       };
@@ -12059,7 +12059,7 @@ namespace exprtk
       {
          typedef typename opr_base<T>::Type Type;
          static inline T process(Type t1, Type t2) { return ((t1 >= t2) ? T(1) : T(0)); }
-         static inline T process(const std::string& t1, const std::string& t2) { return ((t1 >= t2) ? T(1) : T(0)); }
+         static inline T process(const std::wstring& t1, const std::wstring& t2) { return ((t1 >= t2) ? T(1) : T(0)); }
          static inline typename expression_node<T>::node_type type() { return expression_node<T>::e_gte; }
          static inline details::operator_type operation() { return details::e_gte; }
       };
@@ -12069,7 +12069,7 @@ namespace exprtk
       {
          typedef typename opr_base<T>::Type Type;
          static inline T process(Type t1, Type t2) { return (std::equal_to<T>()(t1,t2) ? T(1) : T(0)); }
-         static inline T process(const std::string& t1, const std::string& t2) { return ((t1 == t2) ? T(1) : T(0)); }
+         static inline T process(const std::wstring& t1, const std::wstring& t2) { return ((t1 == t2) ? T(1) : T(0)); }
          static inline typename expression_node<T>::node_type type() { return expression_node<T>::e_eq; }
          static inline details::operator_type operation() { return details::e_eq; }
       };
@@ -12079,7 +12079,7 @@ namespace exprtk
       {
          typedef typename opr_base<T>::Type Type;
          static inline T process(Type t1, Type t2) { return numeric::equal(t1,t2); }
-         static inline T process(const std::string& t1, const std::string& t2) { return ((t1 == t2) ? T(1) : T(0)); }
+         static inline T process(const std::wstring& t1, const std::wstring& t2) { return ((t1 == t2) ? T(1) : T(0)); }
          static inline typename expression_node<T>::node_type type() { return expression_node<T>::e_eq; }
          static inline details::operator_type operation() { return details::e_equal; }
       };
@@ -12089,7 +12089,7 @@ namespace exprtk
       {
          typedef typename opr_base<T>::Type Type;
          static inline T process(Type t1, Type t2) { return (std::not_equal_to<T>()(t1,t2) ? T(1) : T(0)); }
-         static inline T process(const std::string& t1, const std::string& t2) { return ((t1 != t2) ? T(1) : T(0)); }
+         static inline T process(const std::wstring& t1, const std::wstring& t2) { return ((t1 != t2) ? T(1) : T(0)); }
          static inline typename expression_node<T>::node_type type() { return expression_node<T>::e_ne; }
          static inline details::operator_type operation() { return details::e_ne; }
       };
@@ -12153,7 +12153,7 @@ namespace exprtk
       {
          typedef typename opr_base<T>::Type Type;
          static inline T process(const T&, const T&) { return std::numeric_limits<T>::quiet_NaN(); }
-         static inline T process(const std::string& t1, const std::string& t2) { return ((std::string::npos != t2.find(t1)) ? T(1) : T(0)); }
+         static inline T process(const std::wstring& t1, const std::wstring& t2) { return ((std::wstring::npos != t2.find(t1)) ? T(1) : T(0)); }
          static inline typename expression_node<T>::node_type type() { return expression_node<T>::e_in; }
          static inline details::operator_type operation() { return details::e_in; }
       };
@@ -12163,7 +12163,7 @@ namespace exprtk
       {
          typedef typename opr_base<T>::Type Type;
          static inline T process(const T&, const T&) { return std::numeric_limits<T>::quiet_NaN(); }
-         static inline T process(const std::string& t1, const std::string& t2) { return (details::wc_match(t2,t1) ? T(1) : T(0)); }
+         static inline T process(const std::wstring& t1, const std::wstring& t2) { return (details::wc_match(t2,t1) ? T(1) : T(0)); }
          static inline typename expression_node<T>::node_type type() { return expression_node<T>::e_like; }
          static inline details::operator_type operation() { return details::e_like; }
       };
@@ -12173,7 +12173,7 @@ namespace exprtk
       {
          typedef typename opr_base<T>::Type Type;
          static inline T process(const T&, const T&) { return std::numeric_limits<T>::quiet_NaN(); }
-         static inline T process(const std::string& t1, const std::string& t2) { return (details::wc_imatch(t2,t1) ? T(1) : T(0)); }
+         static inline T process(const std::wstring& t1, const std::wstring& t2) { return (details::wc_imatch(t2,t1) ? T(1) : T(0)); }
          static inline typename expression_node<T>::node_type type() { return expression_node<T>::e_ilike; }
          static inline details::operator_type operation() { return details::e_ilike; }
       };
@@ -12183,7 +12183,7 @@ namespace exprtk
       {
          typedef typename opr_base<T>::Type Type;
          static inline T process(const T& t0, const T& t1, const T& t2) { return ((t0 <= t1) && (t1 <= t2)) ? T(1) : T(0); }
-         static inline T process(const std::string& t0, const std::string& t1, const std::string& t2)
+         static inline T process(const std::wstring& t0, const std::wstring& t1, const std::wstring& t2)
          {
             return ((t0 <= t1) && (t1 <= t2)) ? T(1) : T(0);
          }
@@ -13236,7 +13236,7 @@ namespace exprtk
          virtual ~T0oT1oT2_base_node()
          {}
 
-         virtual std::string type_id() const = 0;
+         virtual std::wstring type_id() const = 0;
       };
 
       template <typename T>
@@ -13247,7 +13247,7 @@ namespace exprtk
          virtual ~T0oT1oT2oT3_base_node()
          {}
 
-         virtual std::string type_id() const = 0;
+         virtual std::wstring type_id() const = 0;
       };
 
       template <typename T, typename Operation>
@@ -13427,10 +13427,10 @@ namespace exprtk
       template <typename T> struct is_ref<const T&>        { enum {result = 0}; };
 
       template <std::size_t State>
-      struct param_to_str { static std::string result() { static const std::string r("v"); return r; } };
+      struct param_to_str { static std::wstring result() { static const std::wstring r(L"v"); return r; } };
 
       template <>
-      struct param_to_str<0> { static std::string result() { static const std::string r("c"); return r; } };
+      struct param_to_str<0> { static std::wstring result() { static const std::wstring r(L"c"); return r; } };
 
       #define exprtk_crtype(Type)                          \
       param_to_str<is_const_ref< Type >::result>::result() \
@@ -13450,11 +13450,11 @@ namespace exprtk
             }
 
             template <typename T0, typename T1, typename T2>
-            static inline std::string id()
+            static inline std::wstring id()
             {
-               static const std::string result = "(" + exprtk_crtype(T0) + "o"   +
-                                                       exprtk_crtype(T1) + ")o(" +
-                                                       exprtk_crtype(T2) + ")"   ;
+               static const std::wstring result = L"(" + exprtk_crtype(T0) + L"o"   +
+                                                       exprtk_crtype(T1) + L")o(" +
+                                                       exprtk_crtype(T2) + L")"   ;
                return result;
             }
          };
@@ -13468,11 +13468,11 @@ namespace exprtk
             }
 
             template <typename T0, typename T1, typename T2>
-            static inline std::string id()
+            static inline std::wstring id()
             {
-               static const std::string result = "(" + exprtk_crtype(T0) + ")o(" +
-                                                       exprtk_crtype(T1) + "o"   +
-                                                       exprtk_crtype(T2) + ")"   ;
+               static const std::wstring result = L"(" + exprtk_crtype(T0) + L")o(" +
+                                                       exprtk_crtype(T1) + L"o"   +
+                                                       exprtk_crtype(T2) + L")"   ;
                return result;
             }
          };
@@ -13495,12 +13495,12 @@ namespace exprtk
             }
 
             template <typename T0, typename T1, typename T2, typename T3>
-            static inline std::string id()
+            static inline std::wstring id()
             {
-               static const std::string result = "(" + exprtk_crtype(T0) + "o"  +
-                                                       exprtk_crtype(T1) + ")o" +
-                                                 "(" + exprtk_crtype(T2) + "o"  +
-                                                       exprtk_crtype(T3) + ")"  ;
+               static const std::wstring result = L"(" + exprtk_crtype(T0) + L"o"  +
+                                                       exprtk_crtype(T1) + L")o" +
+                                                 L"(" + exprtk_crtype(T2) + L"o"  +
+                                                       exprtk_crtype(T3) + L")"  ;
                return result;
             }
          };
@@ -13515,12 +13515,12 @@ namespace exprtk
                return bf0(t0,bf1(t1,bf2(t2,t3)));
             }
             template <typename T0, typename T1, typename T2, typename T3>
-            static inline std::string id()
+            static inline std::wstring id()
             {
-               static const std::string result = "(" + exprtk_crtype(T0) +  ")o((" +
-                                                       exprtk_crtype(T1) +  ")o("  +
-                                                       exprtk_crtype(T2) +  "o"    +
-                                                       exprtk_crtype(T3) +  "))"   ;
+               static const std::wstring result = L"(" + exprtk_crtype(T0) +  L")o((" +
+                                                       exprtk_crtype(T1) +  L")o("  +
+                                                       exprtk_crtype(T2) +  L"o"    +
+                                                       exprtk_crtype(T3) +  L"))"   ;
                return result;
             }
          };
@@ -13536,12 +13536,12 @@ namespace exprtk
             }
 
             template <typename T0, typename T1, typename T2, typename T3>
-            static inline std::string id()
+            static inline std::wstring id()
             {
-               static const std::string result = "(" + exprtk_crtype(T0) + ")o((" +
-                                                       exprtk_crtype(T1) + "o"    +
-                                                       exprtk_crtype(T2) + ")o("  +
-                                                       exprtk_crtype(T3) + "))"   ;
+               static const std::wstring result = L"(" + exprtk_crtype(T0) + L")o((" +
+                                                       exprtk_crtype(T1) + L"o"    +
+                                                       exprtk_crtype(T2) + L")o("  +
+                                                       exprtk_crtype(T3) + L"))"   ;
                return result;
             }
          };
@@ -13557,12 +13557,12 @@ namespace exprtk
             }
 
             template <typename T0, typename T1, typename T2, typename T3>
-            static inline std::string id()
+            static inline std::wstring id()
             {
-               static const std::string result = "((" + exprtk_crtype(T0) + "o"    +
-                                                        exprtk_crtype(T1) + ")o("  +
-                                                        exprtk_crtype(T2) + "))o(" +
-                                                        exprtk_crtype(T3) + ")";
+               static const std::wstring result = L"((" + exprtk_crtype(T0) + L"o"    +
+                                                        exprtk_crtype(T1) + L")o("  +
+                                                        exprtk_crtype(T2) + L"))o(" +
+                                                        exprtk_crtype(T3) + L")";
                return result;
             }
          };
@@ -13578,12 +13578,12 @@ namespace exprtk
             }
 
             template <typename T0, typename T1, typename T2, typename T3>
-            static inline std::string id()
+            static inline std::wstring id()
             {
-               static const std::string result = "((" + exprtk_crtype(T0) + ")o("  +
-                                                        exprtk_crtype(T1) + "o"    +
-                                                        exprtk_crtype(T2) + "))o(" +
-                                                        exprtk_crtype(T3) + ")"    ;
+               static const std::wstring result = L"((" + exprtk_crtype(T0) + L")o("  +
+                                                        exprtk_crtype(T1) + L"o"    +
+                                                        exprtk_crtype(T2) + L"))o(" +
+                                                        exprtk_crtype(T3) + L")"    ;
                return result;
             }
          };
@@ -13791,12 +13791,12 @@ namespace exprtk
             return f1_;
          }
 
-         std::string type_id() const
+         std::wstring type_id() const
          {
             return id();
          }
 
-         static inline std::string id()
+         static inline std::wstring id()
          {
             return process_mode_t::template id<T0,T1,T2>();
          }
@@ -13886,12 +13886,12 @@ namespace exprtk
             return f2_;
          }
 
-         inline std::string type_id() const
+         inline std::wstring type_id() const
          {
             return id();
          }
 
-         static inline std::string id()
+         static inline std::wstring id()
          {
             return process_mode_t::template id<T0,T1,T2,T3>();
          }
@@ -13973,14 +13973,14 @@ namespace exprtk
             return f_;
          }
 
-         std::string type_id() const
+         std::wstring type_id() const
          {
             return id();
          }
 
-         static inline std::string id()
+         static inline std::wstring id()
          {
-            return "sf3";
+            return L"sf3";
          }
 
          template <typename Allocator>
@@ -14064,12 +14064,12 @@ namespace exprtk
             return t2_;
          }
 
-         std::string type_id() const
+         std::wstring type_id() const
          {
             return id();
          }
 
-         static inline std::string id()
+         static inline std::wstring id()
          {
             return SF3Operation::id();
          }
@@ -14165,14 +14165,14 @@ namespace exprtk
             return f_;
          }
 
-         std::string type_id() const
+         std::wstring type_id() const
          {
             return id();
          }
 
-         static inline std::string id()
+         static inline std::wstring id()
          {
-            return "sf4";
+            return L"sf4";
          }
 
          template <typename Allocator>
@@ -14248,12 +14248,12 @@ namespace exprtk
             return t2_;
          }
 
-         std::string type_id() const
+         std::wstring type_id() const
          {
             return id();
          }
 
-         static inline std::string id()
+         static inline std::wstring id()
          {
             return SF4Operation::id();
          }
@@ -14718,12 +14718,12 @@ namespace exprtk
             return Operation::operation();
          }
 
-         inline std::string& s0()
+         inline std::wstring& s0()
          {
             return s0_;
          }
 
-         inline std::string& s1()
+         inline std::wstring& s1()
          {
             return s1_;
          }
@@ -14780,12 +14780,12 @@ namespace exprtk
             return Operation::operation();
          }
 
-         inline std::string& s0()
+         inline std::wstring& s0()
          {
             return s0_;
          }
 
-         inline std::string& s1()
+         inline std::wstring& s1()
          {
             return s1_;
          }
@@ -14843,12 +14843,12 @@ namespace exprtk
             return Operation::operation();
          }
 
-         inline std::string& s0()
+         inline std::wstring& s0()
          {
             return s0_;
          }
 
-         inline std::string& s1()
+         inline std::wstring& s1()
          {
             return s1_;
          }
@@ -14918,12 +14918,12 @@ namespace exprtk
             return Operation::operation();
          }
 
-         inline std::string& s0()
+         inline std::wstring& s0()
          {
             return s0_;
          }
 
-         inline std::string& s1()
+         inline std::wstring& s1()
          {
             return s1_;
          }
@@ -15080,17 +15080,17 @@ namespace exprtk
             return Operation::operation();
          }
 
-         inline std::string& s0()
+         inline std::wstring& s0()
          {
             return s0_;
          }
 
-         inline std::string& s1()
+         inline std::wstring& s1()
          {
             return s1_;
          }
 
-         inline std::string& s2()
+         inline std::wstring& s2()
          {
             return s2_;
          }
@@ -15667,63 +15667,63 @@ namespace exprtk
          }
       };
 
-      inline void load_operations_map(std::multimap<std::string,details::base_operation_t,details::ilesscompare>& m)
+      inline void load_operations_map(std::multimap<std::wstring,details::base_operation_t,details::ilesscompare>& m)
       {
          #define register_op(Symbol,Type,Args)                                               \
-         m.insert(std::make_pair(std::string(Symbol),details::base_operation_t(Type,Args))); \
+         m.insert(std::make_pair(std::wstring(Symbol),details::base_operation_t(Type,Args))); \
 
-         register_op(      "abs", e_abs     , 1)
-         register_op(     "acos", e_acos    , 1)
-         register_op(    "acosh", e_acosh   , 1)
-         register_op(     "asin", e_asin    , 1)
-         register_op(    "asinh", e_asinh   , 1)
-         register_op(     "atan", e_atan    , 1)
-         register_op(    "atanh", e_atanh   , 1)
-         register_op(     "ceil", e_ceil    , 1)
-         register_op(      "cos", e_cos     , 1)
-         register_op(     "cosh", e_cosh    , 1)
-         register_op(      "exp", e_exp     , 1)
-         register_op(    "expm1", e_expm1   , 1)
-         register_op(    "floor", e_floor   , 1)
-         register_op(      "log", e_log     , 1)
-         register_op(    "log10", e_log10   , 1)
-         register_op(     "log2", e_log2    , 1)
-         register_op(    "log1p", e_log1p   , 1)
-         register_op(    "round", e_round   , 1)
-         register_op(      "sin", e_sin     , 1)
-         register_op(     "sinc", e_sinc    , 1)
-         register_op(     "sinh", e_sinh    , 1)
-         register_op(      "sec", e_sec     , 1)
-         register_op(      "csc", e_csc     , 1)
-         register_op(     "sqrt", e_sqrt    , 1)
-         register_op(      "tan", e_tan     , 1)
-         register_op(     "tanh", e_tanh    , 1)
-         register_op(      "cot", e_cot     , 1)
-         register_op(  "rad2deg", e_r2d     , 1)
-         register_op(  "deg2rad", e_d2r     , 1)
-         register_op( "deg2grad", e_d2g     , 1)
-         register_op( "grad2deg", e_g2d     , 1)
-         register_op(      "sgn", e_sgn     , 1)
-         register_op(      "not", e_notl    , 1)
-         register_op(      "erf", e_erf     , 1)
-         register_op(     "erfc", e_erfc    , 1)
-         register_op(     "ncdf", e_ncdf    , 1)
-         register_op(     "frac", e_frac    , 1)
-         register_op(    "trunc", e_trunc   , 1)
-         register_op(    "atan2", e_atan2   , 2)
-         register_op(      "mod", e_mod     , 2)
-         register_op(     "logn", e_logn    , 2)
-         register_op(      "pow", e_pow     , 2)
-         register_op(     "root", e_root    , 2)
-         register_op(   "roundn", e_roundn  , 2)
-         register_op(    "equal", e_equal   , 2)
-         register_op("not_equal", e_nequal  , 2)
-         register_op(    "hypot", e_hypot   , 2)
-         register_op(      "shr", e_shr     , 2)
-         register_op(      "shl", e_shl     , 2)
-         register_op(    "clamp", e_clamp   , 3)
-         register_op(   "iclamp", e_iclamp  , 3)
-         register_op(  "inrange", e_inrange , 3)
+         register_op(      L"abs", e_abs     , 1)
+         register_op(     L"acos", e_acos    , 1)
+         register_op(    L"acosh", e_acosh   , 1)
+         register_op(     L"asin", e_asin    , 1)
+         register_op(    L"asinh", e_asinh   , 1)
+         register_op(     L"atan", e_atan    , 1)
+         register_op(    L"atanh", e_atanh   , 1)
+         register_op(     L"ceil", e_ceil    , 1)
+         register_op(      L"cos", e_cos     , 1)
+         register_op(     L"cosh", e_cosh    , 1)
+         register_op(      L"exp", e_exp     , 1)
+         register_op(    L"expm1", e_expm1   , 1)
+         register_op(    L"floor", e_floor   , 1)
+         register_op(      L"log", e_log     , 1)
+         register_op(    L"log10", e_log10   , 1)
+         register_op(     L"log2", e_log2    , 1)
+         register_op(    L"log1p", e_log1p   , 1)
+         register_op(    L"round", e_round   , 1)
+         register_op(      L"sin", e_sin     , 1)
+         register_op(     L"sinc", e_sinc    , 1)
+         register_op(     L"sinh", e_sinh    , 1)
+         register_op(      L"sec", e_sec     , 1)
+         register_op(      L"csc", e_csc     , 1)
+         register_op(     L"sqrt", e_sqrt    , 1)
+         register_op(      L"tan", e_tan     , 1)
+         register_op(     L"tanh", e_tanh    , 1)
+         register_op(      L"cot", e_cot     , 1)
+         register_op(  L"rad2deg", e_r2d     , 1)
+         register_op(  L"deg2rad", e_d2r     , 1)
+         register_op( L"deg2grad", e_d2g     , 1)
+         register_op( L"grad2deg", e_g2d     , 1)
+         register_op(      L"sgn", e_sgn     , 1)
+         register_op(      L"not", e_notl    , 1)
+         register_op(      L"erf", e_erf     , 1)
+         register_op(     L"erfc", e_erfc    , 1)
+         register_op(     L"ncdf", e_ncdf    , 1)
+         register_op(     L"frac", e_frac    , 1)
+         register_op(    L"trunc", e_trunc   , 1)
+         register_op(    L"atan2", e_atan2   , 2)
+         register_op(      L"mod", e_mod     , 2)
+         register_op(     L"logn", e_logn    , 2)
+         register_op(      L"pow", e_pow     , 2)
+         register_op(     L"root", e_root    , 2)
+         register_op(   L"roundn", e_roundn  , 2)
+         register_op(    L"equal", e_equal   , 2)
+         register_op(L"not_equal", e_nequal  , 2)
+         register_op(    L"hypot", e_hypot   , 2)
+         register_op(      L"shr", e_shr     , 2)
+         register_op(      L"shl", e_shl     , 2)
+         register_op(    L"clamp", e_clamp   , 3)
+         register_op(   L"iclamp", e_iclamp  , 3)
+         register_op(  L"inrange", e_inrange , 3)
          #undef register_op
       }
 
@@ -15917,7 +15917,7 @@ namespace exprtk
 
       inline virtual T operator() (const std::vector<T>&)
       {
-         exprtk_debug(("ivararg_function::operator() - Operator has not been overridden.\n"));
+         exprtk_debug((L"ivararg_function::operator() - Operator has not been overridden.\n"));
          return std::numeric_limits<T>::quiet_NaN();
       }
    };
@@ -15937,7 +15937,7 @@ namespace exprtk
       typedef type_store<T> generic_type;
       typedef typename generic_type::parameter_list parameter_list_t;
 
-      igeneric_function(const std::string& param_seq = "", const return_type rtr_type = e_rtrn_scalar)
+      igeneric_function(const std::wstring& param_seq = L"", const return_type rtr_type = e_rtrn_scalar)
       : parameter_sequence(param_seq),
         rtrn_type(rtr_type)
       {}
@@ -15947,7 +15947,7 @@ namespace exprtk
 
       #define igeneric_function_empty_body(N)        \
       {                                              \
-         exprtk_debug(("igeneric_function::operator() - Operator has not been overridden. ["#N"]\n")); \
+         exprtk_debug((L"igeneric_function::operator() - Operator has not been overridden. ["#N L"]\n")); \
          return std::numeric_limits<T>::quiet_NaN(); \
       }                                              \
 
@@ -15956,7 +15956,7 @@ namespace exprtk
       igeneric_function_empty_body(1)
 
       // f(i_0,i_1,....,i_N) --> String
-      inline virtual T operator() (std::string&, parameter_list_t)
+      inline virtual T operator() (std::wstring&, parameter_list_t)
       igeneric_function_empty_body(2)
 
       // f(psi,i_0,i_1,....,i_N) --> Scalar
@@ -15964,10 +15964,10 @@ namespace exprtk
       igeneric_function_empty_body(3)
 
       // f(psi,i_0,i_1,....,i_N) --> String
-      inline virtual T operator() (const std::size_t&, std::string&, parameter_list_t)
+      inline virtual T operator() (const std::size_t&, std::wstring&, parameter_list_t)
       igeneric_function_empty_body(4)
 
-      std::string parameter_sequence;
+      std::wstring parameter_sequence;
       return_type rtrn_type;
    };
 
@@ -16187,7 +16187,7 @@ namespace exprtk
          typedef Type type_t;
          typedef type_t* type_ptr;
          typedef std::pair<bool,type_ptr> type_pair_t;
-         typedef std::map<std::string,type_pair_t,details::ilesscompare> type_map_t;
+         typedef std::map<std::wstring,type_pair_t,details::ilesscompare> type_map_t;
          typedef typename type_map_t::iterator tm_itr_t;
          typedef typename type_map_t::const_iterator tm_const_itr_t;
 
@@ -16200,7 +16200,7 @@ namespace exprtk
          : size(0)
          {}
 
-         inline bool symbol_exists(const std::string& symbol_name) const
+         inline bool symbol_exists(const std::wstring& symbol_name) const
          {
             if (symbol_name.empty())
                return false;
@@ -16211,10 +16211,10 @@ namespace exprtk
          }
 
          template <typename PtrType>
-         inline std::string entity_name(const PtrType& ptr) const
+         inline std::wstring entity_name(const PtrType& ptr) const
          {
             if (map.empty())
-               return std::string();
+               return std::wstring();
 
             tm_const_itr_t itr = map.begin();
 
@@ -16228,10 +16228,10 @@ namespace exprtk
                   ++itr;
             }
 
-            return std::string();
+            return std::wstring();
          }
 
-         inline bool is_constant(const std::string& symbol_name) const
+         inline bool is_constant(const std::wstring& symbol_name) const
          {
             if (symbol_name.empty())
                return false;
@@ -16247,7 +16247,7 @@ namespace exprtk
          }
 
          template <typename Tie, typename RType>
-         inline bool add_impl(const std::string& symbol_name, RType t, const bool is_const)
+         inline bool add_impl(const std::wstring& symbol_name, RType t, const bool is_const)
          {
             if (symbol_name.size() > 1)
             {
@@ -16306,39 +16306,39 @@ namespace exprtk
          };
 
          template <std::size_t v_size>
-         inline bool add(const std::string& symbol_name, T (&v)[v_size], const bool is_const = false)
+         inline bool add(const std::wstring& symbol_name, T (&v)[v_size], const bool is_const = false)
          {
             return add_impl<tie_array,std::pair<T*,std::size_t> >
                       (symbol_name, std::make_pair(v,v_size), is_const);
          }
 
-         inline bool add(const std::string& symbol_name, T* v, const std::size_t v_size, const bool is_const = false)
+         inline bool add(const std::wstring& symbol_name, T* v, const std::size_t v_size, const bool is_const = false)
          {
             return add_impl<tie_array,std::pair<T*,std::size_t> >
                      (symbol_name, std::make_pair(v,v_size), is_const);
          }
 
          template <typename Allocator>
-         inline bool add(const std::string& symbol_name, std::vector<T,Allocator>& v, const bool is_const = false)
+         inline bool add(const std::wstring& symbol_name, std::vector<T,Allocator>& v, const bool is_const = false)
          {
             return add_impl<tie_stdvec,std::vector<T,Allocator>&>
                       (symbol_name, v, is_const);
          }
 
-         inline bool add(const std::string& symbol_name, exprtk::vector_view<T>& v, const bool is_const = false)
+         inline bool add(const std::wstring& symbol_name, exprtk::vector_view<T>& v, const bool is_const = false)
          {
             return add_impl<tie_vecview,exprtk::vector_view<T>&>
                       (symbol_name, v, is_const);
          }
 
          template <typename Allocator>
-         inline bool add(const std::string& symbol_name, std::deque<T,Allocator>& v, const bool is_const = false)
+         inline bool add(const std::wstring& symbol_name, std::deque<T,Allocator>& v, const bool is_const = false)
          {
             return add_impl<tie_stddeq,std::deque<T,Allocator>&>
                       (symbol_name, v, is_const);
          }
 
-         inline bool add(const std::string& symbol_name, RawType& t, const bool is_const = false)
+         inline bool add(const std::wstring& symbol_name, RawType& t, const bool is_const = false)
          {
             struct tie
             {
@@ -16348,7 +16348,7 @@ namespace exprtk
                }
 
                #ifndef exprtk_disable_string_capabilities
-               static inline std::pair<bool,stringvar_node_t*> make(std::string& t,const bool is_const = false)
+               static inline std::pair<bool,stringvar_node_t*> make(std::wstring& t,const bool is_const = false)
                {
                   return std::make_pair(is_const, new stringvar_node_t(t));
                }
@@ -16381,7 +16381,7 @@ namespace exprtk
             return true;
          }
 
-         inline type_ptr get(const std::string& symbol_name) const
+         inline type_ptr get(const std::wstring& symbol_name) const
          {
             const tm_const_itr_t itr = map.find(symbol_name);
 
@@ -16405,7 +16405,7 @@ namespace exprtk
          {
             static inline bool test(const variable_node_t* p, const void* ptr)
             {
-               exprtk_debug(("ptr_match::test() - %p <--> %p\n",(void*)(&(p->ref())),ptr));
+               exprtk_debug((L"ptr_match::test() - %p <--> %p\n",(void*)(&(p->ref())),ptr));
                return (&(p->ref()) == ptr);
             }
          };
@@ -16429,7 +16429,7 @@ namespace exprtk
             return type_ptr(0);
          }
 
-         inline bool remove(const std::string& symbol_name, const bool delete_node = true)
+         inline bool remove(const std::wstring& symbol_name, const bool delete_node = true)
          {
             const tm_itr_t itr = map.find(symbol_name);
 
@@ -16459,14 +16459,14 @@ namespace exprtk
                return false;
          }
 
-         inline RawType& type_ref(const std::string& symbol_name)
+         inline RawType& type_ref(const std::wstring& symbol_name)
          {
             struct init_type
             {
                static inline double set(double)           { return (0.0);           }
                static inline double set(long double)      { return (0.0);           }
                static inline float  set(float)            { return (0.0f);          }
-               static inline std::string set(std::string) { return std::string(""); }
+               static inline std::wstring set(std::wstring) { return std::wstring(L""); }
             };
 
             static RawType null_type = init_type::set(RawType());
@@ -16513,7 +16513,7 @@ namespace exprtk
 
          template <typename Allocator,
                    template <typename, typename> class Sequence>
-         inline std::size_t get_list(Sequence<std::pair<std::string,RawType>,Allocator>& list) const
+         inline std::size_t get_list(Sequence<std::pair<std::wstring,RawType>,Allocator>& list) const
          {
             std::size_t count = 0;
 
@@ -16535,7 +16535,7 @@ namespace exprtk
 
          template <typename Allocator,
                    template <typename, typename> class Sequence>
-         inline std::size_t get_list(Sequence<std::string,Allocator>& vlist) const
+         inline std::size_t get_list(Sequence<std::wstring,Allocator>& vlist) const
          {
             std::size_t count = 0;
 
@@ -16580,7 +16580,7 @@ namespace exprtk
          {
             type_store<typename details::variable_node<T>,T> variable_store;
             #ifndef exprtk_disable_string_capabilities
-            type_store<typename details::stringvar_node<T>,std::string> stringvar_store;
+            type_store<typename details::stringvar_node<T>,std::wstring> stringvar_store;
             #endif
             type_store<ifunction<T>,ifunction<T> > function_store;
             type_store<ivararg_function <T>,ivararg_function <T> > vararg_function_store;
@@ -16609,7 +16609,7 @@ namespace exprtk
                }
             }
 
-            inline bool is_reserved_symbol(const std::string& symbol) const
+            inline bool is_reserved_symbol(const std::wstring& symbol) const
             {
                return (reserved_symbol_table_.end() != reserved_symbol_table_.find(symbol));
             }
@@ -16626,8 +16626,8 @@ namespace exprtk
             }
 
             std::list<T>               local_symbol_list_;
-            std::list<std::string>     local_stringvar_list_;
-            std::set<std::string>      reserved_symbol_table_;
+            std::list<std::wstring>     local_stringvar_list_;
+            std::set<std::wstring>      reserved_symbol_table_;
             std::vector<ifunction<T>*> free_function_list_;
          };
 
@@ -16786,7 +16786,7 @@ namespace exprtk
             return 0;
       }
 
-      inline variable_ptr get_variable(const std::string& variable_name) const
+      inline variable_ptr get_variable(const std::wstring& variable_name) const
       {
          if (!valid())
             return reinterpret_cast<variable_ptr>(0);
@@ -16806,7 +16806,7 @@ namespace exprtk
       }
 
       #ifndef exprtk_disable_string_capabilities
-      inline stringvar_ptr get_stringvar(const std::string& string_name) const
+      inline stringvar_ptr get_stringvar(const std::wstring& string_name) const
       {
          if (!valid())
             return reinterpret_cast<stringvar_ptr>(0);
@@ -16817,7 +16817,7 @@ namespace exprtk
       }
       #endif
 
-      inline function_ptr get_function(const std::string& function_name) const
+      inline function_ptr get_function(const std::wstring& function_name) const
       {
          if (!valid())
             return reinterpret_cast<function_ptr>(0);
@@ -16827,7 +16827,7 @@ namespace exprtk
             return local_data().function_store.get(function_name);
       }
 
-      inline vararg_function_ptr get_vararg_function(const std::string& vararg_function_name) const
+      inline vararg_function_ptr get_vararg_function(const std::wstring& vararg_function_name) const
       {
          if (!valid())
             return reinterpret_cast<vararg_function_ptr>(0);
@@ -16837,7 +16837,7 @@ namespace exprtk
             return local_data().vararg_function_store.get(vararg_function_name);
       }
 
-      inline generic_function_ptr get_generic_function(const std::string& function_name) const
+      inline generic_function_ptr get_generic_function(const std::wstring& function_name) const
       {
          if (!valid())
             return reinterpret_cast<generic_function_ptr>(0);
@@ -16847,7 +16847,7 @@ namespace exprtk
             return local_data().generic_function_store.get(function_name);
       }
 
-      inline generic_function_ptr get_string_function(const std::string& function_name) const
+      inline generic_function_ptr get_string_function(const std::wstring& function_name) const
       {
          if (!valid())
             return reinterpret_cast<generic_function_ptr>(0);
@@ -16859,7 +16859,7 @@ namespace exprtk
 
       typedef vector_holder_t* vector_holder_ptr;
 
-      inline vector_holder_ptr get_vector(const std::string& vector_name) const
+      inline vector_holder_ptr get_vector(const std::wstring& vector_name) const
       {
          if (!valid())
             return reinterpret_cast<vector_holder_ptr>(0);
@@ -16869,7 +16869,7 @@ namespace exprtk
             return local_data().vector_store.get(vector_name);
       }
 
-      inline T& variable_ref(const std::string& symbol_name)
+      inline T& variable_ref(const std::wstring& symbol_name)
       {
          static T null_var = T(0);
          if (!valid())
@@ -16881,9 +16881,9 @@ namespace exprtk
       }
 
       #ifndef exprtk_disable_string_capabilities
-      inline std::string& stringvar_ref(const std::string& symbol_name)
+      inline std::wstring& stringvar_ref(const std::wstring& symbol_name)
       {
-         static std::string null_stringvar;
+         static std::wstring null_stringvar;
          if (!valid())
             return null_stringvar;
          else if (!valid_symbol(symbol_name))
@@ -16893,7 +16893,7 @@ namespace exprtk
       }
       #endif
 
-      inline bool is_constant_node(const std::string& symbol_name) const
+      inline bool is_constant_node(const std::wstring& symbol_name) const
       {
          if (!valid())
             return false;
@@ -16904,7 +16904,7 @@ namespace exprtk
       }
 
       #ifndef exprtk_disable_string_capabilities
-      inline bool is_constant_string(const std::string& symbol_name) const
+      inline bool is_constant_string(const std::wstring& symbol_name) const
       {
          if (!valid())
             return false;
@@ -16917,7 +16917,7 @@ namespace exprtk
       }
       #endif
 
-      inline bool create_variable(const std::string& variable_name, const T& value = T(0))
+      inline bool create_variable(const std::wstring& variable_name, const T& value = T(0))
       {
          if (!valid())
             return false;
@@ -16933,7 +16933,7 @@ namespace exprtk
       }
 
       #ifndef exprtk_disable_string_capabilities
-      inline bool create_stringvar(const std::string& stringvar_name, const std::string& value = std::string(""))
+      inline bool create_stringvar(const std::wstring& stringvar_name, const std::wstring& value = std::wstring(L""))
       {
          if (!valid())
             return false;
@@ -16943,13 +16943,13 @@ namespace exprtk
             return false;
 
          local_data().local_stringvar_list_.push_back(value);
-         std::string& s = local_data().local_stringvar_list_.back();
+         std::wstring& s = local_data().local_stringvar_list_.back();
 
          return add_stringvar(stringvar_name,s);
       }
       #endif
 
-      inline bool add_variable(const std::string& variable_name, T& t, const bool is_constant = false)
+      inline bool add_variable(const std::wstring& variable_name, T& t, const bool is_constant = false)
       {
          if (!valid())
             return false;
@@ -16961,7 +16961,7 @@ namespace exprtk
             return local_data().variable_store.add(variable_name,t,is_constant);
       }
 
-      inline bool add_constant(const std::string& constant_name, const T& value)
+      inline bool add_constant(const std::wstring& constant_name, const T& value)
       {
          if (!valid())
             return false;
@@ -16977,7 +16977,7 @@ namespace exprtk
       }
 
       #ifndef exprtk_disable_string_capabilities
-      inline bool add_stringvar(const std::string& stringvar_name, std::string& s, const bool is_constant = false)
+      inline bool add_stringvar(const std::wstring& stringvar_name, std::wstring& s, const bool is_constant = false)
       {
          if (!valid())
             return false;
@@ -16990,7 +16990,7 @@ namespace exprtk
       }
       #endif
 
-      inline bool add_function(const std::string& function_name, function_t& function)
+      inline bool add_function(const std::wstring& function_name, function_t& function)
       {
          if (!valid())
             return false;
@@ -17002,7 +17002,7 @@ namespace exprtk
             return local_data().function_store.add(function_name,function);
       }
 
-      inline bool add_function(const std::string& vararg_function_name, vararg_function_t& vararg_function)
+      inline bool add_function(const std::wstring& vararg_function_name, vararg_function_t& vararg_function)
       {
          if (!valid())
             return false;
@@ -17014,7 +17014,7 @@ namespace exprtk
             return local_data().vararg_function_store.add(vararg_function_name,vararg_function);
       }
 
-      inline bool add_function(const std::string& function_name, generic_function_t& function)
+      inline bool add_function(const std::wstring& function_name, generic_function_t& function)
       {
          if (!valid())
             return false;
@@ -17022,7 +17022,7 @@ namespace exprtk
             return false;
          else if (symbol_exists(function_name))
             return false;
-         else if (std::string::npos != function.parameter_sequence.find_first_not_of("STVZ*?|"))
+         else if (std::wstring::npos != function.parameter_sequence.find_first_not_of(L"STVZ*?|"))
             return false;
          else if (generic_function_t::e_rtrn_scalar == function.rtrn_type)
             return local_data().generic_function_store.add(function_name,function);
@@ -17033,7 +17033,7 @@ namespace exprtk
       }
 
       #define exprtk_define_freefunction(NN)                                                \
-      inline bool add_function(const std::string& function_name, ff##NN##_functor function) \
+      inline bool add_function(const std::wstring& function_name, ff##NN##_functor function) \
       {                                                                                     \
          if (!valid())                                                                      \
             return false;                                                                   \
@@ -17060,7 +17060,7 @@ namespace exprtk
 
       #undef exprtk_define_freefunction
 
-      inline bool add_reserved_function(const std::string& function_name, function_t& function)
+      inline bool add_reserved_function(const std::wstring& function_name, function_t& function)
       {
          if (!valid())
             return false;
@@ -17072,7 +17072,7 @@ namespace exprtk
             return local_data().function_store.add(function_name,function);
       }
 
-      inline bool add_reserved_function(const std::string& vararg_function_name, vararg_function_t& vararg_function)
+      inline bool add_reserved_function(const std::wstring& vararg_function_name, vararg_function_t& vararg_function)
       {
          if (!valid())
             return false;
@@ -17084,7 +17084,7 @@ namespace exprtk
             return local_data().vararg_function_store.add(vararg_function_name,vararg_function);
       }
 
-      inline bool add_reserved_function(const std::string& function_name, generic_function_t& function)
+      inline bool add_reserved_function(const std::wstring& function_name, generic_function_t& function)
       {
          if (!valid())
             return false;
@@ -17092,7 +17092,7 @@ namespace exprtk
             return false;
          else if (symbol_exists(function_name,false))
             return false;
-         else if (std::string::npos != function.parameter_sequence.find_first_not_of("STV*?|"))
+         else if (std::wstring::npos != function.parameter_sequence.find_first_not_of(L"STV*?|"))
             return false;
          else if (generic_function_t::e_rtrn_scalar == function.rtrn_type)
             return local_data().generic_function_store.add(function_name,function);
@@ -17103,7 +17103,7 @@ namespace exprtk
       }
 
       template <std::size_t N>
-      inline bool add_vector(const std::string& vector_name, T (&v)[N])
+      inline bool add_vector(const std::wstring& vector_name, T (&v)[N])
       {
          if (!valid())
             return false;
@@ -17115,7 +17115,7 @@ namespace exprtk
             return local_data().vector_store.add(vector_name,v);
       }
 
-      inline bool add_vector(const std::string& vector_name, T* v, const std::size_t& v_size)
+      inline bool add_vector(const std::wstring& vector_name, T* v, const std::size_t& v_size)
       {
          if (!valid())
             return false;
@@ -17130,7 +17130,7 @@ namespace exprtk
       }
 
       template <typename Allocator>
-      inline bool add_vector(const std::string& vector_name, std::vector<T,Allocator>& v)
+      inline bool add_vector(const std::wstring& vector_name, std::vector<T,Allocator>& v)
       {
          if (!valid())
             return false;
@@ -17144,7 +17144,7 @@ namespace exprtk
             return local_data().vector_store.add(vector_name,v);
       }
 
-      inline bool add_vector(const std::string& vector_name, exprtk::vector_view<T>& v)
+      inline bool add_vector(const std::wstring& vector_name, exprtk::vector_view<T>& v)
       {
          if (!valid())
             return false;
@@ -17158,7 +17158,7 @@ namespace exprtk
             return local_data().vector_store.add(vector_name,v);
       }
 
-      inline bool remove_variable(const std::string& variable_name, const bool delete_node = true)
+      inline bool remove_variable(const std::wstring& variable_name, const bool delete_node = true)
       {
          if (!valid())
             return false;
@@ -17167,7 +17167,7 @@ namespace exprtk
       }
 
       #ifndef exprtk_disable_string_capabilities
-      inline bool remove_stringvar(const std::string& string_name)
+      inline bool remove_stringvar(const std::wstring& string_name)
       {
          if (!valid())
             return false;
@@ -17176,7 +17176,7 @@ namespace exprtk
       }
       #endif
 
-      inline bool remove_function(const std::string& function_name)
+      inline bool remove_function(const std::wstring& function_name)
       {
          if (!valid())
             return false;
@@ -17184,7 +17184,7 @@ namespace exprtk
             return local_data().function_store.remove(function_name);
       }
 
-      inline bool remove_vararg_function(const std::string& vararg_function_name)
+      inline bool remove_vararg_function(const std::wstring& vararg_function_name)
       {
          if (!valid())
             return false;
@@ -17192,7 +17192,7 @@ namespace exprtk
             return local_data().vararg_function_store.remove(vararg_function_name);
       }
 
-      inline bool remove_vector(const std::string& vector_name)
+      inline bool remove_vector(const std::wstring& vector_name)
       {
          if (!valid())
             return false;
@@ -17210,19 +17210,19 @@ namespace exprtk
       inline bool add_pi()
       {
          static const T local_pi = T(details::numeric::constant::pi);
-         return add_constant("pi",local_pi);
+         return add_constant(L"pi",local_pi);
       }
 
       inline bool add_epsilon()
       {
          static const T local_epsilon = details::numeric::details::epsilon_type<T>::value();
-         return add_constant("epsilon",local_epsilon);
+         return add_constant(L"epsilon",local_epsilon);
       }
 
       inline bool add_infinity()
       {
          static const T local_infinity = std::numeric_limits<T>::infinity();
-         return add_constant("inf",local_infinity);
+         return add_constant(L"inf",local_infinity);
       }
 
       template <typename Package>
@@ -17233,7 +17233,7 @@ namespace exprtk
 
       template <typename Allocator,
                 template <typename, typename> class Sequence>
-      inline std::size_t get_variable_list(Sequence<std::pair<std::string,T>,Allocator>& vlist) const
+      inline std::size_t get_variable_list(Sequence<std::pair<std::wstring,T>,Allocator>& vlist) const
       {
          if (!valid())
             return 0;
@@ -17243,7 +17243,7 @@ namespace exprtk
 
       template <typename Allocator,
                 template <typename, typename> class Sequence>
-      inline std::size_t get_variable_list(Sequence<std::string,Allocator>& vlist) const
+      inline std::size_t get_variable_list(Sequence<std::wstring,Allocator>& vlist) const
       {
          if (!valid())
             return 0;
@@ -17254,7 +17254,7 @@ namespace exprtk
       #ifndef exprtk_disable_string_capabilities
       template <typename Allocator,
                 template <typename, typename> class Sequence>
-      inline std::size_t get_stringvar_list(Sequence<std::pair<std::string,std::string>,Allocator>& svlist) const
+      inline std::size_t get_stringvar_list(Sequence<std::pair<std::wstring,std::wstring>,Allocator>& svlist) const
       {
          if (!valid())
             return 0;
@@ -17264,7 +17264,7 @@ namespace exprtk
 
       template <typename Allocator,
                 template <typename, typename> class Sequence>
-      inline std::size_t get_stringvar_list(Sequence<std::string,Allocator>& svlist) const
+      inline std::size_t get_stringvar_list(Sequence<std::wstring,Allocator>& svlist) const
       {
          if (!valid())
             return 0;
@@ -17275,7 +17275,7 @@ namespace exprtk
 
       template <typename Allocator,
                 template <typename, typename> class Sequence>
-      inline std::size_t get_vector_list(Sequence<std::string,Allocator>& vlist) const
+      inline std::size_t get_vector_list(Sequence<std::wstring,Allocator>& vlist) const
       {
          if (!valid())
             return 0;
@@ -17283,7 +17283,7 @@ namespace exprtk
             return local_data().vector_store.get_list(vlist);
       }
 
-      inline bool symbol_exists(const std::string& symbol_name, const bool check_reserved_symb = true) const
+      inline bool symbol_exists(const std::wstring& symbol_name, const bool check_reserved_symb = true) const
       {
          /*
             Function will return true if symbol_name exists as either a
@@ -17306,7 +17306,7 @@ namespace exprtk
             return false;
       }
 
-      inline bool is_variable(const std::string& variable_name) const
+      inline bool is_variable(const std::wstring& variable_name) const
       {
          if (!valid())
             return false;
@@ -17315,7 +17315,7 @@ namespace exprtk
       }
 
       #ifndef exprtk_disable_string_capabilities
-      inline bool is_stringvar(const std::string& stringvar_name) const
+      inline bool is_stringvar(const std::wstring& stringvar_name) const
       {
          if (!valid())
             return false;
@@ -17323,7 +17323,7 @@ namespace exprtk
             return local_data().stringvar_store.symbol_exists(stringvar_name);
       }
 
-      inline bool is_conststr_stringvar(const std::string& symbol_name) const
+      inline bool is_conststr_stringvar(const std::wstring& symbol_name) const
       {
          if (!valid())
             return false;
@@ -17339,7 +17339,7 @@ namespace exprtk
       }
       #endif
 
-      inline bool is_function(const std::string& function_name) const
+      inline bool is_function(const std::wstring& function_name) const
       {
          if (!valid())
             return false;
@@ -17347,7 +17347,7 @@ namespace exprtk
             return local_data().function_store.symbol_exists(function_name);
       }
 
-      inline bool is_vararg_function(const std::string& vararg_function_name) const
+      inline bool is_vararg_function(const std::wstring& vararg_function_name) const
       {
          if (!valid())
             return false;
@@ -17355,7 +17355,7 @@ namespace exprtk
             return local_data().vararg_function_store.symbol_exists(vararg_function_name);
       }
 
-      inline bool is_vector(const std::string& vector_name) const
+      inline bool is_vector(const std::wstring& vector_name) const
       {
          if (!valid())
             return false;
@@ -17363,23 +17363,23 @@ namespace exprtk
             return local_data().vector_store.symbol_exists(vector_name);
       }
 
-      inline std::string get_variable_name(const expression_ptr& ptr) const
+      inline std::wstring get_variable_name(const expression_ptr& ptr) const
       {
          return local_data().variable_store.entity_name(ptr);
       }
 
-      inline std::string get_vector_name(const vector_holder_ptr& ptr) const
+      inline std::wstring get_vector_name(const vector_holder_ptr& ptr) const
       {
          return local_data().vector_store.entity_name(ptr);
       }
 
       #ifndef exprtk_disable_string_capabilities
-      inline std::string get_stringvar_name(const expression_ptr& ptr) const
+      inline std::wstring get_stringvar_name(const expression_ptr& ptr) const
       {
          return local_data().stringvar_store.entity_name(ptr);
       }
 
-      inline std::string get_conststr_stringvar_name(const expression_ptr& ptr) const
+      inline std::wstring get_conststr_stringvar_name(const expression_ptr& ptr) const
       {
          return local_data().stringvar_store.entity_name(ptr);
       }
@@ -17394,7 +17394,7 @@ namespace exprtk
       inline void load_from(const symbol_table<T>& st)
       {
          {
-            std::vector<std::string> name_list;
+            std::vector<std::wstring> name_list;
 
             st.local_data().function_store.get_list(name_list);
 
@@ -17409,7 +17409,7 @@ namespace exprtk
          }
 
          {
-            std::vector<std::string> name_list;
+            std::vector<std::wstring> name_list;
 
             st.local_data().vararg_function_store.get_list(name_list);
 
@@ -17424,7 +17424,7 @@ namespace exprtk
          }
 
          {
-            std::vector<std::string> name_list;
+            std::vector<std::wstring> name_list;
 
             st.local_data().generic_function_store.get_list(name_list);
 
@@ -17439,7 +17439,7 @@ namespace exprtk
          }
 
          {
-            std::vector<std::string> name_list;
+            std::vector<std::wstring> name_list;
 
             st.local_data().string_function_store.get_list(name_list);
 
@@ -17456,7 +17456,7 @@ namespace exprtk
 
    private:
 
-      inline bool valid_symbol(const std::string& symbol, const bool check_reserved_symb = true) const
+      inline bool valid_symbol(const std::wstring& symbol, const bool check_reserved_symb = true) const
       {
          if (symbol.empty())
             return false;
@@ -17468,10 +17468,10 @@ namespace exprtk
             {
                if (
                     !details::is_letter_or_digit(symbol[i]) &&
-                    ('_' != symbol[i])
+                    (L'_' != symbol[i])
                   )
                {
-                  if (('.' == symbol[i]) && (i < (symbol.size() - 1)))
+                  if ((L'.' == symbol[i]) && (i < (symbol.size() - 1)))
                      continue;
                   else
                      return false;
@@ -17482,7 +17482,7 @@ namespace exprtk
          return (check_reserved_symb) ? (!local_data().is_reserved_symbol(symbol)) : true;
       }
 
-      inline bool valid_function(const std::string& symbol) const
+      inline bool valid_function(const std::wstring& symbol) const
       {
          if (symbol.empty())
             return false;
@@ -17494,10 +17494,10 @@ namespace exprtk
             {
                if (
                     !details::is_letter_or_digit(symbol[i]) &&
-                    ('_' != symbol[i])
+                    (L'_' != symbol[i])
                   )
                {
-                  if (('.' == symbol[i]) && (i < (symbol.size() - 1)))
+                  if ((L'.' == symbol[i]) && (i < (symbol.size() - 1)))
                      continue;
                   else
                      return false;
@@ -17612,7 +17612,7 @@ namespace exprtk
                      case e_vecdata   : delete [] (T*)(local_data_list[i].pointer);
                                         break;
 
-                     case e_string    : delete (std::string*)(local_data_list[i].pointer);
+                     case e_string    : delete (std::wstring*)(local_data_list[i].pointer);
                                         break;
 
                      default          : break;
@@ -17953,56 +17953,56 @@ namespace exprtk
 
          lexer::token token;
          error_mode mode;
-         std::string diagnostic;
-         std::string src_location;
-         std::string error_line;
+         std::wstring diagnostic;
+         std::wstring src_location;
+         std::wstring error_line;
          std::size_t line_no;
          std::size_t column_no;
       };
 
       inline type make_error(error_mode mode,
-                             const std::string& diagnostic   = "",
-                             const std::string& src_location = "")
+                             const std::wstring& diagnostic   = L"",
+                             const std::wstring& src_location = L"")
       {
          type t;
          t.mode         = mode;
          t.token.type   = lexer::token::e_error;
          t.diagnostic   = diagnostic;
          t.src_location = src_location;
-         exprtk_debug(("%s\n",diagnostic .c_str()));
+         exprtk_debug((L"%ls\n",diagnostic .c_str()));
          return t;
       }
 
       inline type make_error(error_mode mode,
                              const lexer::token& tk,
-                             const std::string& diagnostic   = "",
-                             const std::string& src_location = "")
+                             const std::wstring& diagnostic   = L"",
+                             const std::wstring& src_location = L"")
       {
          type t;
          t.mode       = mode;
          t.token      = tk;
          t.diagnostic = diagnostic;
          t.src_location = src_location;
-         exprtk_debug(("%s\n",diagnostic .c_str()));
+         exprtk_debug((L"%ls\n",diagnostic .c_str()));
          return t;
       }
 
-      inline std::string to_str(error_mode mode)
+      inline std::wstring to_str(error_mode mode)
       {
          switch (mode)
          {
-            case e_unknown : return std::string("Unknown Error");
-            case e_syntax  : return std::string("Syntax Error" );
-            case e_token   : return std::string("Token Error"  );
-            case e_numeric : return std::string("Numeric Error");
-            case e_symtab  : return std::string("Symbol Error" );
-            case e_lexer   : return std::string("Lexer Error"  );
-            case e_helper  : return std::string("Helper Error" );
-            default        : return std::string("Unknown Error");
+            case e_unknown : return std::wstring(L"Unknown Error");
+            case e_syntax  : return std::wstring(L"Syntax Error" );
+            case e_token   : return std::wstring(L"Token Error"  );
+            case e_numeric : return std::wstring(L"Numeric Error");
+            case e_symtab  : return std::wstring(L"Symbol Error" );
+            case e_lexer   : return std::wstring(L"Lexer Error"  );
+            case e_helper  : return std::wstring(L"Helper Error" );
+            default        : return std::wstring(L"Unknown Error");
          }
       }
 
-      inline bool update_error(type& error, const std::string& expression)
+      inline bool update_error(type& error, const std::wstring& expression)
       {
          if (
               expression.empty()                         ||
@@ -18046,7 +18046,7 @@ namespace exprtk
 
       inline void dump_error(const type& error)
       {
-         printf("Position: %02d   Type: [%s]   Msg: %s\n",
+         printf("Position: %02d   Type: [%ls]   Msg: %ls\n",
                 static_cast<int>(error.token.position),
                 exprtk::parser_error::to_str(error.mode).c_str(),
                 error.diagnostic.c_str());
@@ -18156,12 +18156,12 @@ namespace exprtk
       typedef std::map<operator_t, binary_functor_t>  binary_op_map_t;
       typedef std::map<operator_t,trinary_functor_t> trinary_op_map_t;
 
-      typedef std::map<std::string,std::pair<trinary_functor_t   ,operator_t> > sf3_map_t;
-      typedef std::map<std::string,std::pair<quaternary_functor_t,operator_t> > sf4_map_t;
+      typedef std::map<std::wstring,std::pair<trinary_functor_t   ,operator_t> > sf3_map_t;
+      typedef std::map<std::wstring,std::pair<quaternary_functor_t,operator_t> > sf4_map_t;
 
       typedef std::map<binary_functor_t,operator_t> inv_binary_op_map_t;
-      typedef std::multimap<std::string,details::base_operation_t,details::ilesscompare> base_ops_map_t;
-      typedef std::set<std::string,details::ilesscompare> disabled_func_set_t;
+      typedef std::multimap<std::wstring,details::base_operation_t,details::ilesscompare> base_ops_map_t;
+      typedef std::set<std::wstring,details::ilesscompare> disabled_func_set_t;
 
       typedef details::T0oT1_define<T,  cref_t,  cref_t> vov_t;
       typedef details::T0oT1_define<T, const_t,  cref_t> cov_t;
@@ -18210,7 +18210,7 @@ namespace exprtk
          #endif
 
          scope_element()
-         : name("???"),
+         : name(L"???"),
            size (std::numeric_limits<std::size_t>::max()),
            index(std::numeric_limits<std::size_t>::max()),
            depth(std::numeric_limits<std::size_t>::max()),
@@ -18246,7 +18246,7 @@ namespace exprtk
 
          void clear()
          {
-            name   = "???";
+            name   = L"???";
             size   = std::numeric_limits<std::size_t>::max();
             index  = std::numeric_limits<std::size_t>::max();
             depth  = std::numeric_limits<std::size_t>::max();
@@ -18262,7 +18262,7 @@ namespace exprtk
             #endif
          }
 
-         std::string  name;
+         std::wstring  name;
          std::size_t  size;
          std::size_t  index;
          std::size_t  depth;
@@ -18309,7 +18309,7 @@ namespace exprtk
                return null_element_;
          }
 
-         inline scope_element& get_element(const std::string& var_name,
+         inline scope_element& get_element(const std::wstring& var_name,
                                            const std::size_t index = std::numeric_limits<std::size_t>::max())
          {
             const std::size_t current_depth = parser_.state_.scope_depth;
@@ -18330,7 +18330,7 @@ namespace exprtk
             return null_element_;
          }
 
-         inline scope_element& get_active_element(const std::string& var_name,
+         inline scope_element& get_active_element(const std::wstring& var_name,
                                                   const std::size_t index = std::numeric_limits<std::size_t>::max())
          {
             const std::size_t current_depth = parser_.state_.scope_depth;
@@ -18377,7 +18377,7 @@ namespace exprtk
 
          inline void deactivate(const std::size_t& scope_depth)
          {
-            exprtk_debug(("deactivate() - Scope depth: %d\n",
+            exprtk_debug((L"deactivate() - Scope depth: %d\n",
                           static_cast<int>(parser_.state_.scope_depth)));
 
             for (std::size_t i = 0; i < element_.size(); ++i)
@@ -18386,7 +18386,7 @@ namespace exprtk
 
                if (se.active && (se.depth >= scope_depth))
                {
-                  exprtk_debug(("deactivate() - element[%02d] '%s'\n",
+                  exprtk_debug((L"deactivate() - element[%02d] '%ls'\n",
                                 static_cast<int>(i),
                                 se.name.c_str()));
 
@@ -18411,7 +18411,7 @@ namespace exprtk
                                                   break;
 
                #ifndef exprtk_disable_string_capabilities
-               case scope_element::e_string     : if (se.data    ) delete (std::string*) se.data;
+               case scope_element::e_string     : if (se.data    ) delete (std::wstring*) se.data;
                                                   if (se.str_node) delete se.str_node;
                                                   break;
                #endif
@@ -18484,8 +18484,8 @@ namespace exprtk
          {
             parser_.state_.scope_depth++;
             #ifdef exprtk_enable_debugging
-            std::string depth(2 * parser_.state_.scope_depth,'-');
-            exprtk_debug(("%s> Scope Depth: %02d\n",
+            std::wstring depth(2 * parser_.state_.scope_depth,L'-');
+            exprtk_debug((L"%ls> Scope Depth: %02d\n",
                           depth.c_str(),
                           static_cast<int>(parser_.state_.scope_depth)));
             #endif
@@ -18496,8 +18496,8 @@ namespace exprtk
             parser_.sem_.deactivate(parser_.state_.scope_depth);
             parser_.state_.scope_depth--;
             #ifdef exprtk_enable_debugging
-            std::string depth(2 * parser_.state_.scope_depth,'-');
-            exprtk_debug(("<%s Scope Depth: %02d\n",
+            std::wstring depth(2 * parser_.state_.scope_depth,L'-');
+            exprtk_debug((L"<%ls Scope Depth: %02d\n",
                           depth.c_str(),
                           static_cast<int>(parser_.state_.scope_depth)));
             #endif
@@ -18548,7 +18548,7 @@ namespace exprtk
             return false;
          }
 
-         inline bool valid_symbol(const std::string& symbol) const
+         inline bool valid_symbol(const std::wstring& symbol) const
          {
             if (!symtab_list_.empty())
                return symtab_list_[0].valid_symbol(symbol);
@@ -18556,7 +18556,7 @@ namespace exprtk
                return false;
          }
 
-         inline bool valid_function_name(const std::string& symbol) const
+         inline bool valid_function_name(const std::wstring& symbol) const
          {
             if (!symtab_list_.empty())
                return symtab_list_[0].valid_function(symbol);
@@ -18564,7 +18564,7 @@ namespace exprtk
                return false;
          }
 
-         inline variable_ptr get_variable(const std::string& variable_name) const
+         inline variable_ptr get_variable(const std::wstring& variable_name) const
          {
             if (!valid_symbol(variable_name))
                return reinterpret_cast<variable_ptr>(0);
@@ -18604,7 +18604,7 @@ namespace exprtk
          }
 
          #ifndef exprtk_disable_string_capabilities
-         inline stringvar_ptr get_stringvar(const std::string& string_name) const
+         inline stringvar_ptr get_stringvar(const std::wstring& string_name) const
          {
             if (!valid_symbol(string_name))
                return reinterpret_cast<stringvar_ptr>(0);
@@ -18626,7 +18626,7 @@ namespace exprtk
          }
          #endif
 
-         inline function_ptr get_function(const std::string& function_name) const
+         inline function_ptr get_function(const std::wstring& function_name) const
          {
             if (!valid_function_name(function_name))
                return reinterpret_cast<function_ptr>(0);
@@ -18647,7 +18647,7 @@ namespace exprtk
             return result;
          }
 
-         inline vararg_function_ptr get_vararg_function(const std::string& vararg_function_name) const
+         inline vararg_function_ptr get_vararg_function(const std::wstring& vararg_function_name) const
          {
             if (!valid_function_name(vararg_function_name))
                return reinterpret_cast<vararg_function_ptr>(0);
@@ -18668,7 +18668,7 @@ namespace exprtk
             return result;
          }
 
-         inline generic_function_ptr get_generic_function(const std::string& function_name) const
+         inline generic_function_ptr get_generic_function(const std::wstring& function_name) const
          {
             if (!valid_function_name(function_name))
                return reinterpret_cast<generic_function_ptr>(0);
@@ -18689,7 +18689,7 @@ namespace exprtk
             return result;
          }
 
-         inline generic_function_ptr get_string_function(const std::string& function_name) const
+         inline generic_function_ptr get_string_function(const std::wstring& function_name) const
          {
             if (!valid_function_name(function_name))
                return reinterpret_cast<generic_function_ptr>(0);
@@ -18710,7 +18710,7 @@ namespace exprtk
             return result;
          }
 
-         inline vector_holder_ptr get_vector(const std::string& vector_name) const
+         inline vector_holder_ptr get_vector(const std::wstring& vector_name) const
          {
             if (!valid_symbol(vector_name))
                return reinterpret_cast<vector_holder_ptr>(0);
@@ -18731,7 +18731,7 @@ namespace exprtk
             return result;
          }
 
-         inline bool is_constant_node(const std::string& symbol_name) const
+         inline bool is_constant_node(const std::wstring& symbol_name) const
          {
             if (!valid_symbol(symbol_name))
                return false;
@@ -18748,7 +18748,7 @@ namespace exprtk
          }
 
          #ifndef exprtk_disable_string_capabilities
-         inline bool is_constant_string(const std::string& symbol_name) const
+         inline bool is_constant_string(const std::wstring& symbol_name) const
          {
             if (!valid_symbol(symbol_name))
                return false;
@@ -18767,7 +18767,7 @@ namespace exprtk
          }
          #endif
 
-         inline bool symbol_exists(const std::string& symbol) const
+         inline bool symbol_exists(const std::wstring& symbol) const
          {
             for (std::size_t i = 0; i < symtab_list_.size(); ++i)
             {
@@ -18780,7 +18780,7 @@ namespace exprtk
             return false;
          }
 
-         inline bool is_variable(const std::string& variable_name) const
+         inline bool is_variable(const std::wstring& variable_name) const
          {
             for (std::size_t i = 0; i < symtab_list_.size(); ++i)
             {
@@ -18797,7 +18797,7 @@ namespace exprtk
          }
 
          #ifndef exprtk_disable_string_capabilities
-         inline bool is_stringvar(const std::string& stringvar_name) const
+         inline bool is_stringvar(const std::wstring& stringvar_name) const
          {
             for (std::size_t i = 0; i < symtab_list_.size(); ++i)
             {
@@ -18813,7 +18813,7 @@ namespace exprtk
             return false;
          }
 
-         inline bool is_conststr_stringvar(const std::string& symbol_name) const
+         inline bool is_conststr_stringvar(const std::wstring& symbol_name) const
          {
             for (std::size_t i = 0; i < symtab_list_.size(); ++i)
             {
@@ -18836,7 +18836,7 @@ namespace exprtk
          }
          #endif
 
-         inline bool is_function(const std::string& function_name) const
+         inline bool is_function(const std::wstring& function_name) const
          {
             for (std::size_t i = 0; i < symtab_list_.size(); ++i)
             {
@@ -18852,7 +18852,7 @@ namespace exprtk
             return false;
          }
 
-         inline bool is_vararg_function(const std::string& vararg_function_name) const
+         inline bool is_vararg_function(const std::wstring& vararg_function_name) const
          {
             for (std::size_t i = 0; i < symtab_list_.size(); ++i)
             {
@@ -18868,7 +18868,7 @@ namespace exprtk
             return false;
          }
 
-         inline bool is_vector(const std::string& vector_name) const
+         inline bool is_vector(const std::wstring& vector_name) const
          {
             for (std::size_t i = 0; i < symtab_list_.size(); ++i)
             {
@@ -18884,23 +18884,23 @@ namespace exprtk
             return false;
          }
 
-         inline std::string get_variable_name(const expression_node_ptr& ptr) const
+         inline std::wstring get_variable_name(const expression_node_ptr& ptr) const
          {
             return local_data().variable_store.entity_name(ptr);
          }
 
-         inline std::string get_vector_name(const vector_holder_ptr& ptr) const
+         inline std::wstring get_vector_name(const vector_holder_ptr& ptr) const
          {
             return local_data().vector_store.entity_name(ptr);
          }
 
          #ifndef exprtk_disable_string_capabilities
-         inline std::string get_stringvar_name(const expression_node_ptr& ptr) const
+         inline std::wstring get_stringvar_name(const expression_node_ptr& ptr) const
          {
             return local_data().stringvar_store.entity_name(ptr);
          }
 
-         inline std::string get_conststr_stringvar_name(const expression_node_ptr& ptr) const
+         inline std::wstring get_conststr_stringvar_name(const expression_node_ptr& ptr) const
          {
             return local_data().stringvar_store.entity_name(ptr);
          }
@@ -18940,16 +18940,16 @@ namespace exprtk
          }
 
          #ifndef exprtk_enable_debugging
-         void activate_side_effect(const std::string&)
+         void activate_side_effect(const std::wstring&)
          #else
-         void activate_side_effect(const std::string& source)
+         void activate_side_effect(const std::wstring& source)
          #endif
          {
             if (!side_effect_present)
             {
                side_effect_present = true;
 
-               exprtk_debug(("activate_side_effect() - caller: %s\n",source.c_str()));
+               exprtk_debug((L"activate_side_effect() - caller: %ls\n",source.c_str()));
             }
          }
 
@@ -18987,10 +18987,10 @@ namespace exprtk
          virtual ~unknown_symbol_resolver()
          {}
 
-         virtual bool process(const std::string& /*unknown_symbol*/,
+         virtual bool process(const std::wstring& /*unknown_symbol*/,
                               usr_symbol_type&   st,
                               T&                 default_value,
-                              std::string&       error_message)
+                              std::wstring&       error_message)
          {
             if (e_usrmode_default != mode)
                return false;
@@ -19002,9 +19002,9 @@ namespace exprtk
             return true;
          }
 
-         virtual bool process(const std::string& /* unknown_symbol */,
+         virtual bool process(const std::wstring& /* unknown_symbol */,
                               symbol_table_t&    /* symbol_table   */,
-                              std::string&       /* error_message  */)
+                              std::wstring&       /* error_message  */)
          {
             return false;
          }
@@ -19035,7 +19035,7 @@ namespace exprtk
       {
       public:
 
-         typedef std::pair<std::string,symbol_type> symbol_t;
+         typedef std::pair<std::wstring,symbol_type> symbol_t;
          typedef std::vector<symbol_t> symbol_list_t;
 
          dependent_entity_collector(const std::size_t options = e_ct_none)
@@ -19127,7 +19127,7 @@ namespace exprtk
             return final_stmt_return_;
          }
 
-         typedef std::vector<std::string> retparam_list_t;
+         typedef std::vector<std::wstring> retparam_list_t;
 
          retparam_list_t return_param_type_list() const
          {
@@ -19136,7 +19136,7 @@ namespace exprtk
 
       private:
 
-         inline void add_symbol(const std::string& symbol, const symbol_type st)
+         inline void add_symbol(const std::wstring& symbol, const symbol_type st)
          {
             switch (st)
             {
@@ -19159,7 +19159,7 @@ namespace exprtk
             }
          }
 
-         inline void add_assignment(const std::string& symbol, const symbol_type st)
+         inline void add_assignment(const std::wstring& symbol, const symbol_type st)
          {
             switch (st)
             {
@@ -19191,7 +19191,7 @@ namespace exprtk
       {
       private:
 
-         typedef std::set<std::string,details::ilesscompare> disabled_entity_set_t;
+         typedef std::set<std::wstring,details::ilesscompare> disabled_entity_set_t;
          typedef disabled_entity_set_t::iterator des_itr_t;
 
       public:
@@ -19404,7 +19404,7 @@ namespace exprtk
          bool rsrvd_sym_usr_disabled     () const { return disable_rsrvd_sym_usr_;     }
          bool zero_return_disabled       () const { return disable_zero_return_;       }
 
-         bool function_enabled(const std::string& function_name)
+         bool function_enabled(const std::wstring& function_name)
          {
             if (disabled_func_set_.empty())
                return true;
@@ -19412,7 +19412,7 @@ namespace exprtk
                return (disabled_func_set_.end() == disabled_func_set_.find(function_name));
          }
 
-         bool control_struct_enabled(const std::string& control_struct)
+         bool control_struct_enabled(const std::wstring& control_struct)
          {
             if (disabled_ctrl_set_.empty())
                return true;
@@ -19420,7 +19420,7 @@ namespace exprtk
                return (disabled_ctrl_set_.end() == disabled_ctrl_set_.find(control_struct));
          }
 
-         bool logic_enabled(const std::string& logic_operation)
+         bool logic_enabled(const std::wstring& logic_operation)
          {
             if (disabled_logic_set_.empty())
                return true;
@@ -19455,7 +19455,7 @@ namespace exprtk
                                                            .find(inequality_opr_to_string(inequality));
          }
 
-         bool function_disabled(const std::string& function_name)
+         bool function_disabled(const std::wstring& function_name)
          {
             if (disabled_func_set_.empty())
                return false;
@@ -19463,7 +19463,7 @@ namespace exprtk
                return (disabled_func_set_.end() != disabled_func_set_.find(function_name));
          }
 
-         bool control_struct_disabled(const std::string& control_struct)
+         bool control_struct_disabled(const std::wstring& control_struct)
          {
             if (disabled_ctrl_set_.empty())
                return false;
@@ -19471,7 +19471,7 @@ namespace exprtk
                return (disabled_ctrl_set_.end() != disabled_ctrl_set_.find(control_struct));
          }
 
-         bool logic_disabled(const std::string& logic_operation)
+         bool logic_disabled(const std::wstring& logic_operation)
          {
             if (disabled_logic_set_.empty())
                return false;
@@ -19711,46 +19711,46 @@ namespace exprtk
             disable_zero_return_       = (compile_options & e_disable_zero_return ) == e_disable_zero_return;
          }
 
-         std::string assign_opr_to_string(details::operator_type opr)
+         std::wstring assign_opr_to_string(details::operator_type opr)
          {
             switch (opr)
             {
-               case details::e_assign : return ":=";
-               case details::e_addass : return "+=";
-               case details::e_subass : return "-=";
-               case details::e_mulass : return "*=";
-               case details::e_divass : return "/=";
-               case details::e_modass : return "%=";
-               default                : return   "";
+               case details::e_assign : return L":=";
+               case details::e_addass : return L"+=";
+               case details::e_subass : return L"-=";
+               case details::e_mulass : return L"*=";
+               case details::e_divass : return L"/=";
+               case details::e_modass : return L"%=";
+               default                : return   L"";
             }
          }
 
-         std::string arith_opr_to_string(details::operator_type opr)
+         std::wstring arith_opr_to_string(details::operator_type opr)
          {
             switch (opr)
             {
-               case details::e_add : return "+";
-               case details::e_sub : return "-";
-               case details::e_mul : return "*";
-               case details::e_div : return "/";
-               case details::e_mod : return "%";
-               default             : return  "";
+               case details::e_add : return L"+";
+               case details::e_sub : return L"-";
+               case details::e_mul : return L"*";
+               case details::e_div : return L"/";
+               case details::e_mod : return L"%";
+               default             : return  L"";
             }
          }
 
-         std::string inequality_opr_to_string(details::operator_type opr)
+         std::wstring inequality_opr_to_string(details::operator_type opr)
          {
             switch (opr)
             {
-               case details::e_lt    : return  "<";
-               case details::e_lte   : return "<=";
-               case details::e_eq    : return "==";
-               case details::e_equal : return  "=";
-               case details::e_ne    : return "!=";
-               case details::e_nequal: return "<>";
-               case details::e_gte   : return ">=";
-               case details::e_gt    : return  ">";
-               default               : return   "";
+               case details::e_lt    : return  L"<";
+               case details::e_lte   : return L"<=";
+               case details::e_eq    : return L"==";
+               case details::e_equal : return  L"=";
+               case details::e_ne    : return L"!=";
+               case details::e_nequal: return L"<>";
+               case details::e_gte   : return L">=";
+               case details::e_gt    : return  L">";
+               default               : return   L"";
             }
          }
 
@@ -19832,8 +19832,8 @@ namespace exprtk
          if (settings_.replacer_enabled())
          {
             symbol_replacer_.clear();
-            symbol_replacer_.add_replace("true" ,"1",lexer::token::e_number);
-            symbol_replacer_.add_replace("false","0",lexer::token::e_number);
+            symbol_replacer_.add_replace(L"true" ,L"1",lexer::token::e_number);
+            symbol_replacer_.add_replace(L"false",L"0",lexer::token::e_number);
             helper_assembly_.token_modifier_list.clear();
             helper_assembly_.register_modifier(&symbol_replacer_);
          }
@@ -19881,7 +19881,7 @@ namespace exprtk
          }
       }
 
-      inline bool compile(const std::string& expression_string, expression<T>& expr)
+      inline bool compile(const std::wstring& expression_string, expression<T>& expr)
       {
          state_          .reset();
          error_list_     .clear();
@@ -19897,7 +19897,7 @@ namespace exprtk
          {
             set_error(
                make_error(parser_error::e_syntax,
-                          "ERR000 - Empty expression!",
+                          L"ERR000 - Empty expression!",
                           exprtk_error_location));
 
             return false;
@@ -19913,7 +19913,7 @@ namespace exprtk
          {
             set_error(
                make_error(parser_error::e_syntax,
-                          "ERR001 - Empty expression!",
+                          L"ERR001 - Empty expression!",
                           exprtk_error_location));
 
             return false;
@@ -19960,7 +19960,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR002 - Invalid expression encountered",
+                             L"ERR002 - Invalid expression encountered",
                              exprtk_error_location));
             }
 
@@ -19977,7 +19977,7 @@ namespace exprtk
          }
       }
 
-      inline expression_t compile(const std::string& expression_string, symbol_table_t& symtab)
+      inline expression_t compile(const std::wstring& expression_string, symbol_table_t& symtab)
       {
          expression_t expr;
 
@@ -19994,32 +19994,32 @@ namespace exprtk
          {
             if (lexer()[i].is_error())
             {
-               std::string diagnostic = "ERR003 - ";
+               std::wstring diagnostic = L"ERR003 - ";
 
                switch (lexer()[i].type)
                {
-                  case lexer::token::e_error      : diagnostic += "General token error";
+                  case lexer::token::e_error      : diagnostic += L"General token error";
                                                     break;
 
-                  case lexer::token::e_err_symbol : diagnostic += "Symbol error";
+                  case lexer::token::e_err_symbol : diagnostic += L"Symbol error";
                                                     break;
 
-                  case lexer::token::e_err_number : diagnostic += "Invalid numeric token";
+                  case lexer::token::e_err_number : diagnostic += L"Invalid numeric token";
                                                     break;
 
-                  case lexer::token::e_err_string : diagnostic += "Invalid string token";
+                  case lexer::token::e_err_string : diagnostic += L"Invalid string token";
                                                     break;
 
-                  case lexer::token::e_err_sfunc  : diagnostic += "Invalid special function token";
+                  case lexer::token::e_err_sfunc  : diagnostic += L"Invalid special function token";
                                                     break;
 
-                  default                         : diagnostic += "Unknown compiler error";
+                  default                         : diagnostic += L"Unknown compiler error";
                }
 
                set_error(
                   make_error(parser_error::e_lexer,
                              lexer()[i],
-                             diagnostic + ": " + lexer()[i].value,
+                             diagnostic + L": " + lexer()[i].value,
                              exprtk_error_location));
             }
          }
@@ -20061,7 +20061,7 @@ namespace exprtk
                      set_error(
                         make_error(parser_error::e_token,
                                    bracket_checker_ptr->error_token(),
-                                   "ERR004 - Mismatched brackets: '" + bracket_checker_ptr->error_token().value + "'",
+                                   L"ERR004 - Mismatched brackets: '" + bracket_checker_ptr->error_token().value + L"'",
                                    exprtk_error_location));
                   }
                   else if (0 != (numeric_checker_ptr = dynamic_cast<lexer::helper::numeric_checker*>(helper_assembly_.error_token_scanner)))
@@ -20073,7 +20073,7 @@ namespace exprtk
                         set_error(
                            make_error(parser_error::e_token,
                                       error_token,
-                                      "ERR005 - Invalid numeric token: '" + error_token.value + "'",
+                                      L"ERR005 - Invalid numeric token: '" + error_token.value + L"'",
                                       exprtk_error_location));
                      }
 
@@ -20091,9 +20091,9 @@ namespace exprtk
                         set_error(
                            make_error(parser_error::e_token,
                                       error_token.first,
-                                      "ERR006 - Invalid token sequence: '" +
-                                      error_token.first.value  + "' and '" +
-                                      error_token.second.value + "'",
+                                      L"ERR006 - Invalid token sequence: '" +
+                                      error_token.first.value  + L"' and '" +
+                                      error_token.second.value + L"'",
                                       exprtk_error_location));
                      }
 
@@ -20124,14 +20124,14 @@ namespace exprtk
             throw std::invalid_argument("parser::get_error() - Invalid error index specificed");
       }
 
-      inline std::string error() const
+      inline std::wstring error() const
       {
          if (!error_list_.empty())
          {
             return error_list_[0].diagnostic;
          }
          else
-            return std::string("No Error");
+            return std::wstring(L"No Error");
       }
 
       inline std::size_t error_count() const
@@ -20144,7 +20144,7 @@ namespace exprtk
          return dec_;
       }
 
-      inline bool replace_symbol(const std::string& old_symbol, const std::string& new_symbol)
+      inline bool replace_symbol(const std::wstring& old_symbol, const std::wstring& new_symbol)
       {
          if (!settings_.replacer_enabled())
             return false;
@@ -20154,7 +20154,7 @@ namespace exprtk
             return symbol_replacer_.add_replace(old_symbol,new_symbol,lexer::token::e_symbol);
       }
 
-      inline bool remove_replace_symbol(const std::string& symbol)
+      inline bool remove_replace_symbol(const std::wstring& symbol)
       {
          if (!settings_.replacer_enabled())
             return false;
@@ -20187,7 +20187,7 @@ namespace exprtk
 
    private:
 
-      inline bool valid_base_operation(const std::string& symbol)
+      inline bool valid_base_operation(const std::wstring& symbol)
       {
          const std::size_t length = symbol.size();
 
@@ -20201,17 +20201,17 @@ namespace exprtk
                    (base_ops_map_.end() != base_ops_map_.find(symbol));
       }
 
-      inline bool valid_vararg_operation(const std::string& symbol)
+      inline bool valid_vararg_operation(const std::wstring& symbol)
       {
-         static const std::string s_sum     = "sum" ;
-         static const std::string s_mul     = "mul" ;
-         static const std::string s_avg     = "avg" ;
-         static const std::string s_min     = "min" ;
-         static const std::string s_max     = "max" ;
-         static const std::string s_mand    = "mand";
-         static const std::string s_mor     = "mor" ;
-         static const std::string s_multi   = "~"   ;
-         static const std::string s_mswitch = "[*]" ;
+         static const std::wstring s_sum     = L"sum" ;
+         static const std::wstring s_mul     = L"mul" ;
+         static const std::wstring s_avg     = L"avg" ;
+         static const std::wstring s_min     = L"min" ;
+         static const std::wstring s_max     = L"max" ;
+         static const std::wstring s_mand    = L"mand";
+         static const std::wstring s_mor     = L"mor" ;
+         static const std::wstring s_multi   = L"~"   ;
+         static const std::wstring s_mswitch = L"[*]" ;
 
          return
                (
@@ -20246,11 +20246,11 @@ namespace exprtk
       #ifdef exprtk_enable_debugging
       inline void next_token()
       {
-         std::string ct_str = current_token().value;
+         std::wstring ct_str = current_token().value;
          parser_helper::next_token();
-         std::string depth(2 * state_.scope_depth,' ');
-         exprtk_debug(("%s"
-                       "prev[%s] --> curr[%s]\n",
+         std::wstring depth(2 * state_.scope_depth,L' ');
+         exprtk_debug((L"%ls"
+                       L"prev[%ls] --> curr[%ls]\n",
                        depth.c_str(),
                        ct_str.c_str(),
                        current_token().value.c_str()));
@@ -20284,7 +20284,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR007 - Invalid expression encountered",
+                                L"ERR007 - Invalid expression encountered",
                                 exprtk_error_location));
                }
 
@@ -20298,17 +20298,17 @@ namespace exprtk
 
                end_token = current_token();
 
-               std::string sub_expr = construct_subexpr(begin_token,end_token);
+               std::wstring sub_expr = construct_subexpr(begin_token,end_token);
 
-               exprtk_debug(("parse_corpus(%02d) Subexpr: %s\n",
+               exprtk_debug((L"parse_corpus(%02d) Subexpr: %ls\n",
                              static_cast<int>(arg_list.size() - 1),
                              sub_expr.c_str()));
 
-               exprtk_debug(("parse_corpus(%02d) - Side effect present: %s\n",
+               exprtk_debug((L"parse_corpus(%02d) - Side effect present: %ls\n",
                              static_cast<int>(arg_list.size() - 1),
-                             state_.side_effect_present ? "true" : "false"));
+                             state_.side_effect_present ? L"true" : L"false"));
 
-               exprtk_debug(("-------------------------------------------------\n"));
+               exprtk_debug((L"-------------------------------------------------\n"));
             }
 
             if (lexer().finished())
@@ -20337,13 +20337,13 @@ namespace exprtk
          return result;
       }
 
-      std::string construct_subexpr(lexer::token& begin_token, lexer::token& end_token)
+      std::wstring construct_subexpr(lexer::token& begin_token, lexer::token& end_token)
       {
-         std::string result = lexer().substr(begin_token.position,end_token.position);
+         std::wstring result = lexer().substr(begin_token.position,end_token.position);
 
          for (std::size_t i = 0; i < result.size(); ++i)
          {
-            if (details::is_whitespace(result[i])) result[i] = ' ';
+            if (details::is_whitespace(result[i])) result[i] = L' ';
          }
 
          return result;
@@ -20414,17 +20414,17 @@ namespace exprtk
                case token_t::e_pow    : current_state.set(e_level12,e_level12,details::   e_pow); break;
                default                : if (token_t::e_symbol == current_token().type)
                                         {
-                                           static const std::string s_and   =   "and";
-                                           static const std::string s_nand  =  "nand";
-                                           static const std::string s_or    =    "or";
-                                           static const std::string s_nor   =   "nor";
-                                           static const std::string s_xor   =   "xor";
-                                           static const std::string s_xnor  =  "xnor";
-                                           static const std::string s_in    =    "in";
-                                           static const std::string s_like  =  "like";
-                                           static const std::string s_ilike = "ilike";
-                                           static const std::string s_and1  =     "&";
-                                           static const std::string s_or1   =     "|";
+                                           static const std::wstring s_and   =   L"and";
+                                           static const std::wstring s_nand  =  L"nand";
+                                           static const std::wstring s_or    =    L"or";
+                                           static const std::wstring s_nor   =   L"nor";
+                                           static const std::wstring s_xor   =   L"xor";
+                                           static const std::wstring s_xnor  =  L"xnor";
+                                           static const std::wstring s_in    =    L"in";
+                                           static const std::wstring s_like  =  L"like";
+                                           static const std::wstring s_ilike = L"ilike";
+                                           static const std::wstring s_and1  =     L"&";
+                                           static const std::wstring s_or1   =     L"|";
 
                                            if (details::imatch(current_token().value,s_and))
                                            {
@@ -20516,7 +20516,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              prev_token,
-                             "ERR008 - Invalid arithmetic operation '" + details::to_str(current_state.operation) + "'",
+                             L"ERR008 - Invalid arithmetic operation '" + details::to_str(current_state.operation) + L"'",
                              exprtk_error_location));
 
                return error_node();
@@ -20528,7 +20528,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              prev_token,
-                             "ERR009 - Invalid inequality operation '" + details::to_str(current_state.operation) + "'",
+                             L"ERR009 - Invalid inequality operation '" + details::to_str(current_state.operation) + L"'",
                              exprtk_error_location));
 
                return error_node();
@@ -20540,7 +20540,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              prev_token,
-                             "ERR010 - Invalid assignment operation '" + details::to_str(current_state.operation) + "'",
+                             L"ERR010 - Invalid assignment operation '" + details::to_str(current_state.operation) + L"'",
                              exprtk_error_location));
 
                return error_node();
@@ -20559,7 +20559,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 prev_token,
-                                "ERR011 - Return statements cannot be part of sub-expressions",
+                                L"ERR011 - Return statements cannot be part of sub-expressions",
                                 exprtk_error_location));
 
                   return error_node();
@@ -20582,7 +20582,7 @@ namespace exprtk
                                 prev_token,
                                 !synthesis_error_.empty() ?
                                 synthesis_error_ :
-                                "ERR012 - General parsing error at token: '" + prev_token.value + "'",
+                                L"ERR012 - General parsing error at token: '" + prev_token.value + L"'",
                                 exprtk_error_location));
                }
 
@@ -20651,7 +20651,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR013 - Failed to find variable node in symbol table",
+                                L"ERR013 - Failed to find variable node in symbol table",
                                 exprtk_error_location));
 
                   free_node(node_allocator_,node);
@@ -20800,7 +20800,7 @@ namespace exprtk
          bool original_value_;
       };
 
-      inline expression_node_ptr parse_function_invocation(ifunction<T>* function, const std::string& function_name)
+      inline expression_node_ptr parse_function_invocation(ifunction<T>* function, const std::wstring& function_name)
       {
          expression_node_ptr func_node = reinterpret_cast<expression_node_ptr>(0);
 
@@ -20831,7 +20831,7 @@ namespace exprtk
                          set_error(
                             make_error(parser_error::e_syntax,
                                        current_token(),
-                                       "ERR014 - Invalid number of parameters for function: '" + function_name + "'",
+                                       L"ERR014 - Invalid number of parameters for function: '" + function_name + L"'",
                                        exprtk_error_location));
 
                          return error_node();
@@ -20845,7 +20845,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR015 - Failed to generate call to function: '" + function_name + "'",
+                          L"ERR015 - Failed to generate call to function: '" + function_name + L"'",
                           exprtk_error_location));
 
             return error_node();
@@ -20853,7 +20853,7 @@ namespace exprtk
       }
 
       template <std::size_t NumberofParameters>
-      inline expression_node_ptr parse_function_call(ifunction<T>* function, const std::string& function_name)
+      inline expression_node_ptr parse_function_call(ifunction<T>* function, const std::wstring& function_name)
       {
          #ifdef _MSC_VER
             #pragma warning(push)
@@ -20864,7 +20864,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR016 - Expecting ifunction '" + function_name + "' to have non-zero parameter count",
+                          L"ERR016 - Expecting ifunction '" + function_name + L"' to have non-zero parameter count",
                           exprtk_error_location));
 
             return error_node();
@@ -20887,7 +20887,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR017 - Expecting argument list for function: '" + function_name + "'",
+                          L"ERR017 - Expecting argument list for function: '" + function_name + L"'",
                           exprtk_error_location));
 
             return error_node();
@@ -20902,7 +20902,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR018 - Failed to parse argument " + details::to_str(i) + " for function: '" + function_name + "'",
+                             L"ERR018 - Failed to parse argument " + details::to_str(i) + L" for function: '" + function_name + L"'",
                              exprtk_error_location));
 
                return error_node();
@@ -20914,7 +20914,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR019 - Invalid number of arguments for function: '" + function_name + "'",
+                                L"ERR019 - Invalid number of arguments for function: '" + function_name + L"'",
                                 exprtk_error_location));
 
                   return error_node();
@@ -20927,7 +20927,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR020 - Invalid number of arguments for function: '" + function_name + "'",
+                          L"ERR020 - Invalid number of arguments for function: '" + function_name + L"'",
                           exprtk_error_location));
 
             return error_node();
@@ -20940,7 +20940,7 @@ namespace exprtk
          return result;
       }
 
-      inline expression_node_ptr parse_function_call_0(ifunction<T>* function, const std::string& function_name)
+      inline expression_node_ptr parse_function_call_0(ifunction<T>* function, const std::wstring& function_name)
       {
          expression_node_ptr result = expression_generator_.function(function);
 
@@ -20956,7 +20956,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR021 - Expecting '()' to proceed call to function: '" + function_name + "'",
+                          L"ERR021 - Expecting '()' to proceed call to function: '" + function_name + L"'",
                           exprtk_error_location));
 
             free_node(node_allocator_,result);
@@ -20981,7 +20981,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR022 - Expected a '(' at start of function call, instead got: '" + current_token().value + "'",
+                          L"ERR022 - Expected a L'(' at start of function call, instead got: '" + current_token().value + L"'",
                           exprtk_error_location));
 
             return 0;
@@ -21004,7 +21004,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR023 - Expected a ',' between function input parameters, instead got: '" + current_token().value + "'",
+                             L"ERR023 - Expected a L',' between function input parameters, instead got: '" + current_token().value + L"'",
                              exprtk_error_location));
 
                return 0;
@@ -21020,7 +21020,7 @@ namespace exprtk
       {
          typedef std::pair<base_ops_map_t::iterator,base_ops_map_t::iterator> map_range_t;
 
-         const std::string operation_name = current_token().value;
+         const std::wstring operation_name = current_token().value;
 
          map_range_t itr_range = base_ops_map_.equal_range(operation_name);
 
@@ -21029,7 +21029,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR024 - No entry found for base operation: " + operation_name,
+                          L"ERR024 - No entry found for base operation: " + operation_name,
                           exprtk_error_location));
 
             return error_node();
@@ -21080,7 +21080,7 @@ namespace exprtk
          set_error(
             make_error(parser_error::e_syntax,
                        current_token(),
-                       "ERR025 - Invalid number of parameters for call to function: '" + operation_name + "'",
+                       L"ERR025 - Invalid number of parameters for call to function: '" + operation_name + L"'",
                        exprtk_error_location));
 
          return error_node();
@@ -21100,7 +21100,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR026 - Expected ',' between if-statement condition and consequent",
+                          L"ERR026 - Expected L',' between if-statement condition and consequent",
                           exprtk_error_location));
             result = false;
          }
@@ -21109,7 +21109,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR027 - Failed to parse consequent for if-statement",
+                          L"ERR027 - Failed to parse consequent for if-statement",
                           exprtk_error_location));
             result = false;
          }
@@ -21118,7 +21118,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR028 - Expected ',' between if-statement consequent and alternative",
+                          L"ERR028 - Expected L',' between if-statement consequent and alternative",
                           exprtk_error_location));
             result = false;
          }
@@ -21127,7 +21127,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR029 - Failed to parse alternative for if-statement",
+                          L"ERR029 - Failed to parse alternative for if-statement",
                           exprtk_error_location));
             result = false;
          }
@@ -21136,7 +21136,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR030 - Expected ')' at the end of if-statement",
+                          L"ERR030 - Expected L')' at the end of if-statement",
                           exprtk_error_location));
             result = false;
          }
@@ -21158,7 +21158,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR031 - Return types of ternary if-statement differ",
+                             L"ERR031 - Return types of ternary if-statement differ",
                              exprtk_error_location));
 
                result = false;
@@ -21188,12 +21188,12 @@ namespace exprtk
 
          if (token_is(token_t::e_lcrlbracket,prsrhlpr_t::e_hold))
          {
-            if (0 == (consequent = parse_multi_sequence("if-statement-01")))
+            if (0 == (consequent = parse_multi_sequence(L"if-statement-01")))
             {
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR032 - Failed to parse body of consequent for if-statement",
+                             L"ERR032 - Failed to parse body of consequent for if-statement",
                              exprtk_error_location));
 
                result = false;
@@ -21216,7 +21216,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR033 - Expected ';' at the end of the consequent for if-statement",
+                                L"ERR033 - Expected L';' at the end of the consequent for if-statement",
                                 exprtk_error_location));
 
                   result = false;
@@ -21227,7 +21227,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR034 - Failed to parse body of consequent for if-statement",
+                             L"ERR034 - Failed to parse body of consequent for if-statement",
                              exprtk_error_location));
 
                result = false;
@@ -21236,31 +21236,31 @@ namespace exprtk
 
          if (result)
          {
-            if (details::imatch(current_token().value,"else"))
+            if (details::imatch(current_token().value,L"else"))
             {
                next_token();
 
                if (token_is(token_t::e_lcrlbracket,prsrhlpr_t::e_hold))
                {
-                  if (0 == (alternative = parse_multi_sequence("else-statement-01")))
+                  if (0 == (alternative = parse_multi_sequence(L"else-statement-01")))
                   {
                      set_error(
                         make_error(parser_error::e_syntax,
                                    current_token(),
-                                   "ERR035 - Failed to parse body of the 'else' for if-statement",
+                                   L"ERR035 - Failed to parse body of the 'else' for if-statement",
                                    exprtk_error_location));
 
                      result = false;
                   }
                }
-               else if (details::imatch(current_token().value,"if"))
+               else if (details::imatch(current_token().value,L"if"))
                {
                   if (0 == (alternative = parse_conditional_statement()))
                   {
                      set_error(
                         make_error(parser_error::e_syntax,
                                    current_token(),
-                                   "ERR036 - Failed to parse body of if-else statement",
+                                   L"ERR036 - Failed to parse body of if-else statement",
                                    exprtk_error_location));
 
                      result = false;
@@ -21273,7 +21273,7 @@ namespace exprtk
                      set_error(
                         make_error(parser_error::e_syntax,
                                    current_token(),
-                                   "ERR037 - Expected ';' at the end of the 'else-if' for the if-statement",
+                                   L"ERR037 - Expected L';' at the end of the 'else-if' for the if-statement",
                                    exprtk_error_location));
 
                      result = false;
@@ -21284,7 +21284,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR038 - Failed to parse body of the 'else' for if-statement",
+                                L"ERR038 - Failed to parse body of the 'else' for if-statement",
                                 exprtk_error_location));
 
                   result = false;
@@ -21309,7 +21309,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR039 - Return types of ternary if-statement differ",
+                             L"ERR039 - Return types of ternary if-statement differ",
                              exprtk_error_location));
 
                result = false;
@@ -21341,7 +21341,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR040 - Expected '(' at start of if-statement, instead got: '" + current_token().value + "'",
+                          L"ERR040 - Expected L'(' at start of if-statement, instead got: '" + current_token().value + L"'",
                           exprtk_error_location));
 
             return error_node();
@@ -21351,7 +21351,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR041 - Failed to parse condition for if-statement",
+                          L"ERR041 - Failed to parse condition for if-statement",
                           exprtk_error_location));
 
             return error_node();
@@ -21383,7 +21383,7 @@ namespace exprtk
          set_error(
             make_error(parser_error::e_syntax,
                        current_token(),
-                       "ERR042 - Invalid if-statement",
+                       L"ERR042 - Invalid if-statement",
                        exprtk_error_location));
 
          free_node(node_allocator_,condition);
@@ -21404,7 +21404,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR043 - Encountered invalid condition branch for ternary if-statement",
+                          L"ERR043 - Encountered invalid condition branch for ternary if-statement",
                           exprtk_error_location));
 
             return error_node();
@@ -21414,7 +21414,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR044 - Expected '?' after condition of ternary if-statement",
+                          L"ERR044 - Expected L'?' after condition of ternary if-statement",
                           exprtk_error_location));
 
             result = false;
@@ -21424,7 +21424,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR045 - Failed to parse consequent for ternary if-statement",
+                          L"ERR045 - Failed to parse consequent for ternary if-statement",
                           exprtk_error_location));
 
             result = false;
@@ -21434,7 +21434,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR046 - Expected ':' between ternary if-statement consequent and alternative",
+                          L"ERR046 - Expected L':' between ternary if-statement consequent and alternative",
                           exprtk_error_location));
 
             result = false;
@@ -21444,7 +21444,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR047 - Failed to parse alternative for ternary if-statement",
+                          L"ERR047 - Failed to parse alternative for ternary if-statement",
                           exprtk_error_location));
 
             result = false;
@@ -21467,7 +21467,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR048 - Return types of ternary if-statement differ",
+                             L"ERR048 - Return types of ternary if-statement differ",
                              exprtk_error_location));
 
                result = false;
@@ -21504,7 +21504,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR049 - Expected '(' at start of while-loop condition statement",
+                          L"ERR049 - Expected L'(' at start of while-loop condition statement",
                           exprtk_error_location));
 
             return error_node();
@@ -21514,7 +21514,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR050 - Failed to parse condition for while-loop",
+                          L"ERR050 - Failed to parse condition for while-loop",
                           exprtk_error_location));
 
             return error_node();
@@ -21524,7 +21524,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR051 - Expected ')' at end of while-loop condition statement",
+                          L"ERR051 - Expected L')' at end of while-loop condition statement",
                           exprtk_error_location));
 
             result = false;
@@ -21534,12 +21534,12 @@ namespace exprtk
 
          if (result)
          {
-            if (0 == (branch = parse_multi_sequence("while-loop")))
+            if (0 == (branch = parse_multi_sequence(L"while-loop")))
             {
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR052 - Failed to parse body of while-loop"));
+                             L"ERR052 - Failed to parse body of while-loop"));
                result = false;
             }
             else if (0 == (result_node = expression_generator_.while_loop(condition,
@@ -21549,7 +21549,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR053 - Failed to synthesize while-loop",
+                             L"ERR053 - Failed to synthesize while-loop",
                              exprtk_error_location));
 
                result = false;
@@ -21584,7 +21584,7 @@ namespace exprtk
 
          brkcnt_list_.push_front(false);
 
-         if (details::imatch(current_token().value,"until"))
+         if (details::imatch(current_token().value,L"until"))
          {
             next_token();
             branch = node_allocator_.allocate<details::null_node<T> >();
@@ -21611,27 +21611,27 @@ namespace exprtk
                   side_effect_list.push_back(state_.side_effect_present);
                }
 
-               if (details::imatch(current_token().value,"until"))
+               if (details::imatch(current_token().value,L"until"))
                {
                   next_token();
                   break;
                }
 
                bool is_next_until = peek_token_is(token_t::e_symbol) &&
-                                    peek_token_is("until");
+                                    peek_token_is(L"until");
 
                if (!token_is(seperator) && is_next_until)
                {
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR054 - Expected '" + token_t::to_str(seperator) + "' in body of repeat until loop",
+                                L"ERR054 - Expected '" + token_t::to_str(seperator) + L"' in body of repeat until loop",
                                 exprtk_error_location));
 
                   return error_node();
                }
 
-               if (details::imatch(current_token().value,"until"))
+               if (details::imatch(current_token().value,L"until"))
                {
                   next_token();
                   break;
@@ -21649,7 +21649,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR055 - Failed to parse body of repeat until loop",
+                             L"ERR055 - Failed to parse body of repeat until loop",
                              exprtk_error_location));
 
                return error_node();
@@ -21663,7 +21663,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR056 - Expected '(' before condition statement of repeat until loop",
+                          L"ERR056 - Expected L'(' before condition statement of repeat until loop",
                           exprtk_error_location));
 
             free_node(node_allocator_,branch);
@@ -21677,7 +21677,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR057 - Failed to parse condition for repeat until loop",
+                          L"ERR057 - Failed to parse condition for repeat until loop",
                           exprtk_error_location));
 
             free_node(node_allocator_,branch);
@@ -21689,7 +21689,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR058 - Expected ')' after condition of repeat until loop",
+                          L"ERR058 - Expected L')' after condition of repeat until loop",
                           exprtk_error_location));
 
             free_node(node_allocator_,    branch);
@@ -21710,7 +21710,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR059 - Failed to synthesize repeat until loop",
+                          L"ERR059 - Failed to synthesize repeat until loop",
                           exprtk_error_location));
 
             free_node(node_allocator_,condition);
@@ -21735,7 +21735,7 @@ namespace exprtk
 
          scope_element* se = 0;
          bool result       = true;
-         std::string loop_counter_symbol;
+         std::wstring loop_counter_symbol;
 
          next_token();
 
@@ -21746,7 +21746,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR060 - Expected '(' at start of for-loop",
+                          L"ERR060 - Expected L'(' at start of for-loop",
                           exprtk_error_location));
 
             return error_node();
@@ -21756,7 +21756,7 @@ namespace exprtk
          {
             if (
                  !token_is(token_t::e_symbol,prsrhlpr_t::e_hold) &&
-                 details::imatch(current_token().value,"var")
+                 details::imatch(current_token().value,L"var")
                )
             {
                next_token();
@@ -21766,7 +21766,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR061 - Expected a variable at the start of initialiser section of for-loop",
+                                L"ERR061 - Expected a variable at the start of initialiser section of for-loop",
                                 exprtk_error_location));
 
                   return error_node();
@@ -21776,7 +21776,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR062 - Expected variable assignment of initialiser section of for-loop",
+                                L"ERR062 - Expected variable assignment of initialiser section of for-loop",
                                 exprtk_error_location));
 
                   return error_node();
@@ -21791,7 +21791,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR063 - For-loop variable '" + loop_counter_symbol+ "' is being shadowed by a previous declaration",
+                                L"ERR063 - For-loop variable '" + loop_counter_symbol+ L"' is being shadowed by a previous declaration",
                                 exprtk_error_location));
 
                   return error_node();
@@ -21823,7 +21823,7 @@ namespace exprtk
                         set_error(
                            make_error(parser_error::e_syntax,
                                       current_token(),
-                                      "ERR064 - Failed to add new local variable '" + loop_counter_symbol + "' to SEM",
+                                      L"ERR064 - Failed to add new local variable '" + loop_counter_symbol + L"' to SEM",
                                       exprtk_error_location));
 
                         sem_.free_element(nse);
@@ -21832,9 +21832,9 @@ namespace exprtk
                      }
                      else
                      {
-                        exprtk_debug(("parse_for_loop() - INFO - Added new local variable: %s\n",nse.name.c_str()));
+                        exprtk_debug((L"parse_for_loop() - INFO - Added new local variable: %ls\n",nse.name.c_str()));
 
-                        state_.activate_side_effect("parse_for_loop()");
+                        state_.activate_side_effect(L"parse_for_loop()");
                      }
                   }
                }
@@ -21845,7 +21845,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR065 - Failed to parse initialiser of for-loop",
+                             L"ERR065 - Failed to parse initialiser of for-loop",
                              exprtk_error_location));
 
                result = false;
@@ -21855,7 +21855,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR066 - Expected ';' after initialiser of for-loop",
+                             L"ERR066 - Expected L';' after initialiser of for-loop",
                              exprtk_error_location));
 
                result = false;
@@ -21869,7 +21869,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR067 - Failed to parse condition of for-loop",
+                             L"ERR067 - Failed to parse condition of for-loop",
                              exprtk_error_location));
 
                result = false;
@@ -21879,7 +21879,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR068 - Expected ';' after condition section of for-loop",
+                             L"ERR068 - Expected L';' after condition section of for-loop",
                              exprtk_error_location));
 
                result = false;
@@ -21893,7 +21893,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR069 - Failed to parse incrementor of for-loop",
+                             L"ERR069 - Failed to parse incrementor of for-loop",
                              exprtk_error_location));
 
                result = false;
@@ -21903,7 +21903,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR070 - Expected ')' after incrementor section of for-loop",
+                             L"ERR070 - Expected L')' after incrementor section of for-loop",
                              exprtk_error_location));
 
                result = false;
@@ -21914,12 +21914,12 @@ namespace exprtk
          {
             brkcnt_list_.push_front(false);
 
-            if (0 == (loop_body = parse_multi_sequence("for-loop")))
+            if (0 == (loop_body = parse_multi_sequence(L"for-loop")))
             {
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR071 - Failed to parse body of for-loop",
+                             L"ERR071 - Failed to parse body of for-loop",
                              exprtk_error_location));
 
                result = false;
@@ -21966,12 +21966,12 @@ namespace exprtk
          std::vector<expression_node_ptr> arg_list;
          expression_node_ptr result = error_node();
 
-         if (!details::imatch(current_token().value,"switch"))
+         if (!details::imatch(current_token().value,L"switch"))
          {
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR072 - Expected keyword 'switch'",
+                          L"ERR072 - Expected keyword 'switch'",
                           exprtk_error_location));
 
             return error_node();
@@ -21986,7 +21986,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR073 - Expected '{' for call to switch statement",
+                          L"ERR073 - Expected L'{' for call to switch statement",
                           exprtk_error_location));
 
             return error_node();
@@ -21994,12 +21994,12 @@ namespace exprtk
 
          for ( ; ; )
          {
-            if (!details::imatch("case",current_token().value))
+            if (!details::imatch(L"case",current_token().value))
             {
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR074 - Expected either a 'case' or 'default' statement",
+                             L"ERR074 - Expected either a 'case' or 'default' statement",
                              exprtk_error_location));
 
                return error_node();
@@ -22016,7 +22016,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR075 - Expected ':' for case of switch statement",
+                             L"ERR075 - Expected L':' for case of switch statement",
                              exprtk_error_location));
 
                return error_node();
@@ -22031,7 +22031,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR076 - Expected ';' at end of case for switch statement",
+                             L"ERR076 - Expected L';' at end of case for switch statement",
                              exprtk_error_location));
 
                return error_node();
@@ -22049,7 +22049,7 @@ namespace exprtk
                arg_list.push_back(consequent);
             }
 
-            if (details::imatch("default",current_token().value))
+            if (details::imatch(L"default",current_token().value))
             {
                next_token();
                if (!token_is(token_t::e_colon))
@@ -22057,7 +22057,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR077 - Expected ':' for default of switch statement",
+                                L"ERR077 - Expected L':' for default of switch statement",
                                 exprtk_error_location));
 
                   return error_node();
@@ -22066,7 +22066,7 @@ namespace exprtk
                expression_node_ptr default_statement = error_node();
 
                if (token_is(token_t::e_lcrlbracket,prsrhlpr_t::e_hold))
-                  default_statement = parse_multi_sequence("switch-default");
+                  default_statement = parse_multi_sequence(L"switch-default");
                else
                   default_statement = parse_expression();
 
@@ -22079,7 +22079,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR078 - Expected ';' at end of default for switch statement",
+                                L"ERR078 - Expected L';' at end of default for switch statement",
                                 exprtk_error_location));
 
                   return error_node();
@@ -22095,7 +22095,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR079 - Expected '}' at end of switch statement",
+                          L"ERR079 - Expected L'}' at end of switch statement",
                           exprtk_error_location));
 
             return error_node();
@@ -22113,12 +22113,12 @@ namespace exprtk
          std::vector<expression_node_ptr> arg_list;
          expression_node_ptr result = error_node();
 
-         if (!details::imatch(current_token().value,"[*]"))
+         if (!details::imatch(current_token().value,L"[*]"))
          {
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR080 - Expected token '[*]'",
+                          L"ERR080 - Expected token '[*]'",
                           exprtk_error_location));
 
             return error_node();
@@ -22133,7 +22133,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR081 - Expected '{' for call to [*] statement",
+                          L"ERR081 - Expected L'{' for call to [*] statement",
                           exprtk_error_location));
 
             return error_node();
@@ -22141,12 +22141,12 @@ namespace exprtk
 
          for ( ; ; )
          {
-            if (!details::imatch("case",current_token().value))
+            if (!details::imatch(L"case",current_token().value))
             {
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR082 - Expected a 'case' statement for multi-switch",
+                             L"ERR082 - Expected a 'case' statement for multi-switch",
                              exprtk_error_location));
 
                return error_node();
@@ -22164,7 +22164,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR083 - Expected ':' for case of [*] statement",
+                             L"ERR083 - Expected L':' for case of [*] statement",
                              exprtk_error_location));
 
                return error_node();
@@ -22180,7 +22180,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR084 - Expected ';' at end of case for [*] statement",
+                             L"ERR084 - Expected L';' at end of case for [*] statement",
                              exprtk_error_location));
 
                return error_node();
@@ -22209,7 +22209,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR085 - Expected '}' at end of [*] statement",
+                          L"ERR085 - Expected L'}' at end of [*] statement",
                           exprtk_error_location));
 
             return error_node();
@@ -22228,30 +22228,30 @@ namespace exprtk
          expression_node_ptr result = error_node();
 
          details::operator_type opt_type = details::e_default;
-         const std::string symbol = current_token().value;
+         const std::wstring symbol = current_token().value;
 
-         if (details::imatch(symbol,"~"))
+         if (details::imatch(symbol,L"~"))
          {
             next_token();
             return parse_multi_sequence();
          }
-         else if (details::imatch(symbol,"[*]"))
+         else if (details::imatch(symbol,L"[*]"))
          {
             return parse_multi_switch_statement();
          }
-         else if (details::imatch(symbol,"avg" )) opt_type = details::e_avg ;
-         else if (details::imatch(symbol,"mand")) opt_type = details::e_mand;
-         else if (details::imatch(symbol,"max" )) opt_type = details::e_max ;
-         else if (details::imatch(symbol,"min" )) opt_type = details::e_min ;
-         else if (details::imatch(symbol,"mor" )) opt_type = details::e_mor ;
-         else if (details::imatch(symbol,"mul" )) opt_type = details::e_prod;
-         else if (details::imatch(symbol,"sum" )) opt_type = details::e_sum ;
+         else if (details::imatch(symbol,L"avg" )) opt_type = details::e_avg ;
+         else if (details::imatch(symbol,L"mand")) opt_type = details::e_mand;
+         else if (details::imatch(symbol,L"max" )) opt_type = details::e_max ;
+         else if (details::imatch(symbol,L"min" )) opt_type = details::e_min ;
+         else if (details::imatch(symbol,L"mor" )) opt_type = details::e_mor ;
+         else if (details::imatch(symbol,L"mul" )) opt_type = details::e_prod;
+         else if (details::imatch(symbol,L"sum" )) opt_type = details::e_sum ;
          else
          {
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR086 - Unsupported vararg function: " + symbol,
+                          L"ERR086 - Unsupported vararg function: " + symbol,
                           exprtk_error_location));
 
             return error_node();
@@ -22268,7 +22268,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR087 - Expected '(' for call to vararg function: " + symbol,
+                          L"ERR087 - Expected L'(' for call to vararg function: " + symbol,
                           exprtk_error_location));
 
             return error_node();
@@ -22290,7 +22290,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR088 - Expected ',' for call to vararg function: " + symbol,
+                             L"ERR088 - Expected L',' for call to vararg function: " + symbol,
                              exprtk_error_location));
 
                return error_node();
@@ -22311,7 +22311,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR089 - Expected '[' as start of string range definition",
+                          L"ERR089 - Expected L'[' as start of string range definition",
                           exprtk_error_location));
 
             free_node(node_allocator_,expression);
@@ -22339,7 +22339,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR090 - Failed to generate string range node",
+                          L"ERR090 - Failed to generate string range node",
                           exprtk_error_location));
 
             free_node(node_allocator_,expression);
@@ -22438,7 +22438,7 @@ namespace exprtk
 
          if (tmp_expression_list.size() > expression_list.size())
          {
-            exprtk_debug(("simplify() - Reduced subexpressions from %d to %d\n",
+            exprtk_debug((L"simplify() - Reduced subexpressions from %d to %d\n",
                           static_cast<int>(tmp_expression_list.size()),
                           static_cast<int>(expression_list    .size())));
          }
@@ -22448,7 +22448,7 @@ namespace exprtk
               side_effect_list.back()      ||
               (expression_list.size() > 1)
             )
-            state_.activate_side_effect("simplify()");
+            state_.activate_side_effect(L"simplify()");
 
          if (1 == expression_list.size())
             return expression_list[0];
@@ -22458,7 +22458,7 @@ namespace exprtk
             return expression_generator_.vararg_function(details::e_multi,expression_list);
       }
 
-      inline expression_node_ptr parse_multi_sequence(const std::string& source = "")
+      inline expression_node_ptr parse_multi_sequence(const std::wstring& source = L"")
       {
          token_t::token_type close_bracket = token_t::e_rcrlbracket;
          token_t::token_type seperator     = token_t::e_eof;
@@ -22475,8 +22475,8 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR091 - Expected '" + token_t::to_str(close_bracket) + "' for call to multi-sequence" +
-                             ((!source.empty()) ? std::string(" section of " + source): ""),
+                             L"ERR091 - Expected '" + token_t::to_str(close_bracket) + L"' for call to multi-sequence" +
+                             ((!source.empty()) ? std::wstring(L" section of " + source): L""),
                              exprtk_error_location));
 
                return error_node();
@@ -22522,7 +22522,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR092 - Expected '" + details::to_str(seperator) + "' for call to multi-sequence section of " + source,
+                             L"ERR092 - Expected '" + details::to_str(seperator) + L"' for call to multi-sequence section of " + source,
                              exprtk_error_location));
 
                return error_node();
@@ -22556,7 +22556,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR093 - Expected '[' for start of range",
+                          L"ERR093 - Expected L'[' for start of range",
                           exprtk_error_location));
 
             return false;
@@ -22577,7 +22577,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR094 - Failed parse begin section of range",
+                             L"ERR094 - Failed parse begin section of range",
                              exprtk_error_location));
 
                return false;
@@ -22601,7 +22601,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR095 - Range lower bound less than zero! Constraint: r0 >= 0",
+                                L"ERR095 - Range lower bound less than zero! Constraint: r0 >= 0",
                                 exprtk_error_location));
 
                   return false;
@@ -22618,7 +22618,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR096 - Expected ':' for break  in range",
+                             L"ERR096 - Expected L':' for break  in range",
                              exprtk_error_location));
 
                rp.free();
@@ -22641,7 +22641,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR097 - Failed parse end section of range",
+                             L"ERR097 - Failed parse end section of range",
                              exprtk_error_location));
 
                rp.free();
@@ -22667,7 +22667,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR098 - Range upper bound less than zero! Constraint: r1 >= 0",
+                                L"ERR098 - Range upper bound less than zero! Constraint: r1 >= 0",
                                 exprtk_error_location));
 
                   return false;
@@ -22684,7 +22684,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR099 - Expected ']' for start of range",
+                             L"ERR099 - Expected L']' for start of range",
                              exprtk_error_location));
 
                rp.free();
@@ -22705,7 +22705,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR100 - Invalid range, Constraint: r0 <= r1",
+                             L"ERR100 - Invalid range, Constraint: r0 <= r1",
                              exprtk_error_location));
 
                return false;
@@ -22715,7 +22715,7 @@ namespace exprtk
          return true;
       }
 
-      inline void lodge_symbol(const std::string& symbol,
+      inline void lodge_symbol(const std::wstring& symbol,
                                const symbol_type st)
       {
          dec_.add_symbol(symbol,st);
@@ -22724,7 +22724,7 @@ namespace exprtk
       #ifndef exprtk_disable_string_capabilities
       inline expression_node_ptr parse_string()
       {
-         const std::string symbol = current_token().value;
+         const std::wstring symbol = current_token().value;
 
          typedef details::stringvar_node<T>* strvar_node_t;
 
@@ -22746,7 +22746,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR101 - Unknown string symbol",
+                             L"ERR101 - Unknown string symbol",
                              exprtk_error_location));
 
                return error_node();
@@ -22818,7 +22818,7 @@ namespace exprtk
       #ifndef exprtk_disable_string_capabilities
       inline expression_node_ptr parse_const_string()
       {
-         const std::string   const_str = current_token().value;
+         const std::wstring   const_str = current_token().value;
          expression_node_ptr result    = expression_generator_(const_str);
 
          if (peek_token_is(token_t::e_lsqrbracket))
@@ -22860,9 +22860,9 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR102 - Overflow in range for string: '" + const_str + "'[" +
-                             (rp.n0_c.first ? details::to_str(static_cast<int>(rp.n0_c.second)) : "?") + ":" +
-                             (rp.n1_c.first ? details::to_str(static_cast<int>(rp.n1_c.second)) : "?") + "]",
+                             L"ERR102 - Overflow in range for string: '" + const_str + L"'[" +
+                             (rp.n0_c.first ? details::to_str(static_cast<int>(rp.n0_c.second)) : L"?") + L":" +
+                             (rp.n1_c.first ? details::to_str(static_cast<int>(rp.n1_c.second)) : L"?") + L"]",
                              exprtk_error_location));
 
                return error_node();
@@ -22887,7 +22887,7 @@ namespace exprtk
 
       inline expression_node_ptr parse_vector()
       {
-         const std::string symbol = current_token().value;
+         const std::wstring symbol = current_token().value;
 
          vector_holder_ptr vec = vector_holder_ptr(0);
 
@@ -22904,7 +22904,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR103 - Symbol '" + symbol+ " not a vector",
+                             L"ERR103 - Symbol '" + symbol+ L" not a vector",
                              exprtk_error_location));
 
                return error_node();
@@ -22930,7 +22930,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR104 - Failed to parse index for vector: '" + symbol + "'",
+                          L"ERR104 - Failed to parse index for vector: '" + symbol + L"'",
                           exprtk_error_location));
 
             return error_node();
@@ -22940,7 +22940,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR105 - Expected ']' for index of vector: '" + symbol + "'",
+                          L"ERR105 - Expected L']' for index of vector: '" + symbol + L"'",
                           exprtk_error_location));
 
             free_node(node_allocator_,index_expr);
@@ -22959,8 +22959,8 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR106 - Index of " + details::to_str(index) + " out of range for "
-                             "vector '" + symbol + "' of size " + details::to_str(vec_size),
+                             L"ERR106 - Index of " + details::to_str(index) + L" out of range for "
+                             L"vector '" + symbol + L"' of size " + details::to_str(vec_size),
                              exprtk_error_location));
 
                free_node(node_allocator_,index_expr);
@@ -22972,7 +22972,7 @@ namespace exprtk
          return expression_generator_.vector_element(symbol,vec,index_expr);
       }
 
-      inline expression_node_ptr parse_vararg_function_call(ivararg_function<T>* vararg_function, const std::string& vararg_function_name)
+      inline expression_node_ptr parse_vararg_function_call(ivararg_function<T>* vararg_function, const std::wstring& vararg_function_name)
       {
          std::vector<expression_node_ptr> arg_list;
 
@@ -22991,8 +22991,8 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR107 - Zero parameter call to vararg function: "
-                                + vararg_function_name + " not allowed",
+                                L"ERR107 - Zero parameter call to vararg function: "
+                                + vararg_function_name + L" not allowed",
                                 exprtk_error_location));
 
                   return error_node();
@@ -23016,7 +23016,7 @@ namespace exprtk
                      set_error(
                         make_error(parser_error::e_syntax,
                                    current_token(),
-                                   "ERR108 - Expected ',' for call to vararg function: "
+                                   L"ERR108 - Expected L',' for call to vararg function: "
                                    + vararg_function_name,
                                    exprtk_error_location));
 
@@ -23030,8 +23030,8 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR109 - Zero parameter call to vararg function: "
-                          + vararg_function_name + " not allowed",
+                          L"ERR109 - Zero parameter call to vararg function: "
+                          + vararg_function_name + L" not allowed",
                           exprtk_error_location));
 
             return error_node();
@@ -23042,9 +23042,9 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR110 - Invalid number of parameters to call to vararg function: "
-                          + vararg_function_name + ", require at least "
-                          + details::to_str(static_cast<int>(vararg_function->min_num_args())) + " parameters",
+                          L"ERR110 - Invalid number of parameters to call to vararg function: "
+                          + vararg_function_name + L", require at least "
+                          + details::to_str(static_cast<int>(vararg_function->min_num_args())) + L" parameters",
                           exprtk_error_location));
 
             return error_node();
@@ -23054,9 +23054,9 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR111 - Invalid number of parameters to call to vararg function: "
-                          + vararg_function_name + ", require no more than "
-                          + details::to_str(static_cast<int>(vararg_function->max_num_args())) + " parameters",
+                          L"ERR111 - Invalid number of parameters to call to vararg function: "
+                          + vararg_function_name + L", require no more than "
+                          + details::to_str(static_cast<int>(vararg_function->max_num_args())) + L" parameters",
                           exprtk_error_location));
 
             return error_node();
@@ -23074,11 +23074,11 @@ namespace exprtk
       public:
 
          typedef parser<T> parser_t;
-         typedef std::vector<std::string> param_seq_list_t;
+         typedef std::vector<std::wstring> param_seq_list_t;
 
          type_checker(parser_t& p,
-                      const std::string& func_name,
-                      const std::string& param_seq)
+                      const std::wstring& func_name,
+                      const std::wstring& param_seq)
          : invalid_state_(true),
            parser_(p),
            function_name_(func_name)
@@ -23086,12 +23086,12 @@ namespace exprtk
             split(param_seq);
          }
 
-         bool verify(const std::string& param_seq, std::size_t& pseq_index)
+         bool verify(const std::wstring& param_seq, std::size_t& pseq_index)
          {
             if (param_seq_list_.empty())
                return true;
 
-            std::vector<std::pair<std::size_t,char> > error_list;
+            std::vector<std::pair<std::size_t,details::char_t> > error_list;
 
             for (std::size_t i = 0; i < param_seq_list_.size(); ++i)
             {
@@ -23117,8 +23117,8 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 parser_.current_token(),
-                                "ERR112 - Failed parameter type check for function '" + function_name_ + "', "
-                                "Expected '" + param_seq_list_[0] + "'  call set: '" + param_seq +"'",
+                                L"ERR112 - Failed parameter type check for function '" + function_name_ + L"', "
+                                L"Expected '" + param_seq_list_[0] + L"'  call set: '" + param_seq +L"'",
                                 exprtk_error_location));
             }
             else
@@ -23138,8 +23138,8 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 parser_.current_token(),
-                                "ERR113 - Failed parameter type check for function '" + function_name_ + "', "
-                                "Best match: '" + param_seq_list_[max_diff_index] + "'  call set: '" + param_seq +"'",
+                                L"ERR113 - Failed parameter type check for function '" + function_name_ + L"', "
+                                L"Best match: '" + param_seq_list_[max_diff_index] + L"'  call set: '" + param_seq +L"'",
                                 exprtk_error_location));
             }
 
@@ -23151,7 +23151,7 @@ namespace exprtk
             return param_seq_list_.size();
          }
 
-         std::string paramseq(const std::size_t& index) const
+         std::wstring paramseq(const std::size_t& index) const
          {
             return param_seq_list_[index];
          }
@@ -23166,12 +23166,12 @@ namespace exprtk
             return
                param_seq_list_.end() != std::find(param_seq_list_.begin(),
                                                   param_seq_list_.end(),
-                                                  "Z");
+                                                  L"Z");
          }
 
       private:
 
-         void split(const std::string& s)
+         void split(const std::wstring& s)
          {
             if (s.empty())
                return;
@@ -23183,24 +23183,24 @@ namespace exprtk
 
             struct token_validator
             {
-               static inline bool process(const std::string& str,
+               static inline bool process(const std::wstring& str,
                                           std::size_t s, std::size_t e,
                                           param_seq_list_t& psl)
                {
                   if (
                        (e - s) &&
-                       (std::string::npos == str.find("?*")) &&
-                       (std::string::npos == str.find("**"))
+                       (std::wstring::npos == str.find(L"?*")) &&
+                       (std::wstring::npos == str.find(L"**"))
                      )
                   {
-                     const std::string curr_str = str.substr(s, e - s);
+                     const std::wstring curr_str = str.substr(s, e - s);
 
-                     if ("Z" == curr_str)
+                     if (L"Z" == curr_str)
                      {
                         psl.push_back(curr_str);
                         return true;
                      }
-                     else if (std::string::npos == curr_str.find_first_not_of("STV*?|"))
+                     else if (std::wstring::npos == curr_str.find_first_not_of(L"STV*?|"))
                      {
                         psl.push_back(curr_str);
                         return true;
@@ -23211,20 +23211,20 @@ namespace exprtk
                }
             };
 
-            while (std::string::npos != (end = s.find('|',start)))
+            while (std::wstring::npos != (end = s.find(L'|',start)))
             {
                if (!token_validator::process(s, start, end, param_seq_list))
                {
                   invalid_state_ = false;
 
-                  const std::string err_param_seq = s.substr(start, end - start);
+                  const std::wstring err_param_seq = s.substr(start, end - start);
 
                   parser_.
                      set_error(
                         make_error(parser_error::e_syntax,
                                    parser_.current_token(),
-                                   "ERR114 - Invalid parameter sequence of '" + err_param_seq +
-                                   "'  for function: " + function_name_,
+                                   L"ERR114 - Invalid parameter sequence of '" + err_param_seq +
+                                   L"'  for function: " + function_name_,
                                    exprtk_error_location));
 
                   return;
@@ -23239,14 +23239,14 @@ namespace exprtk
                   param_seq_list_ = param_seq_list;
                else
                {
-                  const std::string err_param_seq = s.substr(start, s.size() - start);
+                  const std::wstring err_param_seq = s.substr(start, s.size() - start);
 
                   parser_.
                      set_error(
                         make_error(parser_error::e_syntax,
                                    parser_.current_token(),
-                                   "ERR115 - Invalid parameter sequence of '" + err_param_seq +
-                                   "'  for function: " + function_name_,
+                                   L"ERR115 - Invalid parameter sequence of '" + err_param_seq +
+                                   L"'  for function: " + function_name_,
                                    exprtk_error_location));
                   return;
                }
@@ -23258,11 +23258,11 @@ namespace exprtk
 
          bool invalid_state_;
          parser_t& parser_;
-         std::string function_name_;
+         std::wstring function_name_;
          param_seq_list_t param_seq_list_;
       };
 
-      inline expression_node_ptr parse_generic_function_call(igeneric_function<T>* function, const std::string& function_name)
+      inline expression_node_ptr parse_generic_function_call(igeneric_function<T>* function, const std::wstring& function_name)
       {
          std::vector<expression_node_ptr> arg_list;
 
@@ -23270,7 +23270,7 @@ namespace exprtk
 
          next_token();
 
-         std::string param_type_list;
+         std::wstring param_type_list;
 
          type_checker tc((*this), function_name, function->parameter_sequence);
 
@@ -23279,7 +23279,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR116 - Type checker instantiation failure for generic function: " + function_name,
+                          L"ERR116 - Type checker instantiation failure for generic function: " + function_name,
                           exprtk_error_location));
 
             return error_node();
@@ -23294,7 +23294,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR117 - Mismatch in zero parameter condition for generic function: "
+                          L"ERR117 - Mismatch in zero parameter condition for generic function: "
                           + function_name,
                           exprtk_error_location));
 
@@ -23313,8 +23313,8 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR118 - Zero parameter call to generic function: "
-                                + function_name + " not allowed",
+                                L"ERR118 - Zero parameter call to generic function: "
+                                + function_name + L" not allowed",
                                 exprtk_error_location));
 
                   return error_node();
@@ -23330,11 +23330,11 @@ namespace exprtk
                      return error_node();
 
                   if (is_ivector_node(arg))
-                     param_type_list += 'V';
+                     param_type_list += L'V';
                   else if (is_generally_string_node(arg))
-                     param_type_list += 'S';
+                     param_type_list += L'S';
                   else // Everything else is assumed to be a scalar returning expression
-                     param_type_list += 'T';
+                     param_type_list += L'T';
 
                   arg_list.push_back(arg);
 
@@ -23345,7 +23345,7 @@ namespace exprtk
                      set_error(
                         make_error(parser_error::e_syntax,
                                    current_token(),
-                                   "ERR119 - Expected ',' for call to generic function: " + function_name,
+                                   L"ERR119 - Expected L',' for call to generic function: " + function_name,
                                    exprtk_error_location));
 
                      return error_node();
@@ -23362,8 +23362,8 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR120 - Zero parameter call to generic function: "
-                          + function_name + " not allowed",
+                          L"ERR120 - Zero parameter call to generic function: "
+                          + function_name + L" not allowed",
                           exprtk_error_location));
 
             return error_node();
@@ -23379,7 +23379,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR121 - Expected ',' for call to generic function: " + function_name,
+                          L"ERR121 - Expected L',' for call to generic function: " + function_name,
                           exprtk_error_location));
 
             return error_node();
@@ -23400,7 +23400,7 @@ namespace exprtk
       }
 
       #ifndef exprtk_disable_string_capabilities
-      inline expression_node_ptr parse_string_function_call(igeneric_function<T>* function, const std::string& function_name)
+      inline expression_node_ptr parse_string_function_call(igeneric_function<T>* function, const std::wstring& function_name)
       {
          std::vector<expression_node_ptr> arg_list;
 
@@ -23408,7 +23408,7 @@ namespace exprtk
 
          next_token();
 
-         std::string param_type_list;
+         std::wstring param_type_list;
 
          type_checker tc((*this), function_name, function->parameter_sequence);
 
@@ -23432,11 +23432,11 @@ namespace exprtk
                      return error_node();
 
                   if (is_ivector_node(arg))
-                     param_type_list += 'V';
+                     param_type_list += L'V';
                   else if (is_generally_string_node(arg))
-                     param_type_list += 'S';
+                     param_type_list += L'S';
                   else // Everything else is a scalar returning expression
-                     param_type_list += 'T';
+                     param_type_list += L'T';
 
                   arg_list.push_back(arg);
 
@@ -23447,7 +23447,7 @@ namespace exprtk
                      set_error(
                         make_error(parser_error::e_syntax,
                                    current_token(),
-                                   "ERR122 - Expected ',' for call to string function: " + function_name,
+                                   L"ERR122 - Expected L',' for call to string function: " + function_name,
                                    exprtk_error_location));
 
                      return error_node();
@@ -23463,7 +23463,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR123 - Expected ',' for call to string function: " + function_name,
+                          L"ERR123 - Expected L',' for call to string function: " + function_name,
                           exprtk_error_location));
 
             return error_node();
@@ -23503,7 +23503,7 @@ namespace exprtk
                p.set_error(
                     make_error(parser_error::e_syntax,
                                p.current_token(),
-                               "ERR124 - Expected '(' for special function",
+                               L"ERR124 - Expected L'(' for special function",
                                exprtk_error_location));
 
                return error_node();
@@ -23524,7 +23524,7 @@ namespace exprtk
                      p.set_error(
                           make_error(parser_error::e_syntax,
                                      p.current_token(),
-                                     "ERR125 - Expected ',' before next parameter of special function",
+                                     L"ERR125 - Expected L',' before next parameter of special function",
                                      exprtk_error_location));
 
                      return p.error_node();
@@ -23554,21 +23554,21 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_token,
                           current_token(),
-                          "ERR126 - Invalid special function[1]: " + current_token().value,
+                          L"ERR126 - Invalid special function[1]: " + current_token().value,
                           exprtk_error_location));
 
             return error_node();
          }
 
-         const int id = (current_token().value[2] - '0') * 10 +
-                        (current_token().value[3] - '0');
+         const int id = (current_token().value[2] - L'0') * 10 +
+                        (current_token().value[3] - L'0');
 
          if (id >= details::e_sffinal)
          {
             set_error(
                make_error(parser_error::e_token,
                           current_token(),
-                          "ERR127 - Invalid special function[2]: " + current_token().value,
+                          L"ERR127 - Invalid special function[2]: " + current_token().value,
                           exprtk_error_location));
 
             return error_node();
@@ -23600,7 +23600,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR128 - Break call within a break call is not allowed",
+                          L"ERR128 - Break call within a break call is not allowed",
                           exprtk_error_location));
 
             return error_node();
@@ -23623,7 +23623,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR129 - Failed to parse return expression for 'break' statement",
+                                L"ERR129 - Failed to parse return expression for 'break' statement",
                                 exprtk_error_location));
 
                   return error_node();
@@ -23633,7 +23633,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR130 - Expected ']' at the completion of break's return expression",
+                                L"ERR130 - Expected L']' at the completion of break's return expression",
                                 exprtk_error_location));
 
                   free_node(node_allocator_,return_expr);
@@ -23642,7 +23642,7 @@ namespace exprtk
                }
             }
 
-            state_.activate_side_effect("parse_break_statement()");
+            state_.activate_side_effect(L"parse_break_statement()");
 
             return node_allocator_.allocate<details::break_node<T> >(return_expr);
          }
@@ -23651,7 +23651,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR131 - Invalid use of 'break', allowed only in the scope of a loop",
+                          L"ERR131 - Invalid use of 'break', allowed only in the scope of a loop",
                           exprtk_error_location));
          }
 
@@ -23665,7 +23665,7 @@ namespace exprtk
             next_token();
 
             brkcnt_list_.front() = true;
-            state_.activate_side_effect("parse_continue_statement()");
+            state_.activate_side_effect(L"parse_continue_statement()");
 
             return node_allocator_.allocate<details::continue_node<T> >();
          }
@@ -23674,7 +23674,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR132 - Invalid use of 'continue', allowed only in the scope of a loop",
+                          L"ERR132 - Invalid use of 'continue', allowed only in the scope of a loop",
                           exprtk_error_location));
 
             return error_node();
@@ -23682,7 +23682,7 @@ namespace exprtk
       }
       #endif
 
-      inline expression_node_ptr parse_define_vector_statement(const std::string& vec_name)
+      inline expression_node_ptr parse_define_vector_statement(const std::wstring& vec_name)
       {
          expression_node_ptr size_expr = error_node();
 
@@ -23691,7 +23691,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR133 - Expected '[' as part of vector size definition",
+                          L"ERR133 - Expected L'[' as part of vector size definition",
                           exprtk_error_location));
 
             return error_node();
@@ -23701,7 +23701,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR134 - Failed to determine size of vector '" + vec_name + "'",
+                          L"ERR134 - Failed to determine size of vector '" + vec_name + L"'",
                           exprtk_error_location));
 
             return error_node();
@@ -23713,7 +23713,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR135 - Expected a literal number as size of vector '" + vec_name + "'",
+                          L"ERR135 - Expected a literal number as size of vector '" + vec_name + L"'",
                           exprtk_error_location));
 
             return error_node();
@@ -23732,7 +23732,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR136 - Invalid vector size. Must be an integer greater than zero, size: " +
+                          L"ERR136 - Invalid vector size. Must be an integer greater than zero, size: " +
                           details::to_str(details::numeric::to_int32(vector_size)),
                           exprtk_error_location));
 
@@ -23752,7 +23752,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR137 - Expected ']' as part of vector size definition",
+                          L"ERR137 - Expected L']' as part of vector size definition",
                           exprtk_error_location));
 
             return error_node();
@@ -23764,7 +23764,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR138 - Expected ':=' as part of vector definition",
+                             L"ERR138 - Expected ':=' as part of vector definition",
                              exprtk_error_location));
 
                return error_node();
@@ -23778,7 +23778,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR139 - Failed to parse single vector initialiser",
+                                L"ERR139 - Failed to parse single vector initialiser",
                                 exprtk_error_location));
 
                   return error_node();
@@ -23791,7 +23791,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR140 - Expected ']' to close single value vector initialiser",
+                                L"ERR140 - Expected L']' to close single value vector initialiser",
                                 exprtk_error_location));
 
                   return error_node();
@@ -23827,7 +23827,7 @@ namespace exprtk
                         return error_node();
                   }
                   // Are we dealing with a null initialisation vector definition?
-                  else if (token_is(token_t::e_symbol,"null"))
+                  else if (token_is(token_t::e_symbol,L"null"))
                      null_initialisation = true;
                }
 
@@ -23838,7 +23838,7 @@ namespace exprtk
                      set_error(
                         make_error(parser_error::e_syntax,
                                    current_token(),
-                                   "ERR141 - Expected '{' as part of vector initialiser list",
+                                   L"ERR141 - Expected L'{' as part of vector initialiser list",
                                    exprtk_error_location));
 
                      return error_node();
@@ -23858,7 +23858,7 @@ namespace exprtk
                      set_error(
                         make_error(parser_error::e_syntax,
                                    current_token(),
-                                   "ERR142 - Expected '{' as part of vector initialiser list",
+                                   L"ERR142 - Expected L'{' as part of vector initialiser list",
                                    exprtk_error_location));
 
                      return error_node();
@@ -23876,7 +23876,7 @@ namespace exprtk
                      set_error(
                         make_error(parser_error::e_syntax,
                                    current_token(),
-                                   "ERR143 - Expected ',' between vector initialisers",
+                                   L"ERR143 - Expected L',' between vector initialisers",
                                    exprtk_error_location));
 
                      return error_node();
@@ -23898,7 +23898,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR144 - Expected ';' at end of vector definition",
+                                L"ERR144 - Expected L';' at end of vector definition",
                                 exprtk_error_location));
 
                   return error_node();
@@ -23910,7 +23910,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR145 - Initialiser list larger than the number of elements in the vector: '" + vec_name + "'",
+                             L"ERR145 - Initialiser list larger than the number of elements in the vector: '" + vec_name + L"'",
                              exprtk_error_location));
 
                return error_node();
@@ -23930,7 +23930,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR146 - Illegal redefinition of local vector: '" + vec_name + "'",
+                             L"ERR146 - Illegal redefinition of local vector: '" + vec_name + L"'",
                              exprtk_error_location));
 
                return error_node();
@@ -23964,7 +23964,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR147 - Failed to add new local vector '" + vec_name + "' to SEM",
+                             L"ERR147 - Failed to add new local vector '" + vec_name + L"' to SEM",
                              exprtk_error_location));
 
                sem_.free_element(nse);
@@ -23974,12 +23974,12 @@ namespace exprtk
 
             vec_holder = nse.vec_node;
 
-            exprtk_debug(("parse_define_vector_statement() - INFO - Added new local vector: %s[%d]\n",
+            exprtk_debug((L"parse_define_vector_statement() - INFO - Added new local vector: %ls[%d]\n",
                           nse.name.c_str(),
                           static_cast<int>(nse.size)));
          }
 
-         state_.activate_side_effect("parse_define_vector_statement()");
+         state_.activate_side_effect(L"parse_define_vector_statement()");
 
          lodge_symbol(vec_name,e_st_local_vector);
 
@@ -24006,7 +24006,7 @@ namespace exprtk
       }
 
       #ifndef exprtk_disable_string_capabilities
-      inline expression_node_ptr parse_define_string_statement(const std::string& str_name, expression_node_ptr initialisation_expression)
+      inline expression_node_ptr parse_define_string_statement(const std::wstring& str_name, expression_node_ptr initialisation_expression)
       {
          stringvar_node_t* str_node = reinterpret_cast<stringvar_node_t*>(0);
 
@@ -24019,7 +24019,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR148 - Illegal redefinition of local variable: '" + str_name + "'",
+                             L"ERR148 - Illegal redefinition of local variable: '" + str_name + L"'",
                              exprtk_error_location));
 
                free_node(node_allocator_,initialisation_expression);
@@ -24043,15 +24043,15 @@ namespace exprtk
             nse.ref_count = 1;
             nse.type      = scope_element::e_string;
             nse.depth     = state_.scope_depth;
-            nse.data      = new std::string;
-            nse.str_node  = new stringvar_node_t(*(std::string*)(nse.data));
+            nse.data      = new std::wstring;
+            nse.str_node  = new stringvar_node_t(*(std::wstring*)(nse.data));
 
             if (!sem_.add_element(nse))
             {
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR149 - Failed to add new local string variable '" + str_name + "' to SEM",
+                             L"ERR149 - Failed to add new local string variable '" + str_name + L"' to SEM",
                              exprtk_error_location));
 
                free_node(node_allocator_,initialisation_expression);
@@ -24063,12 +24063,12 @@ namespace exprtk
 
             str_node = nse.str_node;
 
-            exprtk_debug(("parse_define_string_statement() - INFO - Added new local string variable: %s\n",nse.name.c_str()));
+            exprtk_debug((L"parse_define_string_statement() - INFO - Added new local string variable: %ls\n",nse.name.c_str()));
          }
 
          lodge_symbol(str_name,e_st_local_string);
 
-         state_.activate_side_effect("parse_define_string_statement()");
+         state_.activate_side_effect(L"parse_define_string_statement()");
 
          expression_node_ptr branch[2] = {0};
 
@@ -24078,13 +24078,13 @@ namespace exprtk
          return expression_generator_(details::e_assign,branch);
       }
       #else
-      inline expression_node_ptr parse_define_string_statement(const std::string&, expression_node_ptr)
+      inline expression_node_ptr parse_define_string_statement(const std::wstring&, expression_node_ptr)
       {
          return error_node();
       }
       #endif
 
-      inline bool local_variable_is_shadowed(const std::string& symbol)
+      inline bool local_variable_is_shadowed(const std::wstring& symbol)
       {
          const scope_element& se = sem_.get_element(symbol);
          return (se.name == symbol) && se.active;
@@ -24097,19 +24097,19 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR150 - Illegal variable definition",
+                          L"ERR150 - Illegal variable definition",
                           exprtk_error_location));
 
             return error_node();
          }
-         else if (!details::imatch(current_token().value,"var"))
+         else if (!details::imatch(current_token().value,L"var"))
          {
             return error_node();
          }
          else
             next_token();
 
-         const std::string var_name = current_token().value;
+         const std::wstring var_name = current_token().value;
 
          expression_node_ptr initialisation_expression = error_node();
 
@@ -24118,7 +24118,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR151 - Expected a symbol for variable definition",
+                          L"ERR151 - Expected a symbol for variable definition",
                           exprtk_error_location));
 
             return error_node();
@@ -24128,7 +24128,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR152 - Illegal redefinition of reserved keyword: '" + var_name + "'",
+                          L"ERR152 - Illegal redefinition of reserved keyword: '" + var_name + L"'",
                           exprtk_error_location));
 
             return error_node();
@@ -24138,7 +24138,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR153 - Illegal redefinition of variable '" + var_name + "'",
+                          L"ERR153 - Illegal redefinition of variable '" + var_name + L"'",
                           exprtk_error_location));
 
             return error_node();
@@ -24148,7 +24148,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR154 - Illegal redefinition of local variable: '" + var_name + "'",
+                          L"ERR154 - Illegal redefinition of local variable: '" + var_name + L"'",
                           exprtk_error_location));
 
             return error_node();
@@ -24168,7 +24168,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR155 - Failed to parse initialisation expression",
+                             L"ERR155 - Failed to parse initialisation expression",
                              exprtk_error_location));
 
                return error_node();
@@ -24186,7 +24186,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR156 - Expected ';' after variable definition",
+                             L"ERR156 - Expected L';' after variable definition",
                              exprtk_error_location));
 
                free_node(node_allocator_,initialisation_expression);
@@ -24214,7 +24214,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR157 - Illegal redefinition of local variable: '" + var_name + "'",
+                             L"ERR157 - Illegal redefinition of local variable: '" + var_name + L"'",
                              exprtk_error_location));
 
                free_node(node_allocator_, initialisation_expression);
@@ -24246,7 +24246,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR158 - Failed to add new local variable '" + var_name + "' to SEM",
+                             L"ERR158 - Failed to add new local variable '" + var_name + L"' to SEM",
                              exprtk_error_location));
 
                free_node(node_allocator_, initialisation_expression);
@@ -24258,10 +24258,10 @@ namespace exprtk
 
             var_node = nse.var_node;
 
-            exprtk_debug(("parse_define_var_statement() - INFO - Added new local variable: %s\n",nse.name.c_str()));
+            exprtk_debug((L"parse_define_var_statement() - INFO - Added new local variable: %ls\n",nse.name.c_str()));
          }
 
-         state_.activate_side_effect("parse_define_var_statement()");
+         state_.activate_side_effect(L"parse_define_var_statement()");
 
          lodge_symbol(var_name,e_st_local_variable);
 
@@ -24273,7 +24273,7 @@ namespace exprtk
          return expression_generator_(details::e_assign,branch);
       }
 
-      inline expression_node_ptr parse_uninitialised_var_statement(const std::string& var_name)
+      inline expression_node_ptr parse_uninitialised_var_statement(const std::wstring& var_name)
       {
          if (
               !token_is(token_t::e_lcrlbracket) ||
@@ -24283,7 +24283,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR159 - Expected a '{}' for uninitialised var definition",
+                          L"ERR159 - Expected a '{}' for uninitialised var definition",
                           exprtk_error_location));
 
             return error_node();
@@ -24293,7 +24293,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR160 - Expected ';' after uninitialised variable definition",
+                          L"ERR160 - Expected L';' after uninitialised variable definition",
                           exprtk_error_location));
 
             return error_node();
@@ -24310,7 +24310,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR161 - Illegal redefinition of local variable: '" + var_name + "'",
+                             L"ERR161 - Illegal redefinition of local variable: '" + var_name + L"'",
                              exprtk_error_location));
 
                return error_node();
@@ -24340,7 +24340,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR162 - Failed to add new local variable '" + var_name + "' to SEM",
+                             L"ERR162 - Failed to add new local variable '" + var_name + L"' to SEM",
                              exprtk_error_location));
 
                sem_.free_element(nse);
@@ -24348,20 +24348,20 @@ namespace exprtk
                return error_node();
             }
 
-            exprtk_debug(("parse_uninitialised_var_statement() - INFO - Added new local variable: %s\n",
+            exprtk_debug((L"parse_uninitialised_var_statement() - INFO - Added new local variable: %ls\n",
                           nse.name.c_str()));
          }
 
          lodge_symbol(var_name,e_st_local_variable);
 
-         state_.activate_side_effect("parse_uninitialised_var_statement()");
+         state_.activate_side_effect(L"parse_uninitialised_var_statement()");
 
          return expression_generator_(T(0));
       }
 
       inline expression_node_ptr parse_swap_statement()
       {
-         if (!details::imatch(current_token().value,"swap"))
+         if (!details::imatch(current_token().value,L"swap"))
          {
             return error_node();
          }
@@ -24373,7 +24373,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR163 - Expected '(' at start of swap statement",
+                          L"ERR163 - Expected L'(' at start of swap statement",
                           exprtk_error_location));
 
             return error_node();
@@ -24385,14 +24385,14 @@ namespace exprtk
          bool variable0_generated = false;
          bool variable1_generated = false;
 
-         const std::string var0_name = current_token().value;
+         const std::wstring var0_name = current_token().value;
 
          if (!token_is(token_t::e_symbol,prsrhlpr_t::e_hold))
          {
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR164 - Expected a symbol for variable or vector element definition",
+                          L"ERR164 - Expected a symbol for variable or vector element definition",
                           exprtk_error_location));
 
             return error_node();
@@ -24404,7 +24404,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR165 - First parameter to swap is an invalid vector element: '" + var0_name + "'",
+                             L"ERR165 - First parameter to swap is an invalid vector element: '" + var0_name + L"'",
                              exprtk_error_location));
 
                return error_node();
@@ -24437,7 +24437,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR166 - First parameter to swap is an invalid variable: '" + var0_name + "'",
+                             L"ERR166 - First parameter to swap is an invalid variable: '" + var0_name + L"'",
                              exprtk_error_location));
 
                return error_node();
@@ -24451,7 +24451,7 @@ namespace exprtk
             set_error(
                 make_error(parser_error::e_syntax,
                            current_token(),
-                           "ERR167 - Expected ',' between parameters to swap",
+                           L"ERR167 - Expected L',' between parameters to swap",
                            exprtk_error_location));
 
             if (variable0_generated)
@@ -24462,14 +24462,14 @@ namespace exprtk
             return error_node();
          }
 
-         const std::string var1_name = current_token().value;
+         const std::wstring var1_name = current_token().value;
 
          if (!token_is(token_t::e_symbol,prsrhlpr_t::e_hold))
          {
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR168 - Expected a symbol for variable or vector element definition",
+                          L"ERR168 - Expected a symbol for variable or vector element definition",
                           exprtk_error_location));
 
             if (variable0_generated)
@@ -24486,7 +24486,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR169 - Second parameter to swap is an invalid vector element: '" + var1_name + "'",
+                             L"ERR169 - Second parameter to swap is an invalid vector element: '" + var1_name + L"'",
                              exprtk_error_location));
 
                if (variable0_generated)
@@ -24524,7 +24524,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR170 - Second parameter to swap is an invalid variable: '" + var1_name + "'",
+                             L"ERR170 - Second parameter to swap is an invalid variable: '" + var1_name + L"'",
                              exprtk_error_location));
 
                if (variable0_generated)
@@ -24543,7 +24543,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR171 - Expected ')' at end of swap statement",
+                          L"ERR171 - Expected L')' at end of swap statement",
                           exprtk_error_location));
 
             if (variable0_generated)
@@ -24587,7 +24587,7 @@ namespace exprtk
             result = node_allocator_.allocate<details::swap_generic_node<T> >
                         (variable0, variable1);
 
-         state_.activate_side_effect("parse_swap_statement()");
+         state_.activate_side_effect(L"parse_swap_statement()");
 
          return result;
       }
@@ -24600,7 +24600,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR172 - Return call within a return call is not allowed",
+                          L"ERR172 - Return call within a return call is not allowed",
                           exprtk_error_location));
 
             return error_node();
@@ -24612,7 +24612,7 @@ namespace exprtk
 
          scoped_vec_delete<expression_node_t> sdd((*this),arg_list);
 
-         if (!details::imatch(current_token().value,"return"))
+         if (!details::imatch(current_token().value,L"return"))
          {
             return error_node();
          }
@@ -24624,7 +24624,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR173 - Expected '[' at start of return statement",
+                          L"ERR173 - Expected L'[' at start of return statement",
                           exprtk_error_location));
 
             return error_node();
@@ -24647,7 +24647,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR174 - Expected ',' between values during call to return",
+                                L"ERR174 - Expected L',' between values during call to return",
                                 exprtk_error_location));
 
                   return error_node();
@@ -24659,7 +24659,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR175 - Zero parameter return statement not allowed",
+                          L"ERR175 - Zero parameter return statement not allowed",
                           exprtk_error_location));
 
             return error_node();
@@ -24674,25 +24674,25 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              prev_token,
-                             "ERR176 - Invalid ']' found during return call",
+                             L"ERR176 - Invalid L']' found during return call",
                              exprtk_error_location));
 
                return error_node();
             }
          }
 
-         std::string ret_param_type_list;
+         std::wstring ret_param_type_list;
 
          for (std::size_t i = 0; i < arg_list.size(); ++i)
          {
             if (0 == arg_list[i])
                return error_node();
             else if (is_ivector_node(arg_list[i]))
-               ret_param_type_list += 'V';
+               ret_param_type_list += L'V';
             else if (is_generally_string_node(arg_list[i]))
-               ret_param_type_list += 'S';
+               ret_param_type_list += L'S';
             else
-               ret_param_type_list += 'T';
+               ret_param_type_list += L'T';
          }
 
          dec_.retparam_list_.push_back(ret_param_type_list);
@@ -24703,7 +24703,7 @@ namespace exprtk
 
          state_.return_stmt_present = true;
 
-         state_.activate_side_effect("parse_return_statement()");
+         state_.activate_side_effect(L"parse_return_statement()");
 
          return result;
       }
@@ -24714,7 +24714,7 @@ namespace exprtk
       }
       #endif
 
-      inline bool post_variable_process(const std::string& symbol)
+      inline bool post_variable_process(const std::wstring& symbol)
       {
          if (
               peek_token_is(token_t::e_lbracket   ) ||
@@ -24727,7 +24727,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR177 - Invalid sequence of variable '"+ symbol + "' and bracket",
+                             L"ERR177 - Invalid sequence of variable '"+ symbol + L"' and bracket",
                              exprtk_error_location));
 
                return false;
@@ -24775,7 +24775,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR178 - Invalid sequence of brackets",
+                             L"ERR178 - Invalid sequence of brackets",
                              exprtk_error_location));
 
                return false;
@@ -24793,7 +24793,7 @@ namespace exprtk
 
       inline expression_node_ptr parse_symtab_symbol()
       {
-         const std::string symbol = current_token().value;
+         const std::wstring symbol = current_token().value;
 
          // Are we dealing with a variable or a special constant?
          expression_node_ptr variable = symtab_store_.get_variable(symbol);
@@ -24872,7 +24872,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR179 - Failed to generate node for function: '" + symbol + "'",
+                                L"ERR179 - Failed to generate node for function: '" + symbol + L"'",
                                 exprtk_error_location));
 
                   return error_node();
@@ -24898,7 +24898,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR180 - Failed to generate node for vararg function: '" + symbol + "'",
+                                L"ERR180 - Failed to generate node for vararg function: '" + symbol + L"'",
                                 exprtk_error_location));
 
                   return error_node();
@@ -24924,7 +24924,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR181 - Failed to generate node for generic function: '" + symbol + "'",
+                                L"ERR181 - Failed to generate node for generic function: '" + symbol + L"'",
                                 exprtk_error_location));
 
                   return error_node();
@@ -24951,7 +24951,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR182 - Failed to generate node for string function: '" + symbol + "'",
+                                L"ERR182 - Failed to generate node for string function: '" + symbol + L"'",
                                 exprtk_error_location));
 
                   return error_node();
@@ -24977,7 +24977,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_syntax,
                                 current_token(),
-                                "ERR183 - Invalid use of reserved symbol '" + symbol + "'",
+                                L"ERR183 - Invalid use of reserved symbol '" + symbol + L"'",
                                 exprtk_error_location));
 
                   return error_node();
@@ -24991,7 +24991,7 @@ namespace exprtk
             {
                symbol_table_t& symtab = symtab_store_.get_symbol_table();
 
-               std::string error_message;
+               std::wstring error_message;
 
                if (unknown_symbol_resolver::e_usrmode_default == unknown_symbol_resolver_->mode)
                {
@@ -25040,8 +25040,8 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_symtab,
                                 current_token(),
-                                "ERR184 - Failed to create variable: '" + symbol + "'" +
-                                (error_message.empty() ? "" : " - " + error_message),
+                                L"ERR184 - Failed to create variable: '" + symbol + L"'" +
+                                (error_message.empty() ? L"" : L" - " + error_message),
                                 exprtk_error_location));
 
                }
@@ -25060,8 +25060,8 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_symtab,
                                 current_token(),
-                                "ERR185 - Failed to resolve symbol: '" + symbol + "'" +
-                                (error_message.empty() ? "" : " - " + error_message),
+                                L"ERR185 - Failed to resolve symbol: '" + symbol + L"'" +
+                                (error_message.empty() ? L"" : L" - " + error_message),
                                 exprtk_error_location));
                }
 
@@ -25072,7 +25072,7 @@ namespace exprtk
          set_error(
             make_error(parser_error::e_syntax,
                        current_token(),
-                       "ERR186 - Undefined symbol: '" + symbol + "'",
+                       L"ERR186 - Undefined symbol: '" + symbol + L"'",
                        exprtk_error_location));
 
          return error_node();
@@ -25080,17 +25080,17 @@ namespace exprtk
 
       inline expression_node_ptr parse_symbol()
       {
-         static const std::string symbol_if       = "if"      ;
-         static const std::string symbol_while    = "while"   ;
-         static const std::string symbol_repeat   = "repeat"  ;
-         static const std::string symbol_for      = "for"     ;
-         static const std::string symbol_switch   = "switch"  ;
-         static const std::string symbol_null     = "null"    ;
-         static const std::string symbol_break    = "break"   ;
-         static const std::string symbol_continue = "continue";
-         static const std::string symbol_var      = "var"     ;
-         static const std::string symbol_swap     = "swap"    ;
-         static const std::string symbol_return   = "return"  ;
+         static const std::wstring symbol_if       = L"if"      ;
+         static const std::wstring symbol_while    = L"while"   ;
+         static const std::wstring symbol_repeat   = L"repeat"  ;
+         static const std::wstring symbol_for      = L"for"     ;
+         static const std::wstring symbol_switch   = L"switch"  ;
+         static const std::wstring symbol_null     = L"null"    ;
+         static const std::wstring symbol_break    = L"break"   ;
+         static const std::wstring symbol_continue = L"continue";
+         static const std::wstring symbol_var      = L"var"     ;
+         static const std::wstring symbol_swap     = L"swap"    ;
+         static const std::wstring symbol_return   = L"return"  ;
 
          if (valid_vararg_operation(current_token().value))
          {
@@ -25179,7 +25179,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_symtab,
                           current_token(),
-                          "ERR187 - Variable or function detected, yet symbol-table is invalid, Symbol: " + current_token().value,
+                          L"ERR187 - Variable or function detected, yet symbol-table is invalid, Symbol: " + current_token().value,
                           exprtk_error_location));
 
             return error_node();
@@ -25203,7 +25203,7 @@ namespace exprtk
                   set_error(
                      make_error(parser_error::e_numeric,
                                 current_token(),
-                                "ERR188 - Failed generate node for scalar: '" + current_token().value + "'",
+                                L"ERR188 - Failed generate node for scalar: '" + current_token().value + L"'",
                                 exprtk_error_location));
 
                   return error_node();
@@ -25217,7 +25217,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_numeric,
                              current_token(),
-                             "ERR189 - Failed to convert '" + current_token().value + "' to a number",
+                             L"ERR189 - Failed to convert '" + current_token().value + L"' to a number",
                              exprtk_error_location));
 
                return error_node();
@@ -25244,7 +25244,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR190 - Expected ')' instead of: '" + current_token().value + "'",
+                             L"ERR190 - Expected L')' instead of: '" + current_token().value + L"'",
                              exprtk_error_location));
 
                free_node(node_allocator_,branch);
@@ -25269,7 +25269,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR191 - Expected ']' instead of: '" + current_token().value + "'",
+                             L"ERR191 - Expected L']' instead of: '" + current_token().value + L"'",
                              exprtk_error_location));
 
                free_node(node_allocator_,branch);
@@ -25294,7 +25294,7 @@ namespace exprtk
                set_error(
                   make_error(parser_error::e_syntax,
                              current_token(),
-                             "ERR192 - Expected '}' instead of: '" + current_token().value + "'",
+                             L"ERR192 - Expected L'}' instead of: '" + current_token().value + L"'",
                              exprtk_error_location));
 
                free_node(node_allocator_,branch);
@@ -25334,7 +25334,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR193 - Premature end of expression[1]",
+                          L"ERR193 - Premature end of expression[1]",
                           exprtk_error_location));
 
             return error_node();
@@ -25344,7 +25344,7 @@ namespace exprtk
             set_error(
                make_error(parser_error::e_syntax,
                           current_token(),
-                          "ERR194 - Premature end of expression[2]",
+                          L"ERR194 - Premature end of expression[2]",
                           exprtk_error_location));
 
             return error_node();
@@ -25371,7 +25371,7 @@ namespace exprtk
 
          typedef details::expression_node<Type>* expression_node_ptr;
          typedef expression_node_ptr (*synthesize_functor_t)(expression_generator<T>&, const details::operator_type& operation, expression_node_ptr (&branch)[2]);
-         typedef std::map<std::string,synthesize_functor_t> synthesize_map_t;
+         typedef std::map<std::wstring,synthesize_functor_t> synthesize_map_t;
          typedef typename exprtk::parser<Type> parser_t;
          typedef const Type& vtype;
          typedef const Type  ctype;
@@ -25379,9 +25379,9 @@ namespace exprtk
          inline void init_synthesize_map()
          {
             #ifndef exprtk_disable_enhanced_features
-            synthesize_map_["(v)o(v)"] = synthesize_vov_expression::process;
-            synthesize_map_["(c)o(v)"] = synthesize_cov_expression::process;
-            synthesize_map_["(v)o(c)"] = synthesize_voc_expression::process;
+            synthesize_map_[L"(v)o(v)"] = synthesize_vov_expression::process;
+            synthesize_map_[L"(c)o(v)"] = synthesize_cov_expression::process;
+            synthesize_map_[L"(v)o(c)"] = synthesize_voc_expression::process;
 
             #define register_synthezier(S)                      \
             synthesize_map_[S ::node_type::id()] = S ::process; \
@@ -25529,17 +25529,17 @@ namespace exprtk
          }
 
          #ifndef exprtk_disable_string_capabilities
-         inline expression_node_ptr operator() (const std::string& s) const
+         inline expression_node_ptr operator() (const std::wstring& s) const
          {
             return node_allocator_->allocate<string_literal_node_t>(s);
          }
 
-         inline expression_node_ptr operator() (std::string& s, range_t& rp) const
+         inline expression_node_ptr operator() (std::wstring& s, range_t& rp) const
          {
             return node_allocator_->allocate_rr<string_range_node_t>(s,rp);
          }
 
-         inline expression_node_ptr operator() (const std::string& s, range_t& rp) const
+         inline expression_node_ptr operator() (const std::wstring& s, range_t& rp) const
          {
             return node_allocator_->allocate_tt<const_string_range_node_t>(s,rp);
          }
@@ -25577,7 +25577,7 @@ namespace exprtk
                    (details::e_frac  == operation) || (details::e_trunc == operation) ;
          }
 
-         inline bool sf3_optimisable(const std::string& sf3id, trinary_functor_t& tfunc)
+         inline bool sf3_optimisable(const std::wstring& sf3id, trinary_functor_t& tfunc)
          {
             typename sf3_map_t::iterator itr = sf3_map_->find(sf3id);
 
@@ -25589,7 +25589,7 @@ namespace exprtk
             return true;
          }
 
-         inline bool sf4_optimisable(const std::string& sf4id, quaternary_functor_t& qfunc)
+         inline bool sf4_optimisable(const std::wstring& sf4id, quaternary_functor_t& qfunc)
          {
             typename sf4_map_t::iterator itr = sf4_map_->find(sf4id);
 
@@ -25601,7 +25601,7 @@ namespace exprtk
             return true;
          }
 
-         inline bool sf3_optimisable(const std::string& sf3id, details::operator_type& operation)
+         inline bool sf3_optimisable(const std::wstring& sf3id, details::operator_type& operation)
          {
             typename sf3_map_t::iterator itr = sf3_map_->find(sf3id);
 
@@ -25613,7 +25613,7 @@ namespace exprtk
             return true;
          }
 
-         inline bool sf4_optimisable(const std::string& sf4id, details::operator_type& operation)
+         inline bool sf4_optimisable(const std::wstring& sf4id, details::operator_type& operation)
          {
             typename sf4_map_t::iterator itr = sf4_map_->find(sf4id);
 
@@ -25695,29 +25695,29 @@ namespace exprtk
          }
          #endif
 
-         inline std::string to_str(const details::operator_type& operation) const
+         inline std::wstring to_str(const details::operator_type& operation) const
          {
             switch (operation)
             {
-               case details::e_add  : return "+"      ;
-               case details::e_sub  : return "-"      ;
-               case details::e_mul  : return "*"      ;
-               case details::e_div  : return "/"      ;
-               case details::e_mod  : return "%"      ;
-               case details::e_pow  : return "^"      ;
-               case details::e_lt   : return "<"      ;
-               case details::e_lte  : return "<="     ;
-               case details::e_gt   : return ">"      ;
-               case details::e_gte  : return ">="     ;
-               case details::e_eq   : return "=="     ;
-               case details::e_ne   : return "!="     ;
-               case details::e_and  : return "and"    ;
-               case details::e_nand : return "nand"   ;
-               case details::e_or   : return "or"     ;
-               case details::e_nor  : return "nor"    ;
-               case details::e_xor  : return "xor"    ;
-               case details::e_xnor : return "xnor"   ;
-               default              : return "UNKNOWN";
+               case details::e_add  : return L"+"      ;
+               case details::e_sub  : return L"-"      ;
+               case details::e_mul  : return L"*"      ;
+               case details::e_div  : return L"/"      ;
+               case details::e_mod  : return L"%"      ;
+               case details::e_pow  : return L"^"      ;
+               case details::e_lt   : return L"<"      ;
+               case details::e_lte  : return L"<="     ;
+               case details::e_gt   : return L">"      ;
+               case details::e_gte  : return L">="     ;
+               case details::e_eq   : return L"=="     ;
+               case details::e_ne   : return L"!="     ;
+               case details::e_and  : return L"and"    ;
+               case details::e_nand : return L"nand"   ;
+               case details::e_or   : return L"or"     ;
+               case details::e_nor  : return L"nor"    ;
+               case details::e_xor  : return L"xor"    ;
+               case details::e_xnor : return L"xnor"   ;
+               default              : return L"UNKNOWN";
             }
          }
 
@@ -25743,18 +25743,18 @@ namespace exprtk
                    (details::e_xnor == operation) ;
          }
 
-         inline std::string branch_to_id(expression_node_ptr branch)
+         inline std::wstring branch_to_id(expression_node_ptr branch)
          {
-            static const std::string null_str   ("(null)" );
-            static const std::string const_str  ("(c)"    );
-            static const std::string var_str    ("(v)"    );
-            static const std::string vov_str    ("(vov)"  );
-            static const std::string cov_str    ("(cov)"  );
-            static const std::string voc_str    ("(voc)"  );
-            static const std::string str_str    ("(s)"    );
-            static const std::string strrng_str ("(rngs)" );
-            static const std::string cs_str     ("(cs)"   );
-            static const std::string cstrrng_str("(crngs)");
+            static const std::wstring null_str   (L"(null)" );
+            static const std::wstring const_str  (L"(c)"    );
+            static const std::wstring var_str    (L"(v)"    );
+            static const std::wstring vov_str    (L"(vov)"  );
+            static const std::wstring cov_str    (L"(cov)"  );
+            static const std::wstring voc_str    (L"(voc)"  );
+            static const std::wstring str_str    (L"(s)"    );
+            static const std::wstring strrng_str (L"(rngs)" );
+            static const std::wstring cs_str     (L"(cs)"   );
+            static const std::wstring cstrrng_str(L"(crngs)");
 
             if (details::is_null_node(branch))
                return null_str;
@@ -25777,16 +25777,16 @@ namespace exprtk
             else if (details::is_const_string_range_node(branch))
                return cstrrng_str;
             else if (details::is_t0ot1ot2_node(branch))
-               return "(" + dynamic_cast<details::T0oT1oT2_base_node<T>*>(branch)->type_id() + ")";
+               return L"(" + dynamic_cast<details::T0oT1oT2_base_node<T>*>(branch)->type_id() + L")";
             else if (details::is_t0ot1ot2ot3_node(branch))
-               return "(" + dynamic_cast<details::T0oT1oT2oT3_base_node<T>*>(branch)->type_id() + ")";
+               return L"(" + dynamic_cast<details::T0oT1oT2oT3_base_node<T>*>(branch)->type_id() + L")";
             else
-               return "ERROR";
+               return L"ERROR";
          }
 
-         inline std::string branch_to_id(expression_node_ptr (&branch)[2])
+         inline std::wstring branch_to_id(expression_node_ptr (&branch)[2])
          {
-            return branch_to_id(branch[0]) + std::string("o") + branch_to_id(branch[1]);
+            return branch_to_id(branch[0]) + std::wstring(L"o") + branch_to_id(branch[1]);
          }
 
          inline bool cov_optimisable(const details::operator_type& operation, expression_node_ptr (&branch)[2]) const
@@ -25964,7 +25964,7 @@ namespace exprtk
 
             if (result)
             {
-               parser_->set_synthesis_error("Invalid string operation");
+               parser_->set_synthesis_error(L"Invalid string operation");
             }
 
             return result;
@@ -25985,7 +25985,7 @@ namespace exprtk
 
             if (result)
             {
-               parser_->set_synthesis_error("Invalid string operation");
+               parser_->set_synthesis_error(L"Invalid string operation");
             }
 
             return result;
@@ -26316,7 +26316,7 @@ namespace exprtk
                      return alternative;
                   else
                      return node_allocator_->
-                              allocate_c<details::string_literal_node<Type> >("");
+                              allocate_c<details::string_literal_node<Type> >(L"");
                }
             }
             else if ((0 != consequent) && (0 != alternative))
@@ -27178,7 +27178,7 @@ namespace exprtk
                result = node_allocator_->allocate<literal_node_t>(v);
             }
 
-            parser_->state_.activate_side_effect("vararg_function_call()");
+            parser_->state_.activate_side_effect(L"vararg_function_call()");
 
             return result;
          }
@@ -27224,7 +27224,7 @@ namespace exprtk
             }
             else if (genfunc_node_ptr->init_branches())
             {
-               parser_->state_.activate_side_effect("generic_function_call()");
+               parser_->state_.activate_side_effect(L"generic_function_call()");
 
                return result;
             }
@@ -27278,7 +27278,7 @@ namespace exprtk
             }
             else if (strfunc_node_ptr->init_branches())
             {
-               parser_->state_.activate_side_effect("string_function_call()");
+               parser_->state_.activate_side_effect(L"string_function_call()");
 
                return result;
             }
@@ -27310,7 +27310,7 @@ namespace exprtk
 
             if (return_node_ptr->init_branches())
             {
-               parser_->state_.activate_side_effect("return_call()");
+               parser_->state_.activate_side_effect(L"return_call()");
 
                return result;
             }
@@ -27350,7 +27350,7 @@ namespace exprtk
          }
          #endif
 
-         inline expression_node_ptr vector_element(const std::string& symbol,
+         inline expression_node_ptr vector_element(const std::wstring& symbol,
                                                    vector_holder_ptr vector_base,
                                                    expression_node_ptr index)
          {
@@ -27387,16 +27387,16 @@ namespace exprtk
 
                   if (!parser_->sem_.add_element(nse))
                   {
-                     parser_->set_synthesis_error("Failed to add new local vector element to SEM [1]");
+                     parser_->set_synthesis_error(L"Failed to add new local vector element to SEM [1]");
 
                      parser_->sem_.free_element(nse);
 
                      result = error_node();
                   }
 
-                  exprtk_debug(("vector_element() - INFO - Added new local vector element: %s\n",nse.name.c_str()));
+                  exprtk_debug((L"vector_element() - INFO - Added new local vector element: %ls\n",nse.name.c_str()));
 
-                  parser_->state_.activate_side_effect("vector_element()");
+                  parser_->state_.activate_side_effect(L"vector_element()");
 
                   result = nse.var_node;
                }
@@ -27443,12 +27443,12 @@ namespace exprtk
 
          void lodge_assignment(symbol_type cst, expression_node_ptr node)
          {
-            parser_->state_.activate_side_effect("lodge_assignment()");
+            parser_->state_.activate_side_effect(L"lodge_assignment()");
 
             if (!parser_->dec_.collect_assignments())
                return;
 
-            std::string symbol_name;
+            std::wstring symbol_name;
 
             switch (cst)
             {
@@ -27542,7 +27542,7 @@ namespace exprtk
             }
             else
             {
-               parser_->set_synthesis_error("Invalid assignment operation.[1]");
+               parser_->set_synthesis_error(L"Invalid assignment operation.[1]");
 
                return error_node();
             }
@@ -27681,7 +27681,7 @@ namespace exprtk
             #endif
             else
             {
-               parser_->set_synthesis_error("Invalid assignment operation[2]");
+               parser_->set_synthesis_error(L"Invalid assignment operation[2]");
 
                return error_node();
             }
@@ -27868,12 +27868,12 @@ namespace exprtk
             #endif
             else
             {
-               parser_->set_synthesis_error("Only variables, strings, vectors or vector elements can be swapped");
+               parser_->set_synthesis_error(L"Only variables, strings, vectors or vector elements can be swapped");
 
                return error_node();
             }
 
-            parser_->state_.activate_side_effect("synthesize_swap_expression()");
+            parser_->state_.activate_side_effect(L"synthesize_swap_expression()");
 
             return result;
          }
@@ -28982,7 +28982,7 @@ namespace exprtk
             if (!operation_optimisable(operation))
                return false;
 
-            const std::string node_id = branch_to_id(branch);
+            const std::wstring node_id = branch_to_id(branch);
 
             const typename synthesize_map_t::iterator itr = synthesize_map_.find(node_id);
 
@@ -29126,7 +29126,7 @@ namespace exprtk
             }
 
             template <typename T0, typename T1, typename T2>
-            static inline bool compile(expression_generator<Type>& expr_gen, const std::string& id,
+            static inline bool compile(expression_generator<Type>& expr_gen, const std::wstring& id,
                                        T0 t0, T1 t1, T2 t2,
                                        expression_node_ptr& result)
             {
@@ -29193,7 +29193,7 @@ namespace exprtk
             }
 
             template <typename T0, typename T1, typename T2, typename T3>
-            static inline bool compile(expression_generator<Type>& expr_gen, const std::string& id,
+            static inline bool compile(expression_generator<Type>& expr_gen, const std::wstring& id,
                                        T0 t0, T1 t1, T2 t2, T3 t3,
                                        expression_node_ptr& result)
             {
@@ -29222,7 +29222,7 @@ namespace exprtk
                typedef details::T0oT1oT2_base_node<Type>* sf3ext_base_ptr;
 
                sf3ext_base_ptr n = static_cast<sf3ext_base_ptr>(sf3node);
-               std::string id = "t" + expr_gen.to_str(operation) + "(" + n->type_id() + ")";
+               std::wstring id = L"t" + expr_gen.to_str(operation) + L"(" + n->type_id() + L")";
 
                switch (n->type())
                {
@@ -29265,7 +29265,7 @@ namespace exprtk
 
                sf3ext_base_ptr n = static_cast<sf3ext_base_ptr>(sf3node);
 
-               std::string id = "(" + n->type_id() + ")" + expr_gen.to_str(operation) + "t";
+               std::wstring id = L"(" + n->type_id() + L")" + expr_gen.to_str(operation) + L"t";
 
                switch (n->type())
                {
@@ -29295,7 +29295,7 @@ namespace exprtk
 
             template <typename SF3TypeNode, typename ExternalType, typename T0, typename T1, typename T2>
             static inline bool compile_right_impl(expression_generator<Type>& expr_gen,
-                                                  const std::string& id,
+                                                  const std::wstring& id,
                                                   ExternalType t,
                                                   expression_node_ptr& node,
                                                   expression_node_ptr& result)
@@ -29317,7 +29317,7 @@ namespace exprtk
 
             template <typename SF3TypeNode, typename ExternalType, typename T0, typename T1, typename T2>
             static inline bool compile_left_impl(expression_generator<Type>& expr_gen,
-                                                 const std::string& id,
+                                                 const std::wstring& id,
                                                  ExternalType t,
                                                  expression_node_ptr& node,
                                                  expression_node_ptr& result)
@@ -29369,9 +29369,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<vtype,vtype,vtype>(expr_gen, "t/(t*t)", v0, v1, v2, result);
+                           template compile<vtype,vtype,vtype>(expr_gen, L"t/(t*t)", v0, v1, v2, result);
 
-                     exprtk_debug(("(v0 / v1) / v2 --> (vovov) v0 / (v1 * v2)\n"));
+                     exprtk_debug((L"(v0 / v1) / v2 --> (vovov) v0 / (v1 * v2)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -29391,10 +29391,10 @@ namespace exprtk
                   return node_type::allocate(*(expr_gen.node_allocator_), v0, v1, v2, f0, f1);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0, const details::operator_type o1)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "t");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"t");
             }
          };
 
@@ -29429,9 +29429,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<vtype,vtype,vtype>(expr_gen, "(t*t)/t", v0, v2, v1, result);
+                           template compile<vtype,vtype,vtype>(expr_gen, L"(t*t)/t", v0, v2, v1, result);
 
-                     exprtk_debug(("v0 / (v1 / v2) --> (vovov) (v0 * v2) / v1\n"));
+                     exprtk_debug((L"v0 / (v1 / v2) --> (vovov) (v0 * v2) / v1\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -29451,10 +29451,10 @@ namespace exprtk
                   return node_type::allocate(*(expr_gen.node_allocator_), v0, v1, v2, f0, f1);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0, const details::operator_type o1)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "t)");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"t)");
             }
          };
 
@@ -29490,9 +29490,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<vtype,vtype,ctype>(expr_gen, "t/(t*t)", v0, v1, c, result);
+                           template compile<vtype,vtype,ctype>(expr_gen, L"t/(t*t)", v0, v1, c, result);
 
-                     exprtk_debug(("(v0 / v1) / c --> (vovoc) v0 / (v1 * c)\n"));
+                     exprtk_debug((L"(v0 / v1) / c --> (vovoc) v0 / (v1 * c)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -29512,10 +29512,10 @@ namespace exprtk
                   return node_type::allocate(*(expr_gen.node_allocator_), v0, v1, c, f0, f1);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0, const details::operator_type o1)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "t");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"t");
             }
          };
 
@@ -29550,9 +29550,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<vtype,ctype,vtype>(expr_gen, "(t*t)/t", v0, c, v1, result);
+                           template compile<vtype,ctype,vtype>(expr_gen, L"(t*t)/t", v0, c, v1, result);
 
-                     exprtk_debug(("v0 / (v1 / c) --> (vocov) (v0 * c) / v1\n"));
+                     exprtk_debug((L"v0 / (v1 / c) --> (vocov) (v0 * c) / v1\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -29572,10 +29572,10 @@ namespace exprtk
                   return node_type::allocate(*(expr_gen.node_allocator_), v0, v1, c, f0, f1);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0, const details::operator_type o1)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "t)");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"t)");
             }
          };
 
@@ -29610,9 +29610,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<vtype,vtype,ctype>(expr_gen, "t/(t*t)", v0, v1, c, result);
+                           template compile<vtype,vtype,ctype>(expr_gen, L"t/(t*t)", v0, v1, c, result);
 
-                     exprtk_debug(("(v0 / c) / v1 --> (vovoc) v0 / (v1 * c)\n"));
+                     exprtk_debug((L"(v0 / c) / v1 --> (vovoc) v0 / (v1 * c)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -29632,10 +29632,10 @@ namespace exprtk
                   return node_type::allocate(*(expr_gen.node_allocator_), v0, c, v1, f0, f1);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0, const details::operator_type o1)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "t");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"t");
             }
          };
 
@@ -29670,9 +29670,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<vtype, vtype, ctype>(expr_gen, "(t*t)/t", v0, v1, c, result);
+                           template compile<vtype, vtype, ctype>(expr_gen, L"(t*t)/t", v0, v1, c, result);
 
-                     exprtk_debug(("v0 / (c / v1) --> (vovoc) (v0 * v1) / c\n"));
+                     exprtk_debug((L"v0 / (c / v1) --> (vovoc) (v0 * v1) / c\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -29692,10 +29692,10 @@ namespace exprtk
                   return node_type::allocate(*(expr_gen.node_allocator_), v0, c, v1, f0, f1);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0, const details::operator_type o1)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "t)");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"t)");
             }
          };
 
@@ -29730,9 +29730,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype, vtype, vtype>(expr_gen, "t/(t*t)", c, v0, v1, result);
+                           template compile<ctype, vtype, vtype>(expr_gen, L"t/(t*t)", c, v0, v1, result);
 
-                     exprtk_debug(("(c / v0) / v1 --> (covov) c / (v0 * v1)\n"));
+                     exprtk_debug((L"(c / v0) / v1 --> (covov) c / (v0 * v1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -29752,10 +29752,10 @@ namespace exprtk
                   return node_type::allocate(*(expr_gen.node_allocator_), c, v0, v1, f0, f1);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0, const details::operator_type o1)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "t");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"t");
             }
          };
 
@@ -29791,9 +29791,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype, vtype, vtype>(expr_gen, "(t*t)/t", c, v1, v0, result);
+                           template compile<ctype, vtype, vtype>(expr_gen, L"(t*t)/t", c, v1, v0, result);
 
-                     exprtk_debug(("c / (v0 / v1) --> (covov) (c * v1) / v0\n"));
+                     exprtk_debug((L"c / (v0 / v1) --> (covov) (c * v1) / v0\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -29813,9 +29813,9 @@ namespace exprtk
                   return node_type::allocate(*(expr_gen.node_allocator_), c, v0, v1, f0, f1);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen, const details::operator_type o0, const details::operator_type o1)
+            static inline std::wstring id(expression_generator<Type>& expr_gen, const details::operator_type o0, const details::operator_type o1)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "t)");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"t)");
             }
          };
 
@@ -29849,7 +29849,7 @@ namespace exprtk
                   // (c0 + v) + c1 --> (cov) (c0 + c1) + v
                   if ((details::e_add == o0) && (details::e_add == o1))
                   {
-                     exprtk_debug(("(c0 + v) + c1 --> (cov) (c0 + c1) + v\n"));
+                     exprtk_debug((L"(c0 + v) + c1 --> (cov) (c0 + c1) + v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::add_op<Type> > >(c0 + c1, v);
@@ -29857,7 +29857,7 @@ namespace exprtk
                   // (c0 + v) - c1 --> (cov) (c0 - c1) + v
                   else if ((details::e_add == o0) && (details::e_sub == o1))
                   {
-                     exprtk_debug(("(c0 + v) - c1 --> (cov) (c0 - c1) + v\n"));
+                     exprtk_debug((L"(c0 + v) - c1 --> (cov) (c0 - c1) + v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::add_op<Type> > >(c0 - c1, v);
@@ -29865,7 +29865,7 @@ namespace exprtk
                   // (c0 - v) + c1 --> (cov) (c0 + c1) - v
                   else if ((details::e_sub == o0) && (details::e_add == o1))
                   {
-                     exprtk_debug(("(c0 - v) + c1 --> (cov) (c0 + c1) - v\n"));
+                     exprtk_debug((L"(c0 - v) + c1 --> (cov) (c0 + c1) - v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::sub_op<Type> > >(c0 + c1, v);
@@ -29873,7 +29873,7 @@ namespace exprtk
                   // (c0 - v) - c1 --> (cov) (c0 - c1) - v
                   else if ((details::e_sub == o0) && (details::e_sub == o1))
                   {
-                     exprtk_debug(("(c0 - v) - c1 --> (cov) (c0 - c1) - v\n"));
+                     exprtk_debug((L"(c0 - v) - c1 --> (cov) (c0 - c1) - v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::sub_op<Type> > >(c0 - c1, v);
@@ -29881,7 +29881,7 @@ namespace exprtk
                   // (c0 * v) * c1 --> (cov) (c0 * c1) * v
                   else if ((details::e_mul == o0) && (details::e_mul == o1))
                   {
-                     exprtk_debug(("(c0 * v) * c1 --> (cov) (c0 * c1) * v\n"));
+                     exprtk_debug((L"(c0 * v) * c1 --> (cov) (c0 * c1) * v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::mul_op<Type> > >(c0 * c1, v);
@@ -29889,7 +29889,7 @@ namespace exprtk
                   // (c0 * v) / c1 --> (cov) (c0 / c1) * v
                   else if ((details::e_mul == o0) && (details::e_div == o1))
                   {
-                     exprtk_debug(("(c0 * v) / c1 --> (cov) (c0 / c1) * v\n"));
+                     exprtk_debug((L"(c0 * v) / c1 --> (cov) (c0 / c1) * v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::mul_op<Type> > >(c0 / c1, v);
@@ -29897,7 +29897,7 @@ namespace exprtk
                   // (c0 / v) * c1 --> (cov) (c0 * c1) / v
                   else if ((details::e_div == o0) && (details::e_mul == o1))
                   {
-                     exprtk_debug(("(c0 / v) * c1 --> (cov) (c0 * c1) / v\n"));
+                     exprtk_debug((L"(c0 / v) * c1 --> (cov) (c0 * c1) / v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::div_op<Type> > >(c0 * c1, v);
@@ -29905,7 +29905,7 @@ namespace exprtk
                   // (c0 / v) / c1 --> (cov) (c0 / c1) / v
                   else if ((details::e_div == o0) && (details::e_div == o1))
                   {
-                     exprtk_debug(("(c0 / v) / c1 --> (cov) (c0 / c1) / v\n"));
+                     exprtk_debug((L"(c0 / v) / c1 --> (cov) (c0 / c1) / v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::div_op<Type> > >(c0 / c1, v);
@@ -29926,10 +29926,10 @@ namespace exprtk
                   return node_type::allocate(*(expr_gen.node_allocator_), c0, v, c1, f0, f1);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0, const details::operator_type o1)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "t");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"t");
             }
          };
 
@@ -29963,7 +29963,7 @@ namespace exprtk
                   // (c0) + (v + c1) --> (cov) (c0 + c1) + v
                   if ((details::e_add == o0) && (details::e_add == o1))
                   {
-                     exprtk_debug(("(c0) + (v + c1) --> (cov) (c0 + c1) + v\n"));
+                     exprtk_debug((L"(c0) + (v + c1) --> (cov) (c0 + c1) + v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::add_op<Type> > >(c0 + c1, v);
@@ -29971,7 +29971,7 @@ namespace exprtk
                   // (c0) + (v - c1) --> (cov) (c0 - c1) + v
                   else if ((details::e_add == o0) && (details::e_sub == o1))
                   {
-                     exprtk_debug(("(c0) + (v - c1) --> (cov) (c0 - c1) + v\n"));
+                     exprtk_debug((L"(c0) + (v - c1) --> (cov) (c0 - c1) + v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::add_op<Type> > >(c0 - c1, v);
@@ -29979,7 +29979,7 @@ namespace exprtk
                   // (c0) - (v + c1) --> (cov) (c0 - c1) - v
                   else if ((details::e_sub == o0) && (details::e_add == o1))
                   {
-                     exprtk_debug(("(c0) - (v + c1) --> (cov) (c0 - c1) - v\n"));
+                     exprtk_debug((L"(c0) - (v + c1) --> (cov) (c0 - c1) - v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::sub_op<Type> > >(c0 - c1, v);
@@ -29987,7 +29987,7 @@ namespace exprtk
                   // (c0) - (v - c1) --> (cov) (c0 + c1) - v
                   else if ((details::e_sub == o0) && (details::e_sub == o1))
                   {
-                     exprtk_debug(("(c0) - (v - c1) --> (cov) (c0 + c1) - v\n"));
+                     exprtk_debug((L"(c0) - (v - c1) --> (cov) (c0 + c1) - v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::sub_op<Type> > >(c0 + c1, v);
@@ -29995,7 +29995,7 @@ namespace exprtk
                   // (c0) * (v * c1) --> (voc) v * (c0 * c1)
                   else if ((details::e_mul == o0) && (details::e_mul == o1))
                   {
-                     exprtk_debug(("(c0) * (v * c1) --> (voc) v * (c0 * c1)\n"));
+                     exprtk_debug((L"(c0) * (v * c1) --> (voc) v * (c0 * c1)\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::mul_op<Type> > >(c0 * c1, v);
@@ -30003,7 +30003,7 @@ namespace exprtk
                   // (c0) * (v / c1) --> (cov) (c0 / c1) * v
                   else if ((details::e_mul == o0) && (details::e_div == o1))
                   {
-                     exprtk_debug(("(c0) * (v / c1) --> (cov) (c0 / c1) * v\n"));
+                     exprtk_debug((L"(c0) * (v / c1) --> (cov) (c0 / c1) * v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::mul_op<Type> > >(c0 / c1, v);
@@ -30011,7 +30011,7 @@ namespace exprtk
                   // (c0) / (v * c1) --> (cov) (c0 / c1) / v
                   else if ((details::e_div == o0) && (details::e_mul == o1))
                   {
-                     exprtk_debug(("(c0) / (v * c1) --> (cov) (c0 / c1) / v\n"));
+                     exprtk_debug((L"(c0) / (v * c1) --> (cov) (c0 / c1) / v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::div_op<Type> > >(c0 / c1, v);
@@ -30019,7 +30019,7 @@ namespace exprtk
                   // (c0) / (v / c1) --> (cov) (c0 * c1) / v
                   else if ((details::e_div == o0) && (details::e_div == o1))
                   {
-                     exprtk_debug(("(c0) / (v / c1) --> (cov) (c0 * c1) / v\n"));
+                     exprtk_debug((L"(c0) / (v / c1) --> (cov) (c0 * c1) / v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::div_op<Type> > >(c0 * c1, v);
@@ -30040,10 +30040,10 @@ namespace exprtk
                   return node_type::allocate(*(expr_gen.node_allocator_), c0, v, c1, f0, f1);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0, const details::operator_type o1)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "t)");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"t)");
             }
          };
 
@@ -30087,7 +30087,7 @@ namespace exprtk
                   // (c0) + (c1 + v) --> (cov) (c0 + c1) + v
                   if ((details::e_add == o0) && (details::e_add == o1))
                   {
-                     exprtk_debug(("(c0) + (c1 + v) --> (cov) (c0 + c1) + v\n"));
+                     exprtk_debug((L"(c0) + (c1 + v) --> (cov) (c0 + c1) + v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::add_op<Type> > >(c0 + c1, v);
@@ -30095,7 +30095,7 @@ namespace exprtk
                   // (c0) + (c1 - v) --> (cov) (c0 + c1) - v
                   else if ((details::e_add == o0) && (details::e_sub == o1))
                   {
-                     exprtk_debug(("(c0) + (c1 - v) --> (cov) (c0 + c1) - v\n"));
+                     exprtk_debug((L"(c0) + (c1 - v) --> (cov) (c0 + c1) - v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::sub_op<Type> > >(c0 + c1, v);
@@ -30103,7 +30103,7 @@ namespace exprtk
                   // (c0) - (c1 + v) --> (cov) (c0 - c1) - v
                   else if ((details::e_sub == o0) && (details::e_add == o1))
                   {
-                     exprtk_debug(("(c0) - (c1 + v) --> (cov) (c0 - c1) - v\n"));
+                     exprtk_debug((L"(c0) - (c1 + v) --> (cov) (c0 - c1) - v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::sub_op<Type> > >(c0 - c1, v);
@@ -30111,7 +30111,7 @@ namespace exprtk
                   // (c0) - (c1 - v) --> (cov) (c0 - c1) + v
                   else if ((details::e_sub == o0) && (details::e_sub == o1))
                   {
-                     exprtk_debug(("(c0) - (c1 - v) --> (cov) (c0 - c1) + v\n"));
+                     exprtk_debug((L"(c0) - (c1 - v) --> (cov) (c0 - c1) + v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::add_op<Type> > >(c0 - c1, v);
@@ -30119,7 +30119,7 @@ namespace exprtk
                   // (c0) * (c1 * v) --> (cov) (c0 * c1) * v
                   else if ((details::e_mul == o0) && (details::e_mul == o1))
                   {
-                     exprtk_debug(("(c0) * (c1 * v) --> (cov) (c0 * c1) * v\n"));
+                     exprtk_debug((L"(c0) * (c1 * v) --> (cov) (c0 * c1) * v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::mul_op<Type> > >(c0 * c1, v);
@@ -30127,7 +30127,7 @@ namespace exprtk
                   // (c0) * (c1 / v) --> (cov) (c0 * c1) / v
                   else if ((details::e_mul == o0) && (details::e_div == o1))
                   {
-                     exprtk_debug(("(c0) * (c1 / v) --> (cov) (c0 * c1) / v\n"));
+                     exprtk_debug((L"(c0) * (c1 / v) --> (cov) (c0 * c1) / v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::div_op<Type> > >(c0 * c1, v);
@@ -30135,7 +30135,7 @@ namespace exprtk
                   // (c0) / (c1 * v) --> (cov) (c0 / c1) / v
                   else if ((details::e_div == o0) && (details::e_mul == o1))
                   {
-                     exprtk_debug(("(c0) / (c1 * v) --> (cov) (c0 / c1) / v\n"));
+                     exprtk_debug((L"(c0) / (c1 * v) --> (cov) (c0 / c1) / v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::div_op<Type> > >(c0 / c1, v);
@@ -30143,7 +30143,7 @@ namespace exprtk
                   // (c0) / (c1 / v) --> (cov) (c0 / c1) * v
                   else if ((details::e_div == o0) && (details::e_div == o1))
                   {
-                     exprtk_debug(("(c0) / (c1 / v) --> (cov) (c0 / c1) * v\n"));
+                     exprtk_debug((L"(c0) / (c1 / v) --> (cov) (c0 / c1) * v\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_cr<typename details::cov_node<Type,details::mul_op<Type> > >(c0 / c1, v);
@@ -30164,9 +30164,9 @@ namespace exprtk
                   return node_type::allocate(*(expr_gen.node_allocator_), c0, c1, v, f0, f1);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen, const details::operator_type o0, const details::operator_type o1)
+            static inline std::wstring id(expression_generator<Type>& expr_gen, const details::operator_type o0, const details::operator_type o1)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "t)");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"t)");
             }
          };
 
@@ -30200,7 +30200,7 @@ namespace exprtk
                   // (v + c0) + c1 --> (voc) v + (c0 + c1)
                   if ((details::e_add == o0) && (details::e_add == o1))
                   {
-                     exprtk_debug(("(v + c0) + c1 --> (voc) v + (c0 + c1)\n"));
+                     exprtk_debug((L"(v + c0) + c1 --> (voc) v + (c0 + c1)\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_rc<typename details::voc_node<Type,details::add_op<Type> > >(v, c0 + c1);
@@ -30208,7 +30208,7 @@ namespace exprtk
                   // (v + c0) - c1 --> (voc) v + (c0 - c1)
                   else if ((details::e_add == o0) && (details::e_sub == o1))
                   {
-                     exprtk_debug(("(v + c0) - c1 --> (voc) v + (c0 - c1)\n"));
+                     exprtk_debug((L"(v + c0) - c1 --> (voc) v + (c0 - c1)\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_rc<typename details::voc_node<Type,details::add_op<Type> > >(v, c0 - c1);
@@ -30216,7 +30216,7 @@ namespace exprtk
                   // (v - c0) + c1 --> (voc) v - (c0 + c1)
                   else if ((details::e_sub == o0) && (details::e_add == o1))
                   {
-                     exprtk_debug(("(v - c0) + c1 --> (voc) v - (c0 + c1)\n"));
+                     exprtk_debug((L"(v - c0) + c1 --> (voc) v - (c0 + c1)\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_rc<typename details::voc_node<Type,details::add_op<Type> > >(v, c1 - c0);
@@ -30224,7 +30224,7 @@ namespace exprtk
                   // (v - c0) - c1 --> (voc) v - (c0 + c1)
                   else if ((details::e_sub == o0) && (details::e_sub == o1))
                   {
-                     exprtk_debug(("(v - c0) - c1 --> (voc) v - (c0 + c1)\n"));
+                     exprtk_debug((L"(v - c0) - c1 --> (voc) v - (c0 + c1)\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_rc<typename details::voc_node<Type,details::sub_op<Type> > >(v, c0 + c1);
@@ -30232,7 +30232,7 @@ namespace exprtk
                   // (v * c0) * c1 --> (voc) v * (c0 * c1)
                   else if ((details::e_mul == o0) && (details::e_mul == o1))
                   {
-                     exprtk_debug(("(v * c0) * c1 --> (voc) v * (c0 * c1)\n"));
+                     exprtk_debug((L"(v * c0) * c1 --> (voc) v * (c0 * c1)\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_rc<typename details::voc_node<Type,details::mul_op<Type> > >(v, c0 * c1);
@@ -30240,7 +30240,7 @@ namespace exprtk
                   // (v * c0) / c1 --> (voc) v * (c0 / c1)
                   else if ((details::e_mul == o0) && (details::e_div == o1))
                   {
-                     exprtk_debug(("(v * c0) / c1 --> (voc) v * (c0 / c1)\n"));
+                     exprtk_debug((L"(v * c0) / c1 --> (voc) v * (c0 / c1)\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_rc<typename details::voc_node<Type,details::mul_op<Type> > >(v, c0 / c1);
@@ -30248,7 +30248,7 @@ namespace exprtk
                   // (v / c0) * c1 --> (voc) v * (c1 / c0)
                   else if ((details::e_div == o0) && (details::e_mul == o1))
                   {
-                     exprtk_debug(("(v / c0) * c1 --> (voc) v * (c1 / c0)\n"));
+                     exprtk_debug((L"(v / c0) * c1 --> (voc) v * (c1 / c0)\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_rc<typename details::voc_node<Type,details::mul_op<Type> > >(v, c1 / c0);
@@ -30256,7 +30256,7 @@ namespace exprtk
                   // (v / c0) / c1 --> (voc) v / (c0 * c1)
                   else if ((details::e_div == o0) && (details::e_div == o1))
                   {
-                     exprtk_debug(("(v / c0) / c1 --> (voc) v / (c0 * c1)\n"));
+                     exprtk_debug((L"(v / c0) / c1 --> (voc) v / (c0 * c1)\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_rc<typename details::voc_node<Type,details::div_op<Type> > >(v, c0 * c1);
@@ -30264,7 +30264,7 @@ namespace exprtk
                   // (v ^ c0) ^ c1 --> (voc) v ^ (c0 * c1)
                   else if ((details::e_pow == o0) && (details::e_pow == o1))
                   {
-                     exprtk_debug(("(v ^ c0) ^ c1 --> (voc) v ^ (c0 * c1)\n"));
+                     exprtk_debug((L"(v ^ c0) ^ c1 --> (voc) v ^ (c0 * c1)\n"));
 
                      return expr_gen.node_allocator_->
                                template allocate_rc<typename details::voc_node<Type,details::pow_op<Type> > >(v, c0 * c1);
@@ -30285,10 +30285,10 @@ namespace exprtk
                   return node_type::allocate(*(expr_gen.node_allocator_), v, c0, c1, f0, f1);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0, const details::operator_type o1)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "t");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"t");
             }
          };
 
@@ -30299,7 +30299,7 @@ namespace exprtk
             static inline expression_node_ptr process(expression_generator<Type>&, const details::operator_type&, expression_node_ptr (&)[2])
             {
                // (v) o0 (c0 o1 c1) - Not possible.
-               exprtk_debug(("(v) o0 (c0 o1 c1) - Not possible.\n"));
+               exprtk_debug((L"(v) o0 (c0 o1 c1) - Not possible.\n"));
                return error_node();
             }
          };
@@ -30344,9 +30344,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf4ext_expression::
-                           template compile<vtype,vtype,vtype,vtype>(expr_gen, "(t*t)/(t*t)", v0, v2, v1, v3, result);
+                           template compile<vtype,vtype,vtype,vtype>(expr_gen, L"(t*t)/(t*t)", v0, v2, v1, v3, result);
 
-                     exprtk_debug(("(v0 / v1) * (v2 / v3) --> (vovovov) (v0 * v2) / (v1 * v3)\n"));
+                     exprtk_debug((L"(v0 / v1) * (v2 / v3) --> (vovovov) (v0 * v2) / (v1 * v3)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30355,9 +30355,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf4ext_expression::
-                           template compile<vtype,vtype,vtype,vtype>(expr_gen, "(t*t)/(t*t)", v0, v3, v1, v2, result);
+                           template compile<vtype,vtype,vtype,vtype>(expr_gen, L"(t*t)/(t*t)", v0, v3, v1, v2, result);
 
-                     exprtk_debug(("(v0 / v1) / (v2 / v3) --> (vovovov) (v0 * v3) / (v1 * v2)\n"));
+                     exprtk_debug((L"(v0 / v1) / (v2 / v3) --> (vovovov) (v0 * v3) / (v1 * v2)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30366,9 +30366,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf4ext_expression::
-                           template compile<vtype,vtype,vtype,vtype>(expr_gen, "(t+t)*(t/t)", v0, v1, v3, v2, result);
+                           template compile<vtype,vtype,vtype,vtype>(expr_gen, L"(t+t)*(t/t)", v0, v1, v3, v2, result);
 
-                     exprtk_debug(("(v0 + v1) / (v2 / v3) --> (vovovov) (v0 + v1) * (v3 / v2)\n"));
+                     exprtk_debug((L"(v0 + v1) / (v2 / v3) --> (vovovov) (v0 + v1) * (v3 / v2)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30377,9 +30377,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf4ext_expression::
-                           template compile<vtype,vtype,vtype,vtype>(expr_gen, "(t-t)*(t/t)", v0, v1, v3, v2, result);
+                           template compile<vtype,vtype,vtype,vtype>(expr_gen, L"(t-t)*(t/t)", v0, v1, v3, v2, result);
 
-                     exprtk_debug(("(v0 - v1) / (v2 / v3) --> (vovovov) (v0 - v1) * (v3 / v2)\n"));
+                     exprtk_debug((L"(v0 - v1) / (v2 / v3) --> (vovovov) (v0 - v1) * (v3 / v2)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30388,9 +30388,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf4ext_expression::
-                           template compile<vtype,vtype,vtype,vtype>(expr_gen, "((t*t)*t)/t", v0, v1, v3, v2, result);
+                           template compile<vtype,vtype,vtype,vtype>(expr_gen, L"((t*t)*t)/t", v0, v1, v3, v2, result);
 
-                     exprtk_debug(("(v0 * v1) / (v2 / v3) --> (vovovov) ((v0 * v1) * v3) / v2\n"));
+                     exprtk_debug((L"(v0 * v1) / (v2 / v3) --> (vovovov) ((v0 * v1) * v3) / v2\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30412,12 +30412,12 @@ namespace exprtk
                   return node_type::allocate(*(expr_gen.node_allocator_), v0, v1, v2, v3, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "(t" << expr_gen.to_str(o2) << "t)");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"(t" << expr_gen.to_str(o2) << L"t)");
             }
          };
 
@@ -30461,9 +30461,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf4ext_expression::
-                           template compile<vtype,vtype,vtype,ctype>(expr_gen, "(t*t)/(t*t)", v0, v2, v1, c, result);
+                           template compile<vtype,vtype,vtype,ctype>(expr_gen, L"(t*t)/(t*t)", v0, v2, v1, c, result);
 
-                     exprtk_debug(("(v0 / v1) * (v2 / c) --> (vovovoc) (v0 * v2) / (v1 * c)\n"));
+                     exprtk_debug((L"(v0 / v1) * (v2 / c) --> (vovovoc) (v0 * v2) / (v1 * c)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30472,9 +30472,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf4ext_expression::
-                           template compile<vtype,ctype,vtype,vtype>(expr_gen, "(t*t)/(t*t)", v0, c, v1, v2, result);
+                           template compile<vtype,ctype,vtype,vtype>(expr_gen, L"(t*t)/(t*t)", v0, c, v1, v2, result);
 
-                     exprtk_debug(("(v0 / v1) / (v2 / c) --> (vocovov) (v0 * c) / (v1 * v2)\n"));
+                     exprtk_debug((L"(v0 / v1) / (v2 / c) --> (vocovov) (v0 * c) / (v1 * v2)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30496,12 +30496,12 @@ namespace exprtk
                   return node_type::allocate(*(expr_gen.node_allocator_), v0, v1, v2, c, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "(t" << expr_gen.to_str(o2) << "t)");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"(t" << expr_gen.to_str(o2) << L"t)");
             }
          };
 
@@ -30545,9 +30545,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf4ext_expression::
-                           template compile<vtype,ctype,vtype,vtype>(expr_gen, "(t*t)/(t*t)", v0, c, v1, v2, result);
+                           template compile<vtype,ctype,vtype,vtype>(expr_gen, L"(t*t)/(t*t)", v0, c, v1, v2, result);
 
-                     exprtk_debug(("(v0 / v1) * (c / v2) --> (vocovov) (v0 * c) / (v1 * v2)\n"));
+                     exprtk_debug((L"(v0 / v1) * (c / v2) --> (vocovov) (v0 * c) / (v1 * v2)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30556,9 +30556,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf4ext_expression::
-                           template compile<vtype,vtype,vtype,ctype>(expr_gen, "(t*t)/(t*t)", v0, v2, v1, c, result);
+                           template compile<vtype,vtype,vtype,ctype>(expr_gen, L"(t*t)/(t*t)", v0, v2, v1, c, result);
 
-                     exprtk_debug(("(v0 / v1) / (c / v2) --> (vovovoc) (v0 * v2) / (v1 * c)\n"));
+                     exprtk_debug((L"(v0 / v1) / (c / v2) --> (vovovoc) (v0 * v2) / (v1 * c)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30580,12 +30580,12 @@ namespace exprtk
                   return node_type::allocate(*(expr_gen.node_allocator_), v0, v1, c, v2, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "(t" << expr_gen.to_str(o2) << "t)");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"(t" << expr_gen.to_str(o2) << L"t)");
             }
          };
 
@@ -30629,9 +30629,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf4ext_expression::
-                           template compile<vtype,vtype,ctype,vtype>(expr_gen, "(t*t)/(t*t)", v0, v1, c, v2, result);
+                           template compile<vtype,vtype,ctype,vtype>(expr_gen, L"(t*t)/(t*t)", v0, v1, c, v2, result);
 
-                     exprtk_debug(("(v0 / c) * (v1 / v2) --> (vovocov) (v0 * v1) / (c * v2)\n"));
+                     exprtk_debug((L"(v0 / c) * (v1 / v2) --> (vovocov) (v0 * v1) / (c * v2)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30640,9 +30640,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf4ext_expression::
-                           template compile<vtype,vtype,ctype,vtype>(expr_gen, "(t*t)/(t*t)", v0, v2, c, v1, result);
+                           template compile<vtype,vtype,ctype,vtype>(expr_gen, L"(t*t)/(t*t)", v0, v2, c, v1, result);
 
-                     exprtk_debug(("(v0 / c) / (v1 / v2) --> (vovocov) (v0 * v2) / (c * v1)\n"));
+                     exprtk_debug((L"(v0 / c) / (v1 / v2) --> (vovocov) (v0 * v2) / (c * v1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30664,12 +30664,12 @@ namespace exprtk
                   return node_type::allocate(*(expr_gen.node_allocator_), v0, c, v1, v2, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "(t" << expr_gen.to_str(o2) << "t)");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"(t" << expr_gen.to_str(o2) << L"t)");
             }
          };
 
@@ -30713,9 +30713,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf4ext_expression::
-                           template compile<ctype,vtype,vtype,vtype>(expr_gen, "(t*t)/(t*t)", c, v1, v0, v2, result);
+                           template compile<ctype,vtype,vtype,vtype>(expr_gen, L"(t*t)/(t*t)", c, v1, v0, v2, result);
 
-                     exprtk_debug(("(c / v0) * (v1 / v2) --> (covovov) (c * v1) / (v0 * v2)\n"));
+                     exprtk_debug((L"(c / v0) * (v1 / v2) --> (covovov) (c * v1) / (v0 * v2)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30724,9 +30724,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf4ext_expression::
-                           template compile<ctype,vtype,vtype,vtype>(expr_gen, "(t*t)/(t*t)", c, v2, v0, v1, result);
+                           template compile<ctype,vtype,vtype,vtype>(expr_gen, L"(t*t)/(t*t)", c, v2, v0, v1, result);
 
-                     exprtk_debug(("(c / v0) / (v1 / v2) --> (covovov) (c * v2) / (v0 * v1)\n"));
+                     exprtk_debug((L"(c / v0) / (v1 / v2) --> (covovov) (c * v2) / (v0 * v1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30748,12 +30748,12 @@ namespace exprtk
                   return node_type::allocate(*(expr_gen.node_allocator_), c, v0, v1, v2, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "(t" << expr_gen.to_str(o2) << "t)");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"(t" << expr_gen.to_str(o2) << L"t)");
             }
          };
 
@@ -30797,9 +30797,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t+t)+t", (c0 + c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t+t)+t", (c0 + c1), v0, v1, result);
 
-                     exprtk_debug(("(c0 + v0) + (c1 + v1) --> (covov) (c0 + c1) + v0 + v1\n"));
+                     exprtk_debug((L"(c0 + v0) + (c1 + v1) --> (covov) (c0 + c1) + v0 + v1\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30808,9 +30808,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t+t)-t", (c0 - c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t+t)-t", (c0 - c1), v0, v1, result);
 
-                     exprtk_debug(("(c0 + v0) - (c1 + v1) --> (covov) (c0 - c1) + v0 - v1\n"));
+                     exprtk_debug((L"(c0 + v0) - (c1 + v1) --> (covov) (c0 - c1) + v0 - v1\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30819,9 +30819,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t-t)+t", (c0 - c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t-t)+t", (c0 - c1), v0, v1, result);
 
-                     exprtk_debug(("(c0 - v0) - (c1 - v1) --> (covov) (c0 - c1) - v0 + v1\n"));
+                     exprtk_debug((L"(c0 - v0) - (c1 - v1) --> (covov) (c0 - c1) - v0 + v1\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30830,9 +30830,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t*t)*t", (c0 * c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t*t)*t", (c0 * c1), v0, v1, result);
 
-                     exprtk_debug(("(c0 * v0) * (c1 * v1) --> (covov) (c0 * c1) * v0 * v1\n"));
+                     exprtk_debug((L"(c0 * v0) * (c1 * v1) --> (covov) (c0 * c1) * v0 * v1\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30841,9 +30841,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t*t)/t", (c0 / c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t*t)/t", (c0 / c1), v0, v1, result);
 
-                     exprtk_debug(("(c0 * v0) / (c1 * v1) --> (covov) (c0 / c1) * (v0 / v1)\n"));
+                     exprtk_debug((L"(c0 * v0) / (c1 * v1) --> (covov) (c0 / c1) * (v0 / v1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30852,9 +30852,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "t/(t*t)", (c0 * c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"t/(t*t)", (c0 * c1), v0, v1, result);
 
-                     exprtk_debug(("(c0 / v0) * (c1 / v1) --> (covov) (c0 * c1) / (v0 * v1)\n"));
+                     exprtk_debug((L"(c0 / v0) * (c1 / v1) --> (covov) (c0 * c1) / (v0 * v1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30863,9 +30863,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t*t)/t", (c0 / c1), v1, v0, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t*t)/t", (c0 / c1), v1, v0, result);
 
-                     exprtk_debug(("(c0 / v0) / (c1 / v1) --> (covov) ((c0 / c1) * v1) / v0\n"));
+                     exprtk_debug((L"(c0 / v0) / (c1 / v1) --> (covov) ((c0 / c1) * v1) / v0\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30874,9 +30874,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "t*(t*t)", (c0 / c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"t*(t*t)", (c0 / c1), v0, v1, result);
 
-                     exprtk_debug(("(c0 * v0) / (c1 / v1) --> (covov) (c0 / c1) * (v0 * v1)\n"));
+                     exprtk_debug((L"(c0 * v0) / (c1 / v1) --> (covov) (c0 / c1) * (v0 * v1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30885,9 +30885,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "t/(t*t)", (c0 / c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"t/(t*t)", (c0 / c1), v0, v1, result);
 
-                     exprtk_debug(("(c0 / v0) / (c1 * v1) --> (covov) (c0 / c1) / (v0 * v1)\n"));
+                     exprtk_debug((L"(c0 / v0) / (c1 * v1) --> (covov) (c0 / c1) / (v0 * v1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30902,12 +30902,12 @@ namespace exprtk
                             )
                           )
                   {
-                     std::string specfunc;
+                     std::wstring specfunc;
 
                      switch (o1)
                      {
-                        case details::e_add : specfunc = "t*(t+t)"; break;
-                        case details::e_sub : specfunc = "t*(t-t)"; break;
+                        case details::e_add : specfunc = L"t*(t+t)"; break;
+                        case details::e_sub : specfunc = L"t*(t-t)"; break;
                         default             : return error_node();
                      }
 
@@ -30915,7 +30915,7 @@ namespace exprtk
                         synthesize_sf3ext_expression::
                            template compile<ctype, vtype, vtype>(expr_gen, specfunc, c0, v0, v1, result);
 
-                     exprtk_debug(("(c * v0) +/- (c * v1) --> (covov) c * (v0 +/- v1)\n"));
+                     exprtk_debug((L"(c * v0) +/- (c * v1) --> (covov) c * (v0 +/- v1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30937,12 +30937,12 @@ namespace exprtk
                   return node_type::allocate(*(expr_gen.node_allocator_), c0, v0, c1, v1, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "(t" << expr_gen.to_str(o2) << "t)");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"(t" << expr_gen.to_str(o2) << L"t)");
             }
          };
 
@@ -30986,9 +30986,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t+t)+t", (c0 + c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t+t)+t", (c0 + c1), v0, v1, result);
 
-                     exprtk_debug(("(v0 + c0) + (v1 + c1) --> (covov) (c0 + c1) + v0 + v1\n"));
+                     exprtk_debug((L"(v0 + c0) + (v1 + c1) --> (covov) (c0 + c1) + v0 + v1\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -30997,9 +30997,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t+t)-t", (c0 - c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t+t)-t", (c0 - c1), v0, v1, result);
 
-                     exprtk_debug(("(v0 + c0) - (v1 + c1) --> (covov) (c0 - c1) + v0 - v1\n"));
+                     exprtk_debug((L"(v0 + c0) - (v1 + c1) --> (covov) (c0 - c1) + v0 - v1\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31008,9 +31008,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t+t)-t", (c1 - c0), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t+t)-t", (c1 - c0), v0, v1, result);
 
-                     exprtk_debug(("(v0 - c0) - (v1 - c1) --> (covov) (c1 - c0) + v0 - v1\n"));
+                     exprtk_debug((L"(v0 - c0) - (v1 - c1) --> (covov) (c1 - c0) + v0 - v1\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31019,9 +31019,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t*t)*t", (c0 * c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t*t)*t", (c0 * c1), v0, v1, result);
 
-                     exprtk_debug(("(v0 * c0) * (v1 * c1) --> (covov) (c0 * c1) * v0 * v1\n"));
+                     exprtk_debug((L"(v0 * c0) * (v1 * c1) --> (covov) (c0 * c1) * v0 * v1\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31030,9 +31030,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t*t)/t", (c0 / c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t*t)/t", (c0 / c1), v0, v1, result);
 
-                     exprtk_debug(("(v0 * c0) / (v1 * c1) --> (covov) (c0 / c1) * (v0 / v1)\n"));
+                     exprtk_debug((L"(v0 * c0) / (v1 * c1) --> (covov) (c0 / c1) * (v0 / v1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31041,9 +31041,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t*t)*t", Type(1) / (c0 * c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t*t)*t", Type(1) / (c0 * c1), v0, v1, result);
 
-                     exprtk_debug(("(v0 / c0) * (v1 / c1) --> (covov) (1 / (c0 * c1)) * v0 * v1\n"));
+                     exprtk_debug((L"(v0 / c0) * (v1 / c1) --> (covov) (1 / (c0 * c1)) * v0 * v1\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31052,9 +31052,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t*t)/t", (c1 / c0), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t*t)/t", (c1 / c0), v0, v1, result);
 
-                     exprtk_debug(("(v0 / c0) / (v1 / c1) --> (covov) ((c1 / c0) * v0) / v1\n"));
+                     exprtk_debug((L"(v0 / c0) / (v1 / c1) --> (covov) ((c1 / c0) * v0) / v1\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31063,9 +31063,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "t*(t/t)", (c0 * c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"t*(t/t)", (c0 * c1), v0, v1, result);
 
-                     exprtk_debug(("(v0 * c0) / (v1 / c1) --> (covov) (c0 * c1) * (v0 / v1)\n"));
+                     exprtk_debug((L"(v0 * c0) / (v1 / c1) --> (covov) (c0 * c1) * (v0 / v1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31074,9 +31074,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "t*(t/t)", Type(1) / (c0 * c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"t*(t/t)", Type(1) / (c0 * c1), v0, v1, result);
 
-                     exprtk_debug(("(v0 / c0) / (v1 * c1) --> (covov) (1 / (c0 * c1)) * v0 / v1\n"));
+                     exprtk_debug((L"(v0 / c0) / (v1 * c1) --> (covov) (1 / (c0 * c1)) * v0 / v1\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31085,9 +31085,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf4ext_expression::
-                           template compile<vtype,ctype,vtype,ctype>(expr_gen, "(t*t)*(t+t)", v0, T(1) / c0, v1, c1, result);
+                           template compile<vtype,ctype,vtype,ctype>(expr_gen, L"(t*t)*(t+t)", v0, T(1) / c0, v1, c1, result);
 
-                     exprtk_debug(("(v0 / c0) * (v1 + c1) --> (vocovoc) (v0 * (1 / c0)) * (v1 + c1)\n"));
+                     exprtk_debug((L"(v0 / c0) * (v1 + c1) --> (vocovoc) (v0 * (1 / c0)) * (v1 + c1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31096,9 +31096,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf4ext_expression::
-                           template compile<vtype,ctype,vtype,ctype>(expr_gen, "(t*t)*(t-t)", v0, T(1) / c0, v1, c1, result);
+                           template compile<vtype,ctype,vtype,ctype>(expr_gen, L"(t*t)*(t-t)", v0, T(1) / c0, v1, c1, result);
 
-                     exprtk_debug(("(v0 / c0) * (v1 - c1) --> (vocovoc) (v0 * (1 / c0)) * (v1 - c1)\n"));
+                     exprtk_debug((L"(v0 / c0) * (v1 - c1) --> (vocovoc) (v0 * (1 / c0)) * (v1 - c1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31113,12 +31113,12 @@ namespace exprtk
                             )
                           )
                   {
-                     std::string specfunc;
+                     std::wstring specfunc;
 
                      switch (o1)
                      {
-                        case details::e_add : specfunc = "t*(t+t)"; break;
-                        case details::e_sub : specfunc = "t*(t-t)"; break;
+                        case details::e_add : specfunc = L"t*(t+t)"; break;
+                        case details::e_sub : specfunc = L"t*(t-t)"; break;
                         default             : return error_node();
                      }
 
@@ -31126,7 +31126,7 @@ namespace exprtk
                         synthesize_sf3ext_expression::
                            template compile<ctype,vtype,vtype>(expr_gen, specfunc, c0, v0, v1, result);
 
-                     exprtk_debug(("(v0 * c) +/- (v1 * c) --> (covov) c * (v0 +/- v1)\n"));
+                     exprtk_debug((L"(v0 * c) +/- (v1 * c) --> (covov) c * (v0 +/- v1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31141,12 +31141,12 @@ namespace exprtk
                             )
                           )
                   {
-                     std::string specfunc;
+                     std::wstring specfunc;
 
                      switch (o1)
                      {
-                        case details::e_add : specfunc = "(t+t)/t"; break;
-                        case details::e_sub : specfunc = "(t-t)/t"; break;
+                        case details::e_add : specfunc = L"(t+t)/t"; break;
+                        case details::e_sub : specfunc = L"(t-t)/t"; break;
                         default             : return error_node();
                      }
 
@@ -31154,7 +31154,7 @@ namespace exprtk
                         synthesize_sf3ext_expression::
                            template compile<vtype,vtype,ctype>(expr_gen, specfunc, v0, v1, c0, result);
 
-                     exprtk_debug(("(v0 / c) +/- (v1 / c) --> (vovoc) (v0 +/- v1) / c\n"));
+                     exprtk_debug((L"(v0 / c) +/- (v1 / c) --> (vovoc) (v0 +/- v1) / c\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31176,12 +31176,12 @@ namespace exprtk
                   return node_type::allocate(*(expr_gen.node_allocator_), v0, c0, v1, c1, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "(t" << expr_gen.to_str(o2) << "t)");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"(t" << expr_gen.to_str(o2) << L"t)");
             }
          };
 
@@ -31225,9 +31225,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t+t)+t", (c0 + c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t+t)+t", (c0 + c1), v0, v1, result);
 
-                     exprtk_debug(("(c0 + v0) + (v1 + c1) --> (covov) (c0 + c1) + v0 + v1\n"));
+                     exprtk_debug((L"(c0 + v0) + (v1 + c1) --> (covov) (c0 + c1) + v0 + v1\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31236,9 +31236,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t+t)-t", (c0 - c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t+t)-t", (c0 - c1), v0, v1, result);
 
-                     exprtk_debug(("(c0 + v0) - (v1 + c1) --> (covov) (c0 - c1) + v0 - v1\n"));
+                     exprtk_debug((L"(c0 + v0) - (v1 + c1) --> (covov) (c0 - c1) + v0 - v1\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31247,9 +31247,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "t-(t+t)", (c0 + c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"t-(t+t)", (c0 + c1), v0, v1, result);
 
-                     exprtk_debug(("(c0 - v0) - (v1 - c1) --> (covov) (c0 + c1) - v0 - v1\n"));
+                     exprtk_debug((L"(c0 - v0) - (v1 - c1) --> (covov) (c0 + c1) - v0 - v1\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31258,9 +31258,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t*t)*t", (c0 * c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t*t)*t", (c0 * c1), v0, v1, result);
 
-                     exprtk_debug(("(c0 * v0) * (v1 * c1) --> (covov) (c0 * c1) * v0 * v1\n"));
+                     exprtk_debug((L"(c0 * v0) * (v1 * c1) --> (covov) (c0 * c1) * v0 * v1\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31269,9 +31269,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t*t)/t", (c0 / c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t*t)/t", (c0 / c1), v0, v1, result);
 
-                     exprtk_debug(("(c0 * v0) / (v1 * c1) --> (covov) (c0 / c1) * (v0 / v1)\n"));
+                     exprtk_debug((L"(c0 * v0) / (v1 * c1) --> (covov) (c0 / c1) * (v0 / v1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31280,9 +31280,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "t*(t/t)", (c0 / c1), v1, v0, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"t*(t/t)", (c0 / c1), v1, v0, result);
 
-                     exprtk_debug(("(c0 / v0) * (v1 / c1) --> (covov) (c0 / c1) * (v1 / v0)\n"));
+                     exprtk_debug((L"(c0 / v0) * (v1 / c1) --> (covov) (c0 / c1) * (v1 / v0)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31291,9 +31291,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "t/(t*t)", (c0 * c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"t/(t*t)", (c0 * c1), v0, v1, result);
 
-                     exprtk_debug(("(c0 / v0) / (v1 / c1) --> (covov) (c0 * c1) / (v0 * v1)\n"));
+                     exprtk_debug((L"(c0 / v0) / (v1 / c1) --> (covov) (c0 * c1) / (v0 * v1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31302,9 +31302,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t*t)/t", (c0 * c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t*t)/t", (c0 * c1), v0, v1, result);
 
-                     exprtk_debug(("(c0 * v0) / (v1 / c1) --> (covov) (c0 * c1) * (v0 / v1)\n"));
+                     exprtk_debug((L"(c0 * v0) / (v1 / c1) --> (covov) (c0 * c1) * (v0 / v1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31313,9 +31313,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "t/(t*t)", (c0 / c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"t/(t*t)", (c0 / c1), v0, v1, result);
 
-                     exprtk_debug(("(c0 / v0) / (v1 * c1) --> (covov) (c0 / c1) / (v0 * v1)\n"));
+                     exprtk_debug((L"(c0 / v0) / (v1 * c1) --> (covov) (c0 / c1) / (v0 * v1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31330,12 +31330,12 @@ namespace exprtk
                             )
                           )
                   {
-                     std::string specfunc;
+                     std::wstring specfunc;
 
                      switch (o1)
                      {
-                        case details::e_add : specfunc = "t*(t+t)"; break;
-                        case details::e_sub : specfunc = "t*(t-t)"; break;
+                        case details::e_add : specfunc = L"t*(t+t)"; break;
+                        case details::e_sub : specfunc = L"t*(t-t)"; break;
                         default             : return error_node();
                      }
 
@@ -31343,7 +31343,7 @@ namespace exprtk
                         synthesize_sf3ext_expression::
                            template compile<ctype,vtype,vtype>(expr_gen,specfunc, c0, v0, v1, result);
 
-                     exprtk_debug(("(c * v0) +/- (v1 * c) --> (covov) c * (v0 +/- v1)\n"));
+                     exprtk_debug((L"(c * v0) +/- (v1 * c) --> (covov) c * (v0 +/- v1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31365,12 +31365,12 @@ namespace exprtk
                   return node_type::allocate(*(expr_gen.node_allocator_), c0, v0, v1, c1, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "(t" << expr_gen.to_str(o2) << "t)");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"(t" << expr_gen.to_str(o2) << L"t)");
             }
          };
 
@@ -31414,9 +31414,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t+t)+t", (c0 + c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t+t)+t", (c0 + c1), v0, v1, result);
 
-                     exprtk_debug(("(v0 + c0) + (c1 + v1) --> (covov) (c0 + c1) + v0 + v1\n"));
+                     exprtk_debug((L"(v0 + c0) + (c1 + v1) --> (covov) (c0 + c1) + v0 + v1\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31425,9 +31425,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t+t)-t", (c0 - c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t+t)-t", (c0 - c1), v0, v1, result);
 
-                     exprtk_debug(("(v0 + c0) - (c1 + v1) --> (covov) (c0 - c1) + v0 - v1\n"));
+                     exprtk_debug((L"(v0 + c0) - (c1 + v1) --> (covov) (c0 - c1) + v0 - v1\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31436,9 +31436,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<vtype,vtype,ctype>(expr_gen, "(t+t)-t", v0, v1, (c1 + c0), result);
+                           template compile<vtype,vtype,ctype>(expr_gen, L"(t+t)-t", v0, v1, (c1 + c0), result);
 
-                     exprtk_debug(("(v0 - c0) - (c1 - v1) --> (vovoc) v0 + v1 - (c1 + c0)\n"));
+                     exprtk_debug((L"(v0 - c0) - (c1 - v1) --> (vovoc) v0 + v1 - (c1 + c0)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31447,9 +31447,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t*t)*t", (c0 * c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t*t)*t", (c0 * c1), v0, v1, result);
 
-                     exprtk_debug(("(v0 * c0) * (c1 * v1) --> (covov) (c0 * c1) * v0 * v1\n"));
+                     exprtk_debug((L"(v0 * c0) * (c1 * v1) --> (covov) (c0 * c1) * v0 * v1\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31458,9 +31458,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t*t)/t", (c0 / c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t*t)/t", (c0 / c1), v0, v1, result);
 
-                     exprtk_debug(("(v0 * c0) / (c1 * v1) --> (covov) (c0 / c1) * (v0 * v1)\n"));
+                     exprtk_debug((L"(v0 * c0) / (c1 * v1) --> (covov) (c0 / c1) * (v0 * v1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31469,9 +31469,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t*t)/t", (c1 / c0), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t*t)/t", (c1 / c0), v0, v1, result);
 
-                     exprtk_debug(("(v0 / c0) * (c1 / v1) --> (covov) (c1 / c0) * (v0 / v1)\n"));
+                     exprtk_debug((L"(v0 / c0) * (c1 / v1) --> (covov) (c1 / c0) * (v0 / v1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31480,9 +31480,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t*t)*t", (c0 / c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t*t)*t", (c0 / c1), v0, v1, result);
 
-                     exprtk_debug(("(v0 * c0) / (c1 / v1) --> (covov) (c0 / c1) * (v0 * v1)\n"));
+                     exprtk_debug((L"(v0 * c0) / (c1 / v1) --> (covov) (c0 / c1) * (v0 * v1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31491,9 +31491,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<ctype,vtype,vtype>(expr_gen, "(t*t)/t", Type(1) / (c0 * c1), v0, v1, result);
+                           template compile<ctype,vtype,vtype>(expr_gen, L"(t*t)/t", Type(1) / (c0 * c1), v0, v1, result);
 
-                     exprtk_debug(("(v0 / c0) / (c1 * v1) --> (covov) (1 / (c0 * c1)) * (v0 / v1)\n"));
+                     exprtk_debug((L"(v0 / c0) / (c1 * v1) --> (covov) (1 / (c0 * c1)) * (v0 / v1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31502,9 +31502,9 @@ namespace exprtk
                   {
                      const bool synthesis_result =
                         synthesize_sf3ext_expression::
-                           template compile<vtype,vtype,ctype>(expr_gen, "(t*t)*t", v0, v1, Type(1) / (c0 * c1), result);
+                           template compile<vtype,vtype,ctype>(expr_gen, L"(t*t)*t", v0, v1, Type(1) / (c0 * c1), result);
 
-                     exprtk_debug(("(v0 / c0) / (c1 / v1) --> (vovoc) (v0 * v1) * (1 / (c0 * c1))\n"));
+                     exprtk_debug((L"(v0 / c0) / (c1 / v1) --> (vovoc) (v0 * v1) * (1 / (c0 * c1))\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31518,12 +31518,12 @@ namespace exprtk
                             )
                           )
                   {
-                     std::string specfunc;
+                     std::wstring specfunc;
 
                      switch (o1)
                      {
-                        case details::e_add : specfunc = "t*(t+t)"; break;
-                        case details::e_sub : specfunc = "t*(t-t)"; break;
+                        case details::e_add : specfunc = L"t*(t+t)"; break;
+                        case details::e_sub : specfunc = L"t*(t-t)"; break;
                         default             : return error_node();
                      }
 
@@ -31531,7 +31531,7 @@ namespace exprtk
                         synthesize_sf3ext_expression::
                            template compile<ctype,vtype,vtype>(expr_gen, specfunc, c0, v0, v1, result);
 
-                     exprtk_debug(("(v0 * c) +/- (c * v1) --> (covov) c * (v0 +/- v1)\n"));
+                     exprtk_debug((L"(v0 * c) +/- (c * v1) --> (covov) c * (v0 +/- v1)\n"));
 
                      return (synthesis_result) ? result : error_node();
                   }
@@ -31553,12 +31553,12 @@ namespace exprtk
                   return node_type::allocate(*(expr_gen.node_allocator_), v0, c0, c1, v1, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "(t" << expr_gen.to_str(o2) << "t)");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"(t" << expr_gen.to_str(o2) << L"t)");
             }
          };
 
@@ -31600,17 +31600,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o0,f0))
                   return error_node();
 
-               exprtk_debug(("v0 o0 (v1 o1 (v2 o2 v3))\n"));
+               exprtk_debug((L"v0 o0 (v1 o1 (v2 o2 v3))\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_),v0,v1,v2,v3,f0,f1,f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "(t" << expr_gen.to_str(o2) << "t))");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"(t" << expr_gen.to_str(o2) << L"t))");
             }
          };
 
@@ -31656,17 +31656,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o0,f0))
                   return error_node();
 
-               exprtk_debug(("v0 o0 (v1 o1 (v2 o2 c))\n"));
+               exprtk_debug((L"v0 o0 (v1 o1 (v2 o2 c))\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), v0, v1, v2, c, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "(t" << expr_gen.to_str(o2) << "t))");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"(t" << expr_gen.to_str(o2) << L"t))");
             }
          };
 
@@ -31712,17 +31712,17 @@ namespace exprtk
                if (!expr_gen.valid_operator(o0,f0))
                   return error_node();
 
-               exprtk_debug(("v0 o0 (v1 o1 (c o2 v2))\n"));
+               exprtk_debug((L"v0 o0 (v1 o1 (c o2 v2))\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), v0, v1, c, v2, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "(t" << expr_gen.to_str(o2) << "t))");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"(t" << expr_gen.to_str(o2) << L"t))");
             }
          };
 
@@ -31768,17 +31768,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o0,f0))
                   return error_node();
 
-               exprtk_debug(("v0 o0 (c o1 (v1 o2 v2))\n"));
+               exprtk_debug((L"v0 o0 (c o1 (v1 o2 v2))\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), v0, c, v1, v2, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "(t" << expr_gen.to_str(o2) << "t))");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"(t" << expr_gen.to_str(o2) << L"t))");
             }
          };
 
@@ -31825,17 +31825,17 @@ namespace exprtk
                if (!expr_gen.valid_operator(o0,f0))
                   return error_node();
 
-               exprtk_debug(("c o0 (v0 o1 (v1 o2 v2))\n"));
+               exprtk_debug((L"c o0 (v0 o1 (v1 o2 v2))\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), c, v0, v1, v2, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "(t" << expr_gen.to_str(o2) << "t))");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"(t" << expr_gen.to_str(o2) << L"t))");
             }
          };
 
@@ -31882,17 +31882,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o0,f0))
                   return error_node();
 
-               exprtk_debug(("c0 o0 (v0 o1 (c1 o2 v1))\n"));
+               exprtk_debug((L"c0 o0 (v0 o1 (c1 o2 v1))\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), c0, v0, c1, v1, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "(t" << expr_gen.to_str(o2) << "t))");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"(t" << expr_gen.to_str(o2) << L"t))");
             }
          };
 
@@ -31938,17 +31938,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o0,f0))
                   return error_node();
 
-               exprtk_debug(("v0 o0 (c0 o1 (v1 o2 c2))\n"));
+               exprtk_debug((L"v0 o0 (c0 o1 (v1 o2 c2))\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), v0, c0, v1, c1, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "(t" << expr_gen.to_str(o2) << "t))");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"(t" << expr_gen.to_str(o2) << L"t))");
             }
          };
 
@@ -31994,17 +31994,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o0,f0))
                   return error_node();
 
-               exprtk_debug(("c0 o0 (v0 o1 (v1 o2 c1))\n"));
+               exprtk_debug((L"c0 o0 (v0 o1 (v1 o2 c1))\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), c0, v0, v1, c1, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "(t" << expr_gen.to_str(o2) << "t))");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"(t" << expr_gen.to_str(o2) << L"t))");
             }
          };
 
@@ -32050,17 +32050,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o0,f0))
                   return error_node();
 
-               exprtk_debug(("v0 o0 (c0 o1 (c1 o2 v1))\n"));
+               exprtk_debug((L"v0 o0 (c0 o1 (c1 o2 v1))\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), v0, c0, c1, v1, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "(t" << expr_gen.to_str(o2) << "t))");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"(t" << expr_gen.to_str(o2) << L"t))");
             }
          };
 
@@ -32106,17 +32106,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o0,f0))
                   return error_node();
 
-               exprtk_debug(("v0 o0 ((v1 o1 v2) o2 v3)\n"));
+               exprtk_debug((L"v0 o0 ((v1 o1 v2) o2 v3)\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), v0, v1, v2, v3, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "((t" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t)");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"((t" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t)");
             }
          };
 
@@ -32162,17 +32162,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o0,f0))
                   return error_node();
 
-               exprtk_debug(("v0 o0 ((v1 o1 v2) o2 c)\n"));
+               exprtk_debug((L"v0 o0 ((v1 o1 v2) o2 c)\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), v0, v1, v2, c, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "((t" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t)");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"((t" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t)");
             }
          };
 
@@ -32218,17 +32218,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o0,f0))
                   return error_node();
 
-               exprtk_debug(("v0 o0 ((v1 o1 c) o2 v2)\n"));
+               exprtk_debug((L"v0 o0 ((v1 o1 c) o2 v2)\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), v0, v1, c, v2, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "((t" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t)");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"((t" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t)");
             }
          };
 
@@ -32274,17 +32274,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o0,f0))
                   return error_node();
 
-               exprtk_debug(("v0 o0 ((c o1 v1) o2 v2)\n"));
+               exprtk_debug((L"v0 o0 ((c o1 v1) o2 v2)\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), v0, c, v1, v2, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "((t" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t)");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"((t" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t)");
             }
          };
 
@@ -32331,17 +32331,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o0,f0))
                   return error_node();
 
-               exprtk_debug(("c o0 ((v1 o1 v2) o2 v3)\n"));
+               exprtk_debug((L"c o0 ((v1 o1 v2) o2 v3)\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), c, v0, v1, v2, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "((t" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t)");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"((t" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t)");
             }
         };
 
@@ -32388,17 +32388,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o0,f0))
                   return error_node();
 
-               exprtk_debug(("c0 o0 ((v0 o1 c1) o2 v1)\n"));
+               exprtk_debug((L"c0 o0 ((v0 o1 c1) o2 v1)\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), c0, v0, c1, v1, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "((t" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t)");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"((t" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t)");
             }
          };
 
@@ -32444,17 +32444,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o0,f0))
                   return error_node();
 
-               exprtk_debug(("v0 o0 ((c0 o1 v1) o2 c1)\n"));
+               exprtk_debug((L"v0 o0 ((c0 o1 v1) o2 c1)\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), v0, c0, v1, c1, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "((t" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t)");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"((t" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t)");
             }
          };
 
@@ -32501,17 +32501,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o0,f0))
                   return error_node();
 
-               exprtk_debug(("c0 o0 ((v0 o1 v1) o2 c1)\n"));
+               exprtk_debug((L"c0 o0 ((v0 o1 v1) o2 c1)\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), c0, v0, v1, c1, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "t" << expr_gen.to_str(o0) << "((t" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t)");
+               return (details::build_string() << L"t" << expr_gen.to_str(o0) << L"((t" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t)");
             }
          };
 
@@ -32521,14 +32521,14 @@ namespace exprtk
             static inline expression_node_ptr process(expression_generator<Type>&, const details::operator_type&, expression_node_ptr (&)[2])
             {
                // v0 o0 ((c0 o1 c1) o2 v1) - Not possible
-               exprtk_debug(("v0 o0 ((c0 o1 c1) o2 v1) - Not possible\n"));
+               exprtk_debug((L"v0 o0 ((c0 o1 c1) o2 v1) - Not possible\n"));
                return error_node();
             }
 
-            static inline std::string id(expression_generator<Type>&,
+            static inline std::wstring id(expression_generator<Type>&,
                                          const details::operator_type, const details::operator_type, const details::operator_type)
             {
-               return "INVALID";
+               return L"INVALID";
             }
          };
 
@@ -32574,17 +32574,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o2,f2))
                   return error_node();
 
-               exprtk_debug(("((v0 o0 v1) o1 v2) o2 v3\n"));
+               exprtk_debug((L"((v0 o0 v1) o1 v2) o2 v3\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), v0, v1, v2, v3, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "((t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t");
+               return (details::build_string() << L"((t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t");
             }
          };
 
@@ -32631,17 +32631,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o2,f2))
                   return error_node();
 
-               exprtk_debug(("((v0 o0 v1) o1 v2) o2 c\n"));
+               exprtk_debug((L"((v0 o0 v1) o1 v2) o2 c\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), v0, v1, v2, c, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "((t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t");
+               return (details::build_string() << L"((t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t");
             }
          };
 
@@ -32687,17 +32687,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o2,f2))
                   return error_node();
 
-               exprtk_debug(("((v0 o0 v1) o1 c) o2 v2\n"));
+               exprtk_debug((L"((v0 o0 v1) o1 c) o2 v2\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), v0, v1, c, v2, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "((t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t");
+               return (details::build_string() << L"((t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t");
             }
          };
 
@@ -32743,17 +32743,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o2,f2))
                   return error_node();
 
-               exprtk_debug(("((v0 o0 c) o1 v1) o2 v2\n"));
+               exprtk_debug((L"((v0 o0 c) o1 v1) o2 v2\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), v0, c, v1, v2, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "((t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t");
+               return (details::build_string() << L"((t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t");
             }
          };
 
@@ -32799,17 +32799,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o2,f2))
                   return error_node();
 
-               exprtk_debug(("((c o0 v0) o1 v1) o2 v2\n"));
+               exprtk_debug((L"((c o0 v0) o1 v1) o2 v2\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), c, v0, v1, v2, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "((t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t");
+               return (details::build_string() << L"((t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t");
             }
          };
 
@@ -32855,17 +32855,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o2,f2))
                   return error_node();
 
-               exprtk_debug(("((c0 o0 v0) o1 c1) o2 v1\n"));
+               exprtk_debug((L"((c0 o0 v0) o1 c1) o2 v1\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), c0, v0, c1, v1, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "((t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t");
+               return (details::build_string() << L"((t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t");
             }
          };
 
@@ -32912,17 +32912,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o2,f2))
                   return error_node();
 
-               exprtk_debug(("((v0 o0 c0) o1 v1) o2 c1\n"));
+               exprtk_debug((L"((v0 o0 c0) o1 v1) o2 c1\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), v0, c0, v1, c1, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "((t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t");
+               return (details::build_string() << L"((t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t");
             }
          };
 
@@ -32969,17 +32969,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o2,f2))
                   return error_node();
 
-               exprtk_debug(("((c0 o0 v0) o1 v1) o2 c1\n"));
+               exprtk_debug((L"((c0 o0 v0) o1 v1) o2 c1\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), c0, v0, v1, c1, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "((t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t");
+               return (details::build_string() << L"((t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t");
             }
          };
 
@@ -33025,17 +33025,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o2,f2))
                   return error_node();
 
-               exprtk_debug(("((v0 o0 c0) o1 c1) o2 v1\n"));
+               exprtk_debug((L"((v0 o0 c0) o1 c1) o2 v1\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), v0, c0, c1, v1, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "((t" << expr_gen.to_str(o0) << "t)" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t");
+               return (details::build_string() << L"((t" << expr_gen.to_str(o0) << L"t)" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t");
             }
          };
 
@@ -33081,17 +33081,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o2,f2))
                   return error_node();
 
-               exprtk_debug(("(v0 o0 (v1 o1 v2)) o2 v3\n"));
+               exprtk_debug((L"(v0 o0 (v1 o1 v2)) o2 v3\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), v0, v1, v2, v3, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t");
             }
          };
 
@@ -33138,17 +33138,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o2,f2))
                   return error_node();
 
-               exprtk_debug(("((v0 o0 (v1 o1 v2)) o2 c)\n"));
+               exprtk_debug((L"((v0 o0 (v1 o1 v2)) o2 c)\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), v0, v1, v2, c, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t");
             }
          };
 
@@ -33194,17 +33194,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o2,f2))
                   return error_node();
 
-               exprtk_debug(("((v0 o0 (v1 o1 c)) o2 v1)\n"));
+               exprtk_debug((L"((v0 o0 (v1 o1 c)) o2 v1)\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), v0, v1, c, v2, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t");
             }
          };
 
@@ -33249,17 +33249,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o2,f2))
                   return error_node();
 
-               exprtk_debug(("((v0 o0 (c o1 v1)) o2 v2)\n"));
+               exprtk_debug((L"((v0 o0 (c o1 v1)) o2 v2)\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), v0, c, v1, v2, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t");
             }
          };
 
@@ -33305,17 +33305,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o2,f2))
                   return error_node();
 
-               exprtk_debug(("((c o0 (v0 o1 v1)) o2 v2)\n"));
+               exprtk_debug((L"((c o0 (v0 o1 v1)) o2 v2)\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), c, v0, v1, v2, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t");
             }
          };
 
@@ -33361,17 +33361,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o2,f2))
                   return error_node();
 
-               exprtk_debug(("((c0 o0 (v0 o1 c1)) o2 v1)\n"));
+               exprtk_debug((L"((c0 o0 (v0 o1 c1)) o2 v1)\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), c0, v0, c1, v1, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t");
             }
          };
 
@@ -33418,17 +33418,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o2,f2))
                   return error_node();
 
-               exprtk_debug(("((v0 o0 (c0 o1 v1)) o2 c1)\n"));
+               exprtk_debug((L"((v0 o0 (c0 o1 v1)) o2 c1)\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), v0, c0, v1, c1, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t");
             }
          };
 
@@ -33475,17 +33475,17 @@ namespace exprtk
                else if (!expr_gen.valid_operator(o2,f2))
                   return error_node();
 
-               exprtk_debug(("((c0 o0 (v0 o1 v1)) o2 c1)\n"));
+               exprtk_debug((L"((c0 o0 (v0 o1 v1)) o2 c1)\n"));
 
                return node_type::allocate(*(expr_gen.node_allocator_), c0, v0, v1, c1, f0, f1, f2);
             }
 
-            static inline std::string id(expression_generator<Type>& expr_gen,
+            static inline std::wstring id(expression_generator<Type>& expr_gen,
                                          const details::operator_type o0,
                                          const details::operator_type o1,
                                          const details::operator_type o2)
             {
-               return (details::build_string() << "(t" << expr_gen.to_str(o0) << "(t" << expr_gen.to_str(o1) << "t)" << expr_gen.to_str(o2) << "t");
+               return (details::build_string() << L"(t" << expr_gen.to_str(o0) << L"(t" << expr_gen.to_str(o1) << L"t)" << expr_gen.to_str(o2) << L"t");
             }
          };
 
@@ -33495,14 +33495,14 @@ namespace exprtk
             static inline expression_node_ptr process(expression_generator<Type>&, const details::operator_type&, expression_node_ptr (&)[2])
             {
                // ((v0 o0 (c0 o1 c1)) o2 v1) - Not possible
-               exprtk_debug(("((v0 o0 (c0 o1 c1)) o2 v1) - Not possible\n"));
+               exprtk_debug((L"((v0 o0 (c0 o1 c1)) o2 v1) - Not possible\n"));
                return error_node();
             }
 
-            static inline std::string id(expression_generator<Type>&,
+            static inline std::wstring id(expression_generator<Type>&,
                                          const details::operator_type, const details::operator_type, const details::operator_type)
             {
-               return "INVALID";
+               return L"INVALID";
             }
          };
          #endif
@@ -33539,28 +33539,28 @@ namespace exprtk
                                                     node_allocator_->
                                                        allocate_rr<typename details::
                                                           vov_node<Type,details::add_op<Type> > >(v0, v1));
-                                        exprtk_debug(("(-v0 + -v1) --> -(v0 + v1)\n"));
+                                        exprtk_debug((L"(-v0 + -v1) --> -(v0 + v1)\n"));
                                         break;
 
                   // (-v0 - -v1) --> (v1 - v0)
                   case details::e_sub : result = node_allocator_->
                                                     allocate_rr<typename details::
                                                        vov_node<Type,details::sub_op<Type> > >(v1, v0);
-                                        exprtk_debug(("(-v0 - -v1) --> (v1 - v0)\n"));
+                                        exprtk_debug((L"(-v0 - -v1) --> (v1 - v0)\n"));
                                         break;
 
                   // (-v0 * -v1) --> (v0 * v1)
                   case details::e_mul : result = node_allocator_->
                                                     allocate_rr<typename details::
                                                        vov_node<Type,details::mul_op<Type> > >(v0, v1);
-                                        exprtk_debug(("(-v0 * -v1) --> (v0 * v1)\n"));
+                                        exprtk_debug((L"(-v0 * -v1) --> (v0 * v1)\n"));
                                         break;
 
                   // (-v0 / -v1) --> (v0 / v1)
                   case details::e_div : result = node_allocator_->
                                                     allocate_rr<typename details::
                                                        vov_node<Type,details::div_op<Type> > >(v0, v1);
-                                        exprtk_debug(("(-v0 / -v1) --> (v0 / v1)\n"));
+                                        exprtk_debug((L"(-v0 / -v1) --> (v0 / v1)\n"));
                                         break;
 
                   default             : break;
@@ -33665,55 +33665,55 @@ namespace exprtk
 
          inline expression_node_ptr synthesize_sos_expression(const details::operator_type& opr, expression_node_ptr (&branch)[2])
          {
-            std::string& s0 = static_cast<details::stringvar_node<Type>*>(branch[0])->ref();
-            std::string& s1 = static_cast<details::stringvar_node<Type>*>(branch[1])->ref();
+            std::wstring& s0 = static_cast<details::stringvar_node<Type>*>(branch[0])->ref();
+            std::wstring& s1 = static_cast<details::stringvar_node<Type>*>(branch[1])->ref();
 
-            return synthesize_sos_expression_impl<std::string&,std::string&>(opr, s0, s1);
+            return synthesize_sos_expression_impl<std::wstring&,std::wstring&>(opr, s0, s1);
          }
 
          inline expression_node_ptr synthesize_sros_expression(const details::operator_type& opr, expression_node_ptr (&branch)[2])
          {
-            std::string&  s0 = static_cast<details::string_range_node<Type>*>(branch[0])->ref  ();
-            std::string&  s1 = static_cast<details::stringvar_node<Type>*>   (branch[1])->ref  ();
+            std::wstring&  s0 = static_cast<details::string_range_node<Type>*>(branch[0])->ref  ();
+            std::wstring&  s1 = static_cast<details::stringvar_node<Type>*>   (branch[1])->ref  ();
             range_t      rp0 = static_cast<details::string_range_node<Type>*>(branch[0])->range();
 
             static_cast<details::string_range_node<Type>*>(branch[0])->range_ref().clear();
 
             free_node(*node_allocator_,branch[0]);
 
-            return synthesize_str_xrox_expression_impl<std::string&,std::string&>(opr, s0, s1, rp0);
+            return synthesize_str_xrox_expression_impl<std::wstring&,std::wstring&>(opr, s0, s1, rp0);
          }
 
          inline expression_node_ptr synthesize_sosr_expression(const details::operator_type& opr, expression_node_ptr (&branch)[2])
          {
-            std::string&  s0 = static_cast<details::stringvar_node<Type>*>   (branch[0])->ref  ();
-            std::string&  s1 = static_cast<details::string_range_node<Type>*>(branch[1])->ref  ();
+            std::wstring&  s0 = static_cast<details::stringvar_node<Type>*>   (branch[0])->ref  ();
+            std::wstring&  s1 = static_cast<details::string_range_node<Type>*>(branch[1])->ref  ();
             range_t      rp1 = static_cast<details::string_range_node<Type>*>(branch[1])->range();
 
             static_cast<details::string_range_node<Type>*>(branch[1])->range_ref().clear();
 
             free_node(*node_allocator_,branch[1]);
 
-            return synthesize_str_xoxr_expression_impl<std::string&,std::string&>(opr, s0, s1, rp1);
+            return synthesize_str_xoxr_expression_impl<std::wstring&,std::wstring&>(opr, s0, s1, rp1);
          }
 
          inline expression_node_ptr synthesize_socsr_expression(const details::operator_type& opr, expression_node_ptr (&branch)[2])
          {
-            std::string&  s0 = static_cast<details::stringvar_node<Type>*>         (branch[0])->ref  ();
-            std::string   s1 = static_cast<details::const_string_range_node<Type>*>(branch[1])->str  ();
+            std::wstring&  s0 = static_cast<details::stringvar_node<Type>*>         (branch[0])->ref  ();
+            std::wstring   s1 = static_cast<details::const_string_range_node<Type>*>(branch[1])->str  ();
             range_t      rp1 = static_cast<details::const_string_range_node<Type>*>(branch[1])->range();
 
             static_cast<details::const_string_range_node<Type>*>(branch[1])->range_ref().clear();
 
             free_node(*node_allocator_,branch[1]);
 
-            return synthesize_str_xoxr_expression_impl<std::string&, const std::string>(opr, s0, s1, rp1);
+            return synthesize_str_xoxr_expression_impl<std::wstring&, const std::wstring>(opr, s0, s1, rp1);
          }
 
          inline expression_node_ptr synthesize_srosr_expression(const details::operator_type& opr, expression_node_ptr (&branch)[2])
          {
-            std::string&  s0 = static_cast<details::string_range_node<Type>*>(branch[0])->ref  ();
-            std::string&  s1 = static_cast<details::string_range_node<Type>*>(branch[1])->ref  ();
+            std::wstring&  s0 = static_cast<details::string_range_node<Type>*>(branch[0])->ref  ();
+            std::wstring&  s1 = static_cast<details::string_range_node<Type>*>(branch[1])->ref  ();
             range_t      rp0 = static_cast<details::string_range_node<Type>*>(branch[0])->range();
             range_t      rp1 = static_cast<details::string_range_node<Type>*>(branch[1])->range();
 
@@ -33723,33 +33723,33 @@ namespace exprtk
             details::free_node(*node_allocator_,branch[0]);
             details::free_node(*node_allocator_,branch[1]);
 
-            return synthesize_str_xroxr_expression_impl<std::string&,std::string&>(opr, s0, s1, rp0, rp1);
+            return synthesize_str_xroxr_expression_impl<std::wstring&,std::wstring&>(opr, s0, s1, rp0, rp1);
          }
 
          inline expression_node_ptr synthesize_socs_expression(const details::operator_type& opr, expression_node_ptr (&branch)[2])
          {
-            std::string& s0 = static_cast<     details::stringvar_node<Type>*>(branch[0])->ref();
-            std::string  s1 = static_cast<details::string_literal_node<Type>*>(branch[1])->str();
+            std::wstring& s0 = static_cast<     details::stringvar_node<Type>*>(branch[0])->ref();
+            std::wstring  s1 = static_cast<details::string_literal_node<Type>*>(branch[1])->str();
 
             details::free_node(*node_allocator_,branch[1]);
 
-            return synthesize_sos_expression_impl<std::string&, const std::string>(opr, s0, s1);
+            return synthesize_sos_expression_impl<std::wstring&, const std::wstring>(opr, s0, s1);
          }
 
          inline expression_node_ptr synthesize_csos_expression(const details::operator_type& opr, expression_node_ptr (&branch)[2])
          {
-            std::string  s0 = static_cast<details::string_literal_node<Type>*>(branch[0])->str();
-            std::string& s1 = static_cast<     details::stringvar_node<Type>*>(branch[1])->ref();
+            std::wstring  s0 = static_cast<details::string_literal_node<Type>*>(branch[0])->str();
+            std::wstring& s1 = static_cast<     details::stringvar_node<Type>*>(branch[1])->ref();
 
             details::free_node(*node_allocator_,branch[0]);
 
-            return synthesize_sos_expression_impl<const std::string,std::string&>(opr, s0, s1);
+            return synthesize_sos_expression_impl<const std::wstring,std::wstring&>(opr, s0, s1);
          }
 
          inline expression_node_ptr synthesize_csosr_expression(const details::operator_type& opr, expression_node_ptr (&branch)[2])
          {
-            std::string   s0 = static_cast<details::string_literal_node<Type>*>(branch[0])->str  ();
-            std::string&  s1 = static_cast<details::string_range_node<Type>*>  (branch[1])->ref  ();
+            std::wstring   s0 = static_cast<details::string_literal_node<Type>*>(branch[0])->str  ();
+            std::wstring&  s1 = static_cast<details::string_range_node<Type>*>  (branch[1])->ref  ();
             range_t      rp1 = static_cast<details::string_range_node<Type>*>  (branch[1])->range();
 
             static_cast<details::string_range_node<Type>*>(branch[1])->range_ref().clear();
@@ -33757,13 +33757,13 @@ namespace exprtk
             details::free_node(*node_allocator_,branch[0]);
             details::free_node(*node_allocator_,branch[1]);
 
-            return synthesize_str_xoxr_expression_impl<const std::string,std::string&>(opr, s0, s1, rp1);
+            return synthesize_str_xoxr_expression_impl<const std::wstring,std::wstring&>(opr, s0, s1, rp1);
          }
 
          inline expression_node_ptr synthesize_srocs_expression(const details::operator_type& opr, expression_node_ptr (&branch)[2])
          {
-            std::string&  s0 = static_cast<details::string_range_node<Type>*>  (branch[0])->ref  ();
-            std::string   s1 = static_cast<details::string_literal_node<Type>*>(branch[1])->str  ();
+            std::wstring&  s0 = static_cast<details::string_range_node<Type>*>  (branch[0])->ref  ();
+            std::wstring   s1 = static_cast<details::string_literal_node<Type>*>(branch[1])->str  ();
             range_t      rp0 = static_cast<details::string_range_node<Type>*>  (branch[0])->range();
 
             static_cast<details::string_range_node<Type>*>(branch[0])->range_ref().clear();
@@ -33771,13 +33771,13 @@ namespace exprtk
             details::free_node(*node_allocator_,branch[0]);
             details::free_node(*node_allocator_,branch[1]);
 
-            return synthesize_str_xrox_expression_impl<std::string&, const std::string>(opr, s0, s1, rp0);
+            return synthesize_str_xrox_expression_impl<std::wstring&, const std::wstring>(opr, s0, s1, rp0);
          }
 
          inline expression_node_ptr synthesize_srocsr_expression(const details::operator_type& opr, expression_node_ptr (&branch)[2])
          {
-            std::string&  s0 = static_cast<details::string_range_node<Type>*>      (branch[0])->ref  ();
-            std::string   s1 = static_cast<details::const_string_range_node<Type>*>(branch[1])->str  ();
+            std::wstring&  s0 = static_cast<details::string_range_node<Type>*>      (branch[0])->ref  ();
+            std::wstring   s1 = static_cast<details::const_string_range_node<Type>*>(branch[1])->str  ();
             range_t      rp0 = static_cast<details::string_range_node<Type>*>      (branch[0])->range();
             range_t      rp1 = static_cast<details::const_string_range_node<Type>*>(branch[1])->range();
 
@@ -33787,13 +33787,13 @@ namespace exprtk
             details::free_node(*node_allocator_,branch[0]);
             details::free_node(*node_allocator_,branch[1]);
 
-            return synthesize_str_xroxr_expression_impl<std::string&, const std::string>(opr, s0, s1, rp0, rp1);
+            return synthesize_str_xroxr_expression_impl<std::wstring&, const std::wstring>(opr, s0, s1, rp0, rp1);
          }
 
          inline expression_node_ptr synthesize_csocs_expression(const details::operator_type& opr, expression_node_ptr (&branch)[2])
          {
-            const std::string s0 = static_cast<details::string_literal_node<Type>*>(branch[0])->str();
-            const std::string s1 = static_cast<details::string_literal_node<Type>*>(branch[1])->str();
+            const std::wstring s0 = static_cast<details::string_literal_node<Type>*>(branch[0])->str();
+            const std::wstring s1 = static_cast<details::string_literal_node<Type>*>(branch[1])->str();
 
             expression_node_ptr result = error_node();
 
@@ -33807,7 +33807,7 @@ namespace exprtk
                result = node_allocator_->allocate_c<details::literal_node<Type> >(details::ilike_op<Type>::process(s0,s1));
             else
             {
-               expression_node_ptr temp = synthesize_sos_expression_impl<const std::string, const std::string>(opr, s0, s1);
+               expression_node_ptr temp = synthesize_sos_expression_impl<const std::wstring, const std::wstring>(opr, s0, s1);
 
                const Type v = temp->value();
 
@@ -33823,8 +33823,8 @@ namespace exprtk
 
          inline expression_node_ptr synthesize_csocsr_expression(const details::operator_type& opr, expression_node_ptr (&branch)[2])
          {
-            const std::string s0 = static_cast<details::string_literal_node<Type>*>    (branch[0])->str  ();
-                  std::string s1 = static_cast<details::const_string_range_node<Type>*>(branch[1])->str  ();
+            const std::wstring s0 = static_cast<details::string_literal_node<Type>*>    (branch[0])->str  ();
+                  std::wstring s1 = static_cast<details::const_string_range_node<Type>*>(branch[1])->str  ();
             range_t          rp1 = static_cast<details::const_string_range_node<Type>*>(branch[1])->range();
 
             static_cast<details::const_string_range_node<Type>*>(branch[1])->range_ref().clear();
@@ -33832,26 +33832,26 @@ namespace exprtk
             free_node(*node_allocator_,branch[0]);
             free_node(*node_allocator_,branch[1]);
 
-            return synthesize_str_xoxr_expression_impl<const std::string, const std::string>(opr, s0, s1, rp1);
+            return synthesize_str_xoxr_expression_impl<const std::wstring, const std::wstring>(opr, s0, s1, rp1);
          }
 
          inline expression_node_ptr synthesize_csros_expression(const details::operator_type& opr, expression_node_ptr (&branch)[2])
          {
-            std::string   s0 = static_cast<details::const_string_range_node<Type>*>(branch[0])->str  ();
-            std::string&  s1 = static_cast<details::stringvar_node<Type>*>         (branch[1])->ref  ();
+            std::wstring   s0 = static_cast<details::const_string_range_node<Type>*>(branch[0])->str  ();
+            std::wstring&  s1 = static_cast<details::stringvar_node<Type>*>         (branch[1])->ref  ();
             range_t      rp0 = static_cast<details::const_string_range_node<Type>*>(branch[0])->range();
 
             static_cast<details::const_string_range_node<Type>*>(branch[0])->range_ref().clear();
 
             free_node(*node_allocator_,branch[0]);
 
-            return synthesize_str_xrox_expression_impl<const std::string,std::string&>(opr, s0, s1, rp0);
+            return synthesize_str_xrox_expression_impl<const std::wstring,std::wstring&>(opr, s0, s1, rp0);
          }
 
          inline expression_node_ptr synthesize_csrosr_expression(const details::operator_type& opr, expression_node_ptr (&branch)[2])
          {
-            const std::string  s0 = static_cast<details::const_string_range_node<Type>*>(branch[0])->str  ();
-                  std::string& s1 = static_cast<details::string_range_node<Type>*>      (branch[1])->ref  ();
+            const std::wstring  s0 = static_cast<details::const_string_range_node<Type>*>(branch[0])->str  ();
+                  std::wstring& s1 = static_cast<details::string_range_node<Type>*>      (branch[1])->ref  ();
             range_t           rp0 = static_cast<details::const_string_range_node<Type>*>(branch[0])->range();
             range_t           rp1 = static_cast<details::string_range_node<Type>*>      (branch[1])->range();
 
@@ -33861,26 +33861,26 @@ namespace exprtk
             free_node(*node_allocator_,branch[0]);
             free_node(*node_allocator_,branch[1]);
 
-            return synthesize_str_xroxr_expression_impl<const std::string,std::string&>(opr, s0, s1, rp0, rp1);
+            return synthesize_str_xroxr_expression_impl<const std::wstring,std::wstring&>(opr, s0, s1, rp0, rp1);
          }
 
          inline expression_node_ptr synthesize_csrocs_expression(const details::operator_type& opr, expression_node_ptr (&branch)[2])
          {
-            std::string       s0 = static_cast<details::const_string_range_node<Type>*>(branch[0])->str  ();
-            const std::string s1 = static_cast<details::string_literal_node<Type>*>    (branch[1])->str  ();
+            std::wstring       s0 = static_cast<details::const_string_range_node<Type>*>(branch[0])->str  ();
+            const std::wstring s1 = static_cast<details::string_literal_node<Type>*>    (branch[1])->str  ();
             range_t          rp0 = static_cast<details::const_string_range_node<Type>*>(branch[0])->range();
 
             static_cast<details::const_string_range_node<Type>*>(branch[0])->range_ref().clear();
 
             details::free_all_nodes(*node_allocator_,branch);
 
-            return synthesize_str_xrox_expression_impl<const std::string,std::string>(opr, s0, s1, rp0);
+            return synthesize_str_xrox_expression_impl<const std::wstring,std::wstring>(opr, s0, s1, rp0);
          }
 
          inline expression_node_ptr synthesize_csrocsr_expression(const details::operator_type& opr, expression_node_ptr (&branch)[2])
          {
-            std::string   s0 = static_cast<details::const_string_range_node<Type>*>(branch[0])->str  ();
-            std::string   s1 = static_cast<details::const_string_range_node<Type>*>(branch[1])->str  ();
+            std::wstring   s0 = static_cast<details::const_string_range_node<Type>*>(branch[0])->str  ();
+            std::wstring   s1 = static_cast<details::const_string_range_node<Type>*>(branch[1])->str  ();
             range_t      rp0 = static_cast<details::const_string_range_node<Type>*>(branch[0])->range();
             range_t      rp1 = static_cast<details::const_string_range_node<Type>*>(branch[1])->range();
 
@@ -33889,7 +33889,7 @@ namespace exprtk
 
             details::free_all_nodes(*node_allocator_,branch);
 
-            return synthesize_str_xroxr_expression_impl<const std::string, const std::string>(opr, s0, s1, rp0, rp1);
+            return synthesize_str_xroxr_expression_impl<const std::wstring, const std::wstring>(opr, s0, s1, rp0, rp1);
          }
 
          inline expression_node_ptr synthesize_strogen_expression(const details::operator_type& opr, expression_node_ptr (&branch)[2])
@@ -34012,9 +34012,9 @@ namespace exprtk
                       details::is_const_string_node(branch[2])
                     )
             {
-               const std::string s0 = static_cast<details::string_literal_node<Type>*>(branch[0])->str();
-               const std::string s1 = static_cast<details::string_literal_node<Type>*>(branch[1])->str();
-               const std::string s2 = static_cast<details::string_literal_node<Type>*>(branch[2])->str();
+               const std::wstring s0 = static_cast<details::string_literal_node<Type>*>(branch[0])->str();
+               const std::wstring s1 = static_cast<details::string_literal_node<Type>*>(branch[1])->str();
+               const std::wstring s2 = static_cast<details::string_literal_node<Type>*>(branch[2])->str();
 
                const Type v = (((s0 <= s1) && (s1 <= s2)) ? Type(1) : Type(0));
 
@@ -34028,13 +34028,13 @@ namespace exprtk
                       details::is_string_node(branch[2])
                     )
             {
-               std::string& s0 = static_cast<details::stringvar_node<Type>*>(branch[0])->ref();
-               std::string& s1 = static_cast<details::stringvar_node<Type>*>(branch[1])->ref();
-               std::string& s2 = static_cast<details::stringvar_node<Type>*>(branch[2])->ref();
+               std::wstring& s0 = static_cast<details::stringvar_node<Type>*>(branch[0])->ref();
+               std::wstring& s1 = static_cast<details::stringvar_node<Type>*>(branch[1])->ref();
+               std::wstring& s2 = static_cast<details::stringvar_node<Type>*>(branch[2])->ref();
 
-               typedef typename details::sosos_node<Type,std::string&,std::string&,std::string&,details::inrange_op<Type> > inrange_t;
+               typedef typename details::sosos_node<Type,std::wstring&,std::wstring&,std::wstring&,details::inrange_op<Type> > inrange_t;
 
-               return node_allocator_->allocate_type<inrange_t,std::string&,std::string&,std::string&>(s0,s1,s2);
+               return node_allocator_->allocate_type<inrange_t,std::wstring&,std::wstring&,std::wstring&>(s0,s1,s2);
             }
             else if (
                       details::is_const_string_node(branch[0]) &&
@@ -34042,16 +34042,16 @@ namespace exprtk
                       details::is_const_string_node(branch[2])
                     )
             {
-               std::string  s0 = static_cast<details::string_literal_node<Type>*>(branch[0])->str();
-               std::string& s1 = static_cast<     details::stringvar_node<Type>*>(branch[1])->ref();
-               std::string  s2 = static_cast<details::string_literal_node<Type>*>(branch[2])->str();
+               std::wstring  s0 = static_cast<details::string_literal_node<Type>*>(branch[0])->str();
+               std::wstring& s1 = static_cast<     details::stringvar_node<Type>*>(branch[1])->ref();
+               std::wstring  s2 = static_cast<details::string_literal_node<Type>*>(branch[2])->str();
 
-               typedef typename details::sosos_node<Type,std::string,std::string&,std::string,details::inrange_op<Type> > inrange_t;
+               typedef typename details::sosos_node<Type,std::wstring,std::wstring&,std::wstring,details::inrange_op<Type> > inrange_t;
 
                details::free_node(*node_allocator_,branch[0]);
                details::free_node(*node_allocator_,branch[2]);
 
-               return node_allocator_->allocate_type<inrange_t,std::string,std::string&,std::string>(s0,s1,s2);
+               return node_allocator_->allocate_type<inrange_t,std::wstring,std::wstring&,std::wstring>(s0,s1,s2);
             }
             else if (
                             details::is_string_node(branch[0]) &&
@@ -34059,15 +34059,15 @@ namespace exprtk
                             details::is_string_node(branch[2])
                     )
             {
-               std::string&  s0 = static_cast<     details::stringvar_node<Type>*>(branch[0])->ref();
-               std::string   s1 = static_cast<details::string_literal_node<Type>*>(branch[1])->str();
-               std::string&  s2 = static_cast<     details::stringvar_node<Type>*>(branch[2])->ref();
+               std::wstring&  s0 = static_cast<     details::stringvar_node<Type>*>(branch[0])->ref();
+               std::wstring   s1 = static_cast<details::string_literal_node<Type>*>(branch[1])->str();
+               std::wstring&  s2 = static_cast<     details::stringvar_node<Type>*>(branch[2])->ref();
 
-               typedef typename details::sosos_node<Type,std::string&,std::string,std::string&,details::inrange_op<Type> > inrange_t;
+               typedef typename details::sosos_node<Type,std::wstring&,std::wstring,std::wstring&,details::inrange_op<Type> > inrange_t;
 
                details::free_node(*node_allocator_,branch[1]);
 
-               return node_allocator_->allocate_type<inrange_t,std::string&,std::string,std::string&>(s0,s1,s2);
+               return node_allocator_->allocate_type<inrange_t,std::wstring&,std::wstring,std::wstring&>(s0,s1,s2);
             }
             else if (
                       details::is_string_node(branch[0]) &&
@@ -34075,15 +34075,15 @@ namespace exprtk
                       details::is_const_string_node(branch[2])
                     )
             {
-               std::string& s0 = static_cast<     details::stringvar_node<Type>*>(branch[0])->ref();
-               std::string& s1 = static_cast<     details::stringvar_node<Type>*>(branch[1])->ref();
-               std::string  s2 = static_cast<details::string_literal_node<Type>*>(branch[2])->str();
+               std::wstring& s0 = static_cast<     details::stringvar_node<Type>*>(branch[0])->ref();
+               std::wstring& s1 = static_cast<     details::stringvar_node<Type>*>(branch[1])->ref();
+               std::wstring  s2 = static_cast<details::string_literal_node<Type>*>(branch[2])->str();
 
-               typedef typename details::sosos_node<Type,std::string&,std::string&,std::string,details::inrange_op<Type> > inrange_t;
+               typedef typename details::sosos_node<Type,std::wstring&,std::wstring&,std::wstring,details::inrange_op<Type> > inrange_t;
 
                details::free_node(*node_allocator_,branch[2]);
 
-               return node_allocator_->allocate_type<inrange_t,std::string&,std::string&,std::string>(s0,s1,s2);
+               return node_allocator_->allocate_type<inrange_t,std::wstring&,std::wstring&,std::wstring>(s0,s1,s2);
             }
             else if (
                       details::is_const_string_node(branch[0]) &&
@@ -34091,15 +34091,15 @@ namespace exprtk
                       details::      is_string_node(branch[2])
                     )
             {
-               std::string  s0 = static_cast<details::string_literal_node<Type>*>(branch[0])->str();
-               std::string& s1 = static_cast<     details::stringvar_node<Type>*>(branch[1])->ref();
-               std::string& s2 = static_cast<     details::stringvar_node<Type>*>(branch[2])->ref();
+               std::wstring  s0 = static_cast<details::string_literal_node<Type>*>(branch[0])->str();
+               std::wstring& s1 = static_cast<     details::stringvar_node<Type>*>(branch[1])->ref();
+               std::wstring& s2 = static_cast<     details::stringvar_node<Type>*>(branch[2])->ref();
 
-               typedef typename details::sosos_node<Type,std::string,std::string&,std::string&,details::inrange_op<Type> > inrange_t;
+               typedef typename details::sosos_node<Type,std::wstring,std::wstring&,std::wstring&,details::inrange_op<Type> > inrange_t;
 
                details::free_node(*node_allocator_,branch[0]);
 
-               return node_allocator_->allocate_type<inrange_t,std::string,std::string&,std::string&>(s0,s1,s2);
+               return node_allocator_->allocate_type<inrange_t,std::wstring,std::wstring&,std::wstring&>(s0,s1,s2);
             }
             else
                return error_node();
@@ -34279,7 +34279,7 @@ namespace exprtk
                return node_allocator_->allocate<literal_node_t>(v);
             }
 
-            parser_->state_.activate_side_effect("synthesize_expression(function<NT,N>)");
+            parser_->state_.activate_side_effect(L"synthesize_expression(function<NT,N>)");
 
             return expression_point;
          }
@@ -34308,7 +34308,7 @@ namespace exprtk
          }
       }
 
-      inline void set_synthesis_error(const std::string& synthesis_error_message)
+      inline void set_synthesis_error(const std::wstring& synthesis_error_message)
       {
          if (synthesis_error_.empty())
          {
@@ -34504,7 +34504,7 @@ namespace exprtk
          #define register_sf3_extid(Id, Op)                                        \
          sf3_map[Id] = pair_t(details::sf##Op##_op<T>::process,details::e_sf##Op); \
 
-         register_sf3_extid("(t-t)-t",23)  // (t-t)-t --> t-(t+t)
+         register_sf3_extid(L"(t-t)-t",23)  // (t-t)-t --> t-(t+t)
          #undef register_sf3_extid
       }
 
@@ -34594,7 +34594,7 @@ namespace exprtk
       inv_binary_op_map_t inv_binary_op_map_;
       sf3_map_t sf3_map_;
       sf4_map_t sf4_map_;
-      std::string synthesis_error_;
+      std::wstring synthesis_error_;
       scope_element_manager sem_;
 
       lexer::helper::helper_assembly helper_assembly_;
@@ -34613,8 +34613,8 @@ namespace exprtk
 
    template <typename Allocator,
              template <typename, typename> class Sequence>
-   inline bool collect_variables(const std::string& expr_str,
-                                 Sequence<std::string, Allocator>& symbol_list)
+   inline bool collect_variables(const std::wstring& expr_str,
+                                 Sequence<std::wstring, Allocator>& symbol_list)
    {
       typedef double T;
       typedef exprtk::symbol_table<T> symbol_table_t;
@@ -34649,9 +34649,9 @@ namespace exprtk
    template <typename T,
              typename Allocator,
              template <typename, typename> class Sequence>
-   inline bool collect_variables(const std::string& expr_str,
+   inline bool collect_variables(const std::wstring& expr_str,
                                  exprtk::symbol_table<T>& extrnl_symbol_table,
-                                 Sequence<std::string, Allocator>& symbol_list)
+                                 Sequence<std::wstring, Allocator>& symbol_list)
    {
       typedef exprtk::symbol_table<T> symbol_table_t;
       typedef exprtk::expression<T>     expression_t;
@@ -34687,8 +34687,8 @@ namespace exprtk
 
    template <typename Allocator,
              template <typename, typename> class Sequence>
-   inline bool collect_functions(const std::string& expr_str,
-                                 Sequence<std::string, Allocator>& symbol_list)
+   inline bool collect_functions(const std::wstring& expr_str,
+                                 Sequence<std::wstring, Allocator>& symbol_list)
    {
       typedef double T;
       typedef exprtk::symbol_table<T> symbol_table_t;
@@ -34723,9 +34723,9 @@ namespace exprtk
    template <typename T,
              typename Allocator,
              template <typename, typename> class Sequence>
-   inline bool collect_functions(const std::string& expr_str,
+   inline bool collect_functions(const std::wstring& expr_str,
                                  exprtk::symbol_table<T>& extrnl_symbol_table,
-                                 Sequence<std::string, Allocator>& symbol_list)
+                                 Sequence<std::wstring, Allocator>& symbol_list)
    {
       typedef exprtk::symbol_table<T> symbol_table_t;
       typedef exprtk::expression<T>     expression_t;
@@ -34785,7 +34785,7 @@ namespace exprtk
 
    template <typename T>
    inline T integrate(const expression<T>& e,
-                      const std::string& variable_name,
+                      const std::wstring& variable_name,
                       const T& r0, const T& r1,
                       const std::size_t number_of_intervals = 1000000)
    {
@@ -34875,7 +34875,7 @@ namespace exprtk
 
    template <typename T>
    inline T derivative(const expression<T>& e,
-                       const std::string& variable_name,
+                       const std::wstring& variable_name,
                        const T& h = T(0.00000001))
    {
       const symbol_table<T>& sym_table = e.get_symbol_table();
@@ -34902,7 +34902,7 @@ namespace exprtk
 
    template <typename T>
    inline T second_derivative(const expression<T>& e,
-                              const std::string& variable_name,
+                              const std::wstring& variable_name,
                               const T& h = T(0.00001))
    {
       const symbol_table<T>& sym_table = e.get_symbol_table();
@@ -34929,7 +34929,7 @@ namespace exprtk
 
    template <typename T>
    inline T third_derivative(const expression<T>& e,
-                             const std::string& variable_name,
+                             const std::wstring& variable_name,
                              const T& h = T(0.0001))
    {
       const symbol_table<T>& sym_table = e.get_symbol_table();
@@ -34965,7 +34965,7 @@ namespace exprtk
       no string variables or user defined functions.
    */
    template <typename T>
-   inline bool compute(const std::string& expression_string, T& result)
+   inline bool compute(const std::wstring& expression_string, T& result)
    {
       // No variables
       symbol_table<T> symbol_table;
@@ -34987,12 +34987,12 @@ namespace exprtk
    }
 
    template <typename T>
-   inline bool compute(const std::string& expression_string,
+   inline bool compute(const std::wstring& expression_string,
                        const T& x,
                        T& result)
    {
-      // Only 'x'
-      static const std::string x_var("x");
+      // Only L'x'
+      static const std::wstring x_var(L"x");
 
       symbol_table<T> symbol_table;
       symbol_table.add_constants();
@@ -35014,13 +35014,13 @@ namespace exprtk
    }
 
    template <typename T>
-   inline bool compute(const std::string& expression_string,
+   inline bool compute(const std::wstring& expression_string,
                        const T&x, const T& y,
                        T& result)
    {
-      // Only 'x' and 'y'
-      static const std::string x_var("x");
-      static const std::string y_var("y");
+      // Only L'x' and L'y'
+      static const std::wstring x_var(L"x");
+      static const std::wstring y_var(L"y");
 
       symbol_table<T> symbol_table;
       symbol_table.add_constants();
@@ -35043,14 +35043,14 @@ namespace exprtk
    }
 
    template <typename T>
-   inline bool compute(const std::string& expression_string,
+   inline bool compute(const std::wstring& expression_string,
                        const T& x, const T& y, const T& z,
                        T& result)
    {
-      // Only 'x', 'y' or 'z'
-      static const std::string x_var("x");
-      static const std::string y_var("y");
-      static const std::string z_var("z");
+      // Only L'x', L'y' or L'z'
+      static const std::wstring x_var(L"x");
+      static const std::wstring y_var(L"y");
+      static const std::wstring z_var(L"z");
 
       symbol_table<T> symbol_table;
       symbol_table.add_constants();
@@ -35329,38 +35329,38 @@ namespace exprtk
          function()
          {}
 
-         function(const std::string& n)
+         function(const std::wstring& n)
          : name_(n)
          {}
 
-         function(const std::string& name,
-                  const std::string& expression)
+         function(const std::wstring& name,
+                  const std::wstring& expression)
          : name_(name),
            expression_(expression)
          {}
 
-         function(const std::string& name,
-                  const std::string& expression,
-                  const std::string& v0)
+         function(const std::wstring& name,
+                  const std::wstring& expression,
+                  const std::wstring& v0)
          : name_(name),
            expression_(expression)
          {
             v_.push_back(v0);
          }
 
-         function(const std::string& name,
-                  const std::string& expression,
-                  const std::string& v0, const std::string& v1)
+         function(const std::wstring& name,
+                  const std::wstring& expression,
+                  const std::wstring& v0, const std::wstring& v1)
          : name_(name),
            expression_(expression)
          {
             v_.push_back(v0); v_.push_back(v1);
          }
 
-         function(const std::string& name,
-                  const std::string& expression,
-                  const std::string& v0, const std::string& v1,
-                  const std::string& v2)
+         function(const std::wstring& name,
+                  const std::wstring& expression,
+                  const std::wstring& v0, const std::wstring& v1,
+                  const std::wstring& v2)
          : name_(name),
            expression_(expression)
          {
@@ -35368,10 +35368,10 @@ namespace exprtk
             v_.push_back(v2);
          }
 
-         function(const std::string& name,
-                  const std::string& expression,
-                  const std::string& v0, const std::string& v1,
-                  const std::string& v2, const std::string& v3)
+         function(const std::wstring& name,
+                  const std::wstring& expression,
+                  const std::wstring& v0, const std::wstring& v1,
+                  const std::wstring& v2, const std::wstring& v3)
          : name_(name),
            expression_(expression)
          {
@@ -35379,11 +35379,11 @@ namespace exprtk
             v_.push_back(v2); v_.push_back(v3);
          }
 
-         function(const std::string& name,
-                  const std::string& expression,
-                  const std::string& v0, const std::string& v1,
-                  const std::string& v2, const std::string& v3,
-                  const std::string& v4)
+         function(const std::wstring& name,
+                  const std::wstring& expression,
+                  const std::wstring& v0, const std::wstring& v1,
+                  const std::wstring& v2, const std::wstring& v3,
+                  const std::wstring& v4)
          : name_(name),
            expression_(expression)
          {
@@ -35392,27 +35392,27 @@ namespace exprtk
             v_.push_back(v4);
          }
 
-         inline function& name(const std::string& n)
+         inline function& name(const std::wstring& n)
          {
             name_ = n;
             return (*this);
          }
 
-         inline function& expression(const std::string& e)
+         inline function& expression(const std::wstring& e)
          {
             expression_ = e;
             return (*this);
          }
 
-         inline function& var(const std::string& v)
+         inline function& var(const std::wstring& v)
          {
             v_.push_back(v);
             return (*this);
          }
 
-         std::string name_;
-         std::string expression_;
-         std::deque<std::string> v_;
+         std::wstring name_;
+         std::wstring expression_;
+         std::deque<std::wstring> v_;
       };
 
    private:
@@ -35631,7 +35631,7 @@ namespace exprtk
          std::deque<var_t> local_stack;
       };
 
-      typedef std::map<std::string,base_func*> funcparam_t;
+      typedef std::map<std::wstring,base_func*> funcparam_t;
 
       struct func_0param : public base_func
       {
@@ -35795,20 +35795,20 @@ namespace exprtk
 
       template <typename Allocator,
                 template <typename,typename> class Sequence>
-      inline bool add(const std::string& name,
-                      const std::string& expression,
-                      const Sequence<std::string,Allocator>& var_list,
+      inline bool add(const std::wstring& name,
+                      const std::wstring& expression,
+                      const Sequence<std::wstring,Allocator>& var_list,
                       const bool override = false)
       {
          const std::size_t n = var_list.size();
 
-         const typename std::map<std::string,expression_t>::iterator itr = expr_map_.find(name);
+         const typename std::map<std::wstring,expression_t>::iterator itr = expr_map_.find(name);
 
          if (expr_map_.end() != itr)
          {
             if (!override)
             {
-               exprtk_debug(("Compositor error(add): function '%s' already defined\n",
+               exprtk_debug((L"Compositor error(add): function '%ls' already defined\n",
                              name.c_str()));
 
                return false;
@@ -35825,7 +35825,7 @@ namespace exprtk
          }
          else
          {
-            exprtk_debug(("Compositor error(add): Failed to compile function '%s'\n",
+            exprtk_debug((L"Compositor error(add): Failed to compile function '%ls'\n",
                           name.c_str()));
 
             return false;
@@ -35891,9 +35891,9 @@ namespace exprtk
 
       template <typename Allocator,
                 template <typename,typename> class Sequence>
-      bool compile_expression(const std::string& name,
-                              const std::string& expression,
-                              const Sequence<std::string,Allocator>& input_var_list,
+      bool compile_expression(const std::wstring& name,
+                              const std::wstring& expression,
+                              const Sequence<std::wstring,Allocator>& input_var_list,
                               bool  return_present = false)
       {
          expression_t compiled_expression;
@@ -35918,25 +35918,25 @@ namespace exprtk
             compiled_expression.register_symbol_table((*auxiliary_symtab_list_[i]));
          }
 
-         std::string mod_expression;
+         std::wstring mod_expression;
 
          for (std::size_t i = 0; i < input_var_list.size(); ++i)
          {
-            mod_expression += " var " + input_var_list[i] + "{};\n";
+            mod_expression += L" var " + input_var_list[i] + L"{};\n";
          }
 
          if (
-              ('{' == details::front(expression)) &&
-              ('}' == details::back (expression))
+              (L'{' == details::front(expression)) &&
+              (L'}' == details::back (expression))
             )
-            mod_expression += "~" + expression + ";";
+            mod_expression += L"~" + expression + L";";
          else
-            mod_expression += "~{" + expression + "};";
+            mod_expression += L"~{" + expression + L"};";
 
          if (!parser_.compile(mod_expression,compiled_expression))
          {
-            exprtk_debug(("Compositor Error: %s\n",parser_.error().c_str()));
-            exprtk_debug(("Compositor modified expression: \n%s\n",mod_expression.c_str()));
+            exprtk_debug((L"Compositor Error: %ls\n",parser_.error().c_str()));
+            exprtk_debug((L"Compositor modified expression: \n%ls\n",mod_expression.c_str()));
 
             remove(name,input_var_list.size());
 
@@ -35953,17 +35953,17 @@ namespace exprtk
          // Make sure every return point has a scalar as its first parameter
          if (parser_.dec().return_present())
          {
-            typedef std::vector<std::string> str_list_t;
+            typedef std::vector<std::wstring> str_list_t;
 
             str_list_t ret_param_list = parser_.dec().return_param_type_list();
 
             for (std::size_t i = 0; i < ret_param_list.size(); ++i)
             {
-               const std::string& params = ret_param_list[i];
+               const std::wstring& params = ret_param_list[i];
 
-               if (params.empty() || ('T' != params[0]))
+               if (params.empty() || (L'T' != params[0]))
                {
-                  exprtk_debug(("Compositor Error: Return statement in function '%s' is invalid\n",
+                  exprtk_debug((L"Compositor Error: Return statement in function '%ls' is invalid\n",
                                 name.c_str()));
 
                   remove(name,input_var_list.size());
@@ -35981,13 +35981,13 @@ namespace exprtk
             return true;
          else
          {
-            exprtk_debug(("Compositor Error: Failed to add function '%s' to symbol table\n",
+            exprtk_debug((L"Compositor Error: Failed to add function '%ls' to symbol table\n",
                           name.c_str()));
             return false;
          }
       }
 
-      inline bool symbol_used(const std::string& symbol) const
+      inline bool symbol_used(const std::wstring& symbol) const
       {
          return (
                   symbol_table_.is_variable       (symbol) ||
@@ -35998,7 +35998,7 @@ namespace exprtk
                 );
       }
 
-      inline bool valid(const std::string& name,
+      inline bool valid(const std::wstring& name,
                         const std::size_t& arg_count) const
       {
          if (arg_count > 6)
@@ -36011,7 +36011,7 @@ namespace exprtk
             return true;
       }
 
-      inline bool forward(const std::string& name,
+      inline bool forward(const std::wstring& name,
                           const std::size_t& arg_count,
                           symbol_table_t& sym_table,
                           const bool ret_present = false)
@@ -36037,12 +36037,12 @@ namespace exprtk
          return sym_table.add_function(name,ifunc);
       }
 
-      inline void remove(const std::string& name, const std::size_t& arg_count)
+      inline void remove(const std::wstring& name, const std::size_t& arg_count)
       {
          if (arg_count > 6)
             return;
 
-         const typename std::map<std::string,expression_t>::iterator em_itr = expr_map_.find(name);
+         const typename std::map<std::wstring,expression_t>::iterator em_itr = expr_map_.find(name);
 
          if (expr_map_.end() != em_itr)
          {
@@ -36064,7 +36064,7 @@ namespace exprtk
 
       symbol_table_t symbol_table_;
       parser_t parser_;
-      std::map<std::string,expression_t> expr_map_;
+      std::map<std::wstring,expression_t> expr_map_;
       std::vector<funcparam_t> fp_map_;
       std::vector<symbol_table_t*> auxiliary_symtab_list_;
    };
@@ -36072,90 +36072,90 @@ namespace exprtk
    template <typename T>
    inline bool pgo_primer()
    {
-      static const std::string expression_list[]
+      static const std::wstring expression_list[]
                                         = {
-                                             "(y + x)",
-                                             "2 * (y + x)",
-                                             "(2 * y + 2 * x)",
-                                             "(y + x / y) * (x - y / x)",
-                                             "x / ((x + y) * (x - y)) / y",
-                                             "1 - ((x * y) + (y / x)) - 3",
-                                             "sin(2 * x) + cos(pi / y)",
-                                             "1 - sin(2 * x) + cos(pi / y)",
-                                             "sqrt(1 - sin(2 * x) + cos(pi / y) / 3)",
-                                             "(x^2 / sin(2 * pi / y)) -x / 2",
-                                             "x + (cos(y - sin(2 / x * pi)) - sin(x - cos(2 * y / pi))) - y",
-                                             "clamp(-1.0, sin(2 * pi * x) + cos(y / 2 * pi), +1.0)",
-                                             "iclamp(-1.0, sin(2 * pi * x) + cos(y / 2 * pi), +1.0)",
-                                             "max(3.33, min(sqrt(1 - sin(2 * x) + cos(pi / y) / 3), 1.11))",
-                                             "if(avg(x,y) <= x + y, x - y, x * y) + 2 * pi / x",
-                                             "1.1x^1 + 2.2y^2 - 3.3x^3 + 4.4y^4 - 5.5x^5 + 6.6y^6 - 7.7x^27 + 8.8y^55",
-                                             "(yy + xx)",
-                                             "2 * (yy + xx)",
-                                             "(2 * yy + 2 * xx)",
-                                             "(yy + xx / yy) * (xx - yy / xx)",
-                                             "xx / ((xx + yy) * (xx - yy)) / yy",
-                                             "1 - ((xx * yy) + (yy / xx)) - 3",
-                                             "sin(2 * xx) + cos(pi / yy)",
-                                             "1 - sin(2 * xx) + cos(pi / yy)",
-                                             "sqrt(1 - sin(2 * xx) + cos(pi / yy) / 3)",
-                                             "(xx^2 / sin(2 * pi / yy)) -xx / 2",
-                                             "xx + (cos(yy - sin(2 / xx * pi)) - sin(xx - cos(2 * yy / pi))) - yy",
-                                             "clamp(-1.0, sin(2 * pi * xx) + cos(yy / 2 * pi), +1.0)",
-                                             "max(3.33, min(sqrt(1 - sin(2 * xx) + cos(pi / yy) / 3), 1.11))",
-                                             "if(avg(xx,yy) <= xx + yy, xx - yy, xx * yy) + 2 * pi / xx",
-                                             "1.1xx^1 + 2.2yy^2 - 3.3xx^3 + 4.4yy^4 - 5.5xx^5 + 6.6yy^6 - 7.7xx^27 + 8.8yy^55",
-                                             "(1.1*(2.2*(3.3*(4.4*(5.5*(6.6*(7.7*(8.8*(9.9+x)))))))))",
-                                             "(((((((((x+9.9)*8.8)*7.7)*6.6)*5.5)*4.4)*3.3)*2.2)*1.1)",
-                                             "(x + y) * z", "x + (y * z)", "(x + y) * 7", "x + (y * 7)",
-                                             "(x + 7) * y", "x + (7 * y)", "(7 + x) * y", "7 + (x * y)",
-                                             "(2 + x) * 3", "2 + (x * 3)", "(2 + 3) * x", "2 + (3 * x)",
-                                             "(x + 2) * 3", "x + (2 * 3)",
-                                             "(x + y) * (z / w)", "(x + y) * (z / 7)", "(x + y) * (7 / z)", "(x + 7) * (y / z)",
-                                             "(7 + x) * (y / z)", "(2 + x) * (y / z)", "(x + 2) * (y / 3)", "(2 + x) * (y / 3)",
-                                             "(x + 2) * (3 / y)", "x + (y * (z / w))", "x + (y * (z / 7))", "x + (y * (7 / z))",
-                                             "x + (7 * (y / z))", "7 + (x * (y / z))", "2 + (x * (3 / y))", "x + (2 * (y / 4))",
-                                             "2 + (x * (y / 3))", "x + (2 * (3 / y))",
-                                             "x + ((y * z) / w)", "x + ((y * z) / 7)", "x + ((y * 7) / z)", "x + ((7 * y) / z)",
-                                             "7 + ((y * z) / w)", "2 + ((x * 3) / y)", "x + ((2 * y) / 3)", "2 + ((x * y) / 3)",
-                                             "x + ((2 * 3) / y)", "(((x + y) * z) / w)",
-                                             "(((x + y) * z) / 7)", "(((x + y) * 7) / z)", "(((x + 7) * y) / z)", "(((7 + x) * y) / z)",
-                                             "(((2 + x) * 3) / y)", "(((x + 2) * y) / 3)", "(((2 + x) * y) / 3)", "(((x + 2) * 3) / y)",
-                                             "((x + (y * z)) / w)", "((x + (y * z)) / 7)", "((x + (y * 7)) / y)", "((x + (7 * y)) / z)",
-                                             "((7 + (x * y)) / z)", "((2 + (x * 3)) / y)", "((x + (2 * y)) / 3)", "((2 + (x * y)) / 3)",
-                                             "((x + (2 * 3)) / y)",
-                                             "(xx + yy) * zz", "xx + (yy * zz)",
-                                             "(xx + yy) * 7", "xx + (yy * 7)",
-                                             "(xx + 7) * yy", "xx + (7 * yy)",
-                                             "(7 + xx) * yy", "7 + (xx * yy)",
-                                             "(2 + x) * 3", "2 + (x * 3)",
-                                             "(2 + 3) * x", "2 + (3 * x)",
-                                             "(x + 2) * 3", "x + (2 * 3)",
-                                             "(xx + yy) * (zz / ww)", "(xx + yy) * (zz / 7)",
-                                             "(xx + yy) * (7 / zz)", "(xx + 7) * (yy / zz)",
-                                             "(7 + xx) * (yy / zz)", "(2 + xx) * (yy / zz)",
-                                             "(xx + 2) * (yy / 3)", "(2 + xx) * (yy / 3)",
-                                             "(xx + 2) * (3 / yy)", "xx + (yy * (zz / ww))",
-                                             "xx + (yy * (zz / 7))", "xx + (yy * (7 / zz))",
-                                             "xx + (7 * (yy / zz))", "7 + (xx * (yy / zz))",
-                                             "2 + (xx * (3 / yy))", "xx + (2 * (yy / 4))",
-                                             "2 + (xx * (yy / 3))", "xx + (2 * (3 / yy))",
-                                             "xx + ((yy * zz) / ww)", "xx + ((yy * zz) / 7)",
-                                             "xx + ((yy * 7) / zz)", "xx + ((7 * yy) / zz)",
-                                             "7 + ((yy * zz) / ww)", "2 + ((xx * 3) / yy)",
-                                             "xx + ((2 * yy) / 3)", "2 + ((xx * yy) / 3)",
-                                             "xx + ((2 * 3) / yy)", "(((xx + yy) * zz) / ww)",
-                                             "(((xx + yy) * zz) / 7)", "(((xx + yy) * 7) / zz)",
-                                             "(((xx + 7) * yy) / zz)", "(((7 + xx) * yy) / zz)",
-                                             "(((2 + xx) * 3) / yy)", "(((xx + 2) * yy) / 3)",
-                                             "(((2 + xx) * yy) / 3)", "(((xx + 2) * 3) / yy)",
-                                             "((xx + (yy * zz)) / ww)", "((xx + (yy * zz)) / 7)",
-                                             "((xx + (yy * 7)) / yy)", "((xx + (7 * yy)) / zz)",
-                                             "((7 + (xx * yy)) / zz)", "((2 + (xx * 3)) / yy)",
-                                             "((xx + (2 * yy)) / 3)", "((2 + (xx * yy)) / 3)",
-                                             "((xx + (2 * 3)) / yy)"
+                                             L"(y + x)",
+                                             L"2 * (y + x)",
+                                             L"(2 * y + 2 * x)",
+                                             L"(y + x / y) * (x - y / x)",
+                                             L"x / ((x + y) * (x - y)) / y",
+                                             L"1 - ((x * y) + (y / x)) - 3",
+                                             L"sin(2 * x) + cos(pi / y)",
+                                             L"1 - sin(2 * x) + cos(pi / y)",
+                                             L"sqrt(1 - sin(2 * x) + cos(pi / y) / 3)",
+                                             L"(x^2 / sin(2 * pi / y)) -x / 2",
+                                             L"x + (cos(y - sin(2 / x * pi)) - sin(x - cos(2 * y / pi))) - y",
+                                             L"clamp(-1.0, sin(2 * pi * x) + cos(y / 2 * pi), +1.0)",
+                                             L"iclamp(-1.0, sin(2 * pi * x) + cos(y / 2 * pi), +1.0)",
+                                             L"max(3.33, min(sqrt(1 - sin(2 * x) + cos(pi / y) / 3), 1.11))",
+                                             L"if(avg(x,y) <= x + y, x - y, x * y) + 2 * pi / x",
+                                             L"1.1x^1 + 2.2y^2 - 3.3x^3 + 4.4y^4 - 5.5x^5 + 6.6y^6 - 7.7x^27 + 8.8y^55",
+                                             L"(yy + xx)",
+                                             L"2 * (yy + xx)",
+                                             L"(2 * yy + 2 * xx)",
+                                             L"(yy + xx / yy) * (xx - yy / xx)",
+                                             L"xx / ((xx + yy) * (xx - yy)) / yy",
+                                             L"1 - ((xx * yy) + (yy / xx)) - 3",
+                                             L"sin(2 * xx) + cos(pi / yy)",
+                                             L"1 - sin(2 * xx) + cos(pi / yy)",
+                                             L"sqrt(1 - sin(2 * xx) + cos(pi / yy) / 3)",
+                                             L"(xx^2 / sin(2 * pi / yy)) -xx / 2",
+                                             L"xx + (cos(yy - sin(2 / xx * pi)) - sin(xx - cos(2 * yy / pi))) - yy",
+                                             L"clamp(-1.0, sin(2 * pi * xx) + cos(yy / 2 * pi), +1.0)",
+                                             L"max(3.33, min(sqrt(1 - sin(2 * xx) + cos(pi / yy) / 3), 1.11))",
+                                             L"if(avg(xx,yy) <= xx + yy, xx - yy, xx * yy) + 2 * pi / xx",
+                                             L"1.1xx^1 + 2.2yy^2 - 3.3xx^3 + 4.4yy^4 - 5.5xx^5 + 6.6yy^6 - 7.7xx^27 + 8.8yy^55",
+                                             L"(1.1*(2.2*(3.3*(4.4*(5.5*(6.6*(7.7*(8.8*(9.9+x)))))))))",
+                                             L"(((((((((x+9.9)*8.8)*7.7)*6.6)*5.5)*4.4)*3.3)*2.2)*1.1)",
+                                             L"(x + y) * z", L"x + (y * z)", L"(x + y) * 7", L"x + (y * 7)",
+                                             L"(x + 7) * y", L"x + (7 * y)", L"(7 + x) * y", L"7 + (x * y)",
+                                             L"(2 + x) * 3", L"2 + (x * 3)", L"(2 + 3) * x", L"2 + (3 * x)",
+                                             L"(x + 2) * 3", L"x + (2 * 3)",
+                                             L"(x + y) * (z / w)", L"(x + y) * (z / 7)", L"(x + y) * (7 / z)", L"(x + 7) * (y / z)",
+                                             L"(7 + x) * (y / z)", L"(2 + x) * (y / z)", L"(x + 2) * (y / 3)", L"(2 + x) * (y / 3)",
+                                             L"(x + 2) * (3 / y)", L"x + (y * (z / w))", L"x + (y * (z / 7))", L"x + (y * (7 / z))",
+                                             L"x + (7 * (y / z))", L"7 + (x * (y / z))", L"2 + (x * (3 / y))", L"x + (2 * (y / 4))",
+                                             L"2 + (x * (y / 3))", L"x + (2 * (3 / y))",
+                                             L"x + ((y * z) / w)", L"x + ((y * z) / 7)", L"x + ((y * 7) / z)", L"x + ((7 * y) / z)",
+                                             L"7 + ((y * z) / w)", L"2 + ((x * 3) / y)", L"x + ((2 * y) / 3)", L"2 + ((x * y) / 3)",
+                                             L"x + ((2 * 3) / y)", L"(((x + y) * z) / w)",
+                                             L"(((x + y) * z) / 7)", L"(((x + y) * 7) / z)", L"(((x + 7) * y) / z)", L"(((7 + x) * y) / z)",
+                                             L"(((2 + x) * 3) / y)", L"(((x + 2) * y) / 3)", L"(((2 + x) * y) / 3)", L"(((x + 2) * 3) / y)",
+                                             L"((x + (y * z)) / w)", L"((x + (y * z)) / 7)", L"((x + (y * 7)) / y)", L"((x + (7 * y)) / z)",
+                                             L"((7 + (x * y)) / z)", L"((2 + (x * 3)) / y)", L"((x + (2 * y)) / 3)", L"((2 + (x * y)) / 3)",
+                                             L"((x + (2 * 3)) / y)",
+                                             L"(xx + yy) * zz", L"xx + (yy * zz)",
+                                             L"(xx + yy) * 7", L"xx + (yy * 7)",
+                                             L"(xx + 7) * yy", L"xx + (7 * yy)",
+                                             L"(7 + xx) * yy", L"7 + (xx * yy)",
+                                             L"(2 + x) * 3", L"2 + (x * 3)",
+                                             L"(2 + 3) * x", L"2 + (3 * x)",
+                                             L"(x + 2) * 3", L"x + (2 * 3)",
+                                             L"(xx + yy) * (zz / ww)", L"(xx + yy) * (zz / 7)",
+                                             L"(xx + yy) * (7 / zz)", L"(xx + 7) * (yy / zz)",
+                                             L"(7 + xx) * (yy / zz)", L"(2 + xx) * (yy / zz)",
+                                             L"(xx + 2) * (yy / 3)", L"(2 + xx) * (yy / 3)",
+                                             L"(xx + 2) * (3 / yy)", L"xx + (yy * (zz / ww))",
+                                             L"xx + (yy * (zz / 7))", L"xx + (yy * (7 / zz))",
+                                             L"xx + (7 * (yy / zz))", L"7 + (xx * (yy / zz))",
+                                             L"2 + (xx * (3 / yy))", L"xx + (2 * (yy / 4))",
+                                             L"2 + (xx * (yy / 3))", L"xx + (2 * (3 / yy))",
+                                             L"xx + ((yy * zz) / ww)", L"xx + ((yy * zz) / 7)",
+                                             L"xx + ((yy * 7) / zz)", L"xx + ((7 * yy) / zz)",
+                                             L"7 + ((yy * zz) / ww)", L"2 + ((xx * 3) / yy)",
+                                             L"xx + ((2 * yy) / 3)", L"2 + ((xx * yy) / 3)",
+                                             L"xx + ((2 * 3) / yy)", L"(((xx + yy) * zz) / ww)",
+                                             L"(((xx + yy) * zz) / 7)", L"(((xx + yy) * 7) / zz)",
+                                             L"(((xx + 7) * yy) / zz)", L"(((7 + xx) * yy) / zz)",
+                                             L"(((2 + xx) * 3) / yy)", L"(((xx + 2) * yy) / 3)",
+                                             L"(((2 + xx) * yy) / 3)", L"(((xx + 2) * 3) / yy)",
+                                             L"((xx + (yy * zz)) / ww)", L"((xx + (yy * zz)) / 7)",
+                                             L"((xx + (yy * 7)) / yy)", L"((xx + (7 * yy)) / zz)",
+                                             L"((7 + (xx * yy)) / zz)", L"((2 + (xx * 3)) / yy)",
+                                             L"((xx + (2 * yy)) / 3)", L"((2 + (xx * yy)) / 3)",
+                                             L"((xx + (2 * 3)) / yy)"
                                           };
-      static const std::size_t expression_list_size = sizeof(expression_list) / sizeof(std::string);
+      static const std::size_t expression_list_size = sizeof(expression_list) / sizeof(std::wstring);
 
       T  x = T(0);
       T  y = T(0);
@@ -36168,14 +36168,14 @@ namespace exprtk
 
       exprtk::symbol_table<T> symbol_table;
       symbol_table.add_constants();
-      symbol_table.add_variable( "x", x);
-      symbol_table.add_variable( "y", y);
-      symbol_table.add_variable( "z", z);
-      symbol_table.add_variable( "w", w);
-      symbol_table.add_variable("xx",xx);
-      symbol_table.add_variable("yy",yy);
-      symbol_table.add_variable("zz",zz);
-      symbol_table.add_variable("ww",ww);
+      symbol_table.add_variable( L"x", x);
+      symbol_table.add_variable( L"y", y);
+      symbol_table.add_variable( L"z", z);
+      symbol_table.add_variable( L"w", w);
+      symbol_table.add_variable(L"xx",xx);
+      symbol_table.add_variable(L"yy",yy);
+      symbol_table.add_variable(L"zz",zz);
+      symbol_table.add_variable(L"ww",ww);
 
       typedef typename std::deque<exprtk::expression<T> > expr_list_t;
       expr_list_t expr_list;
@@ -36383,7 +36383,7 @@ namespace exprtk
    namespace rtl { namespace io { namespace details
    {
       template <typename T>
-      inline void print_type(const std::string& fmt,
+      inline void print_type(const std::wstring& fmt,
                              const T v,
                              exprtk::details::numeric::details::real_type_tag)
       {
@@ -36400,7 +36400,7 @@ namespace exprtk
          typedef typename generic_type::string_view string_t;
          typedef typename exprtk::details::numeric::details::number_type<T>::type num_type;
 
-         static void process(const std::string& scalar_format, parameter_list_t parameters)
+         static void process(const std::wstring& scalar_format, parameter_list_t parameters)
          {
             for (std::size_t i = 0; i < parameters.size(); ++i)
             {
@@ -36422,12 +36422,12 @@ namespace exprtk
             }
          }
 
-         static inline void print(const std::string& scalar_format, const scalar_t& s)
+         static inline void print(const std::wstring& scalar_format, const scalar_t& s)
          {
             print_type(scalar_format,s(),num_type());
          }
 
-         static inline void print(const std::string& scalar_format, const vector_t& v)
+         static inline void print(const std::wstring& scalar_format, const vector_t& v)
          {
             for (std::size_t i = 0; i < v.size(); ++i)
             {
@@ -36440,7 +36440,7 @@ namespace exprtk
 
          static inline void print(const string_t& s)
          {
-            printf("%s",to_str(s).c_str());
+            printf("%ls",to_str(s).c_str());
          }
       };
 
@@ -36453,7 +36453,7 @@ namespace exprtk
 
       using exprtk::igeneric_function<T>::operator();
 
-      print(const std::string& scalar_format = "%10.5f")
+      print(const std::wstring& scalar_format = L"%10.5f")
       : scalar_format_(scalar_format)
       {
          exprtk::enable_zero_parameters(*this);
@@ -36465,7 +36465,7 @@ namespace exprtk
          return T(0);
       }
 
-      std::string scalar_format_;
+      std::wstring scalar_format_;
    };
 
    template <typename T>
@@ -36475,7 +36475,7 @@ namespace exprtk
 
       using exprtk::igeneric_function<T>::operator();
 
-      println(const std::string& scalar_format = "%10.5f")
+      println(const std::wstring& scalar_format = L"%10.5f")
       : scalar_format_(scalar_format)
       {
          exprtk::enable_zero_parameters(*this);
@@ -36488,7 +36488,7 @@ namespace exprtk
          return T(0);
       }
 
-      std::string scalar_format_;
+      std::wstring scalar_format_;
    };
 
    template <typename T>
@@ -36503,13 +36503,13 @@ namespace exprtk
          if (!symtab.add_function(FunctionName,FunctionType))                     \
          {                                                                        \
             exprtk_debug((                                                        \
-              "exprtk::rtl::io::register_package - Failed to add function: %s\n", \
+              L"exprtk::rtl::io::register_package - Failed to add function: %ls\n", \
               FunctionName));                                                     \
             return false;                                                         \
          }                                                                        \
 
-         exprtk_register_function("print"   , p)
-         exprtk_register_function("println" ,pl)
+         exprtk_register_function(L"print"   , p)
+         exprtk_register_function(L"println" ,pl)
          #undef exprtk_register_function
 
          return true;
@@ -36537,7 +36537,7 @@ namespace exprtk
 
       struct file_descriptor
       {
-         file_descriptor(const std::string& fname, const std::string& access)
+         file_descriptor(const std::wstring& fname, const std::wstring& access)
          : stream_ptr(0),
            mode(get_file_mode(access)),
            file_name(fname)
@@ -36545,13 +36545,13 @@ namespace exprtk
 
          void*       stream_ptr;
          file_mode   mode;
-         std::string file_name;
+         std::wstring file_name;
 
          bool open()
          {
             if (e_read == mode)
             {
-               std::ifstream* stream = new std::ifstream(file_name.c_str(),std::ios::binary);
+               std::wifstream* stream = new std::wifstream(wstring_to_utf8(file_name).c_str(),std::ios::binary);
 
                if (!(*stream))
                {
@@ -36567,7 +36567,7 @@ namespace exprtk
             }
             else if (e_write == mode)
             {
-               std::ofstream* stream = new std::ofstream(file_name.c_str(),std::ios::binary);
+               std::ofstream* stream = new std::ofstream(wstring_to_utf8(file_name).c_str(),std::ios::binary);
 
                if (!(*stream))
                {
@@ -36583,7 +36583,7 @@ namespace exprtk
             }
             else if (e_rdwrt == mode)
             {
-               std::fstream* stream = new std::fstream(file_name.c_str(),std::ios::binary);
+               std::wfstream* stream = new std::wfstream(file_name.c_str(),std::ios::binary);
 
                if (!(*stream))
                {
@@ -36614,13 +36614,13 @@ namespace exprtk
          {
             switch (mode)
             {
-               case e_read  : close<std::ifstream>(stream_ptr);
+               case e_read  : close<std::wifstream>(stream_ptr);
                               break;
 
                case e_write : close<std::ofstream>(stream_ptr);
                               break;
 
-               case e_rdwrt : close<std::fstream> (stream_ptr);
+               case e_rdwrt : close<std::wfstream> (stream_ptr);
                               break;
 
                default      : return false;
@@ -36638,7 +36638,7 @@ namespace exprtk
                                  write(reinterpret_cast<const char*>(view.begin() + offset), amount * sizeof(typename View::value_t));
                               break;
 
-               case e_rdwrt : reinterpret_cast<std::fstream*>(stream_ptr)->
+               case e_rdwrt : reinterpret_cast<std::wfstream*>(stream_ptr)->
                                  write(reinterpret_cast<const char*>(view.begin() + offset) , amount * sizeof(typename View::value_t));
                               break;
 
@@ -36653,11 +36653,11 @@ namespace exprtk
          {
             switch (mode)
             {
-               case e_read  : reinterpret_cast<std::ifstream*>(stream_ptr)->
+               case e_read  : reinterpret_cast<std::wifstream*>(stream_ptr)->
                                  read(reinterpret_cast<char*>(view.begin() + offset), amount * sizeof(typename View::value_t));
                               break;
 
-               case e_rdwrt : reinterpret_cast<std::fstream*>(stream_ptr)->
+               case e_rdwrt : reinterpret_cast<std::wfstream*>(stream_ptr)->
                                  read(reinterpret_cast<char*>(view.begin() + offset) , amount * sizeof(typename View::value_t));
                               break;
 
@@ -36667,12 +36667,12 @@ namespace exprtk
             return true;
          }
 
-         bool getline(std::string& s)
+         bool getline(std::wstring& s)
          {
             switch (mode)
             {
-               case e_read  : return (!!std::getline(*reinterpret_cast<std::ifstream*>(stream_ptr),s));
-               case e_rdwrt : return (!!std::getline(*reinterpret_cast<std::fstream* >(stream_ptr),s));
+               case e_read  : return (!!std::getline(*reinterpret_cast<std::wifstream*>(stream_ptr),s));
+               case e_rdwrt : return (!!std::getline(*reinterpret_cast<std::wfstream* >(stream_ptr),s));
                default      : return false;
             }
          }
@@ -36681,14 +36681,14 @@ namespace exprtk
          {
             switch (mode)
             {
-               case e_read  : return reinterpret_cast<std::ifstream*>(stream_ptr)->eof();
+               case e_read  : return reinterpret_cast<std::wifstream*>(stream_ptr)->eof();
                case e_write : return reinterpret_cast<std::ofstream*>(stream_ptr)->eof();
-               case e_rdwrt : return reinterpret_cast<std::fstream* >(stream_ptr)->eof();
+               case e_rdwrt : return reinterpret_cast<std::wfstream* >(stream_ptr)->eof();
                default      : return true;
             }
          }
 
-         file_mode get_file_mode(const std::string& access)
+         file_mode get_file_mode(const std::wstring& access)
          {
             if (access.empty() || access.size() > 2)
                return e_error;
@@ -36700,8 +36700,8 @@ namespace exprtk
             {
                switch (std::tolower(access[i]))
                {
-                  case 'r' : r_cnt++; break;
-                  case 'w' : w_cnt++; break;
+                  case L'r' : r_cnt++; break;
+                  case L'w' : w_cnt++; break;
                   default  : return e_error;
                }
             }
@@ -36739,7 +36739,7 @@ namespace exprtk
          #endif
          if (sizeof(T) < sizeof(void*))
          {
-            throw std::runtime_error("exprtk::rtl::io::file - Error - pointer size larger than holder.");
+            throw std::runtime_error(L"exprtk::rtl::io::file - Error - pointer size larger than holder.");
          }
          #ifdef _MSC_VER
          #pragma warning(pop)
@@ -36761,13 +36761,13 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       open()
-      : exprtk::igeneric_function<T>("S|SS")
+      : exprtk::igeneric_function<T>(L"S|SS")
       { details::perform_check<T>(); }
 
       inline T operator() (const std::size_t& ps_index, parameter_list_t parameters)
       {
-         std::string file_name;
-         std::string access;
+         std::wstring file_name;
+         std::wstring access;
 
          file_name = to_str(string_t(parameters[0]));
 
@@ -36775,7 +36775,7 @@ namespace exprtk
             return T(0);
 
          if (0 == ps_index)
-            access = "r";
+            access = L"r";
          else if (0 == string_t(parameters[1]).size())
             return T(0);
          else
@@ -36837,7 +36837,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       write()
-      : igfun_t("TS|TST|TV|TVT")
+      : igfun_t(L"TS|TST|TV|TVT")
       { details::perform_check<T>(); }
 
       inline T operator() (const std::size_t& ps_index, parameter_list_t parameters)
@@ -36894,7 +36894,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       read()
-      : igfun_t("TS|TST|TV|TVT")
+      : igfun_t(L"TS|TST|TV|TVT")
       { details::perform_check<T>(); }
 
       inline T operator() (const std::size_t& ps_index, parameter_list_t parameters)
@@ -36950,10 +36950,10 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       getline()
-      : igfun_t("T",igfun_t::e_rtrn_string)
+      : igfun_t(L"T",igfun_t::e_rtrn_string)
       { details::perform_check<T>(); }
 
-      inline T operator() (std::string& result,
+      inline T operator() (std::wstring& result,
                            parameter_list_t parameters)
       {
          details::file_descriptor* fd = details::make_handle(scalar_t(parameters[0])());
@@ -36994,17 +36994,17 @@ namespace exprtk
          if (!symtab.add_function(FunctionName,FunctionType))                           \
          {                                                                              \
             exprtk_debug((                                                              \
-              "exprtk::rtl::io::file::register_package - Failed to add function: %s\n", \
+              L"exprtk::rtl::io::file::register_package - Failed to add function: %ls\n", \
               FunctionName));                                                           \
             return false;                                                               \
          }                                                                              \
 
-         exprtk_register_function("open"   ,o)
-         exprtk_register_function("close"  ,c)
-         exprtk_register_function("write"  ,w)
-         exprtk_register_function("read"   ,r)
-         exprtk_register_function("getline",g)
-         exprtk_register_function("eof"    ,e)
+         exprtk_register_function(L"open"   ,o)
+         exprtk_register_function(L"close"  ,c)
+         exprtk_register_function(L"write"  ,w)
+         exprtk_register_function(L"read"   ,r)
+         exprtk_register_function(L"getline",g)
+         exprtk_register_function(L"eof"    ,e)
          #undef exprtk_register_function
 
          return true;
@@ -37095,7 +37095,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       all_true()
-      : exprtk::igeneric_function<T>("V|VTT")
+      : exprtk::igeneric_function<T>(L"V|VTT")
         /*
            Overloads:
            0. V   - vector
@@ -37141,7 +37141,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       all_false()
-      : exprtk::igeneric_function<T>("V|VTT")
+      : exprtk::igeneric_function<T>(L"V|VTT")
         /*
            Overloads:
            0. V   - vector
@@ -37187,7 +37187,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       any_true()
-      : exprtk::igeneric_function<T>("V|VTT")
+      : exprtk::igeneric_function<T>(L"V|VTT")
         /*
            Overloads:
            0. V   - vector
@@ -37233,7 +37233,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       any_false()
-      : exprtk::igeneric_function<T>("V|VTT")
+      : exprtk::igeneric_function<T>(L"V|VTT")
         /*
            Overloads:
            0. V   - vector
@@ -37279,7 +37279,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       count()
-      : exprtk::igeneric_function<T>("V|VTT")
+      : exprtk::igeneric_function<T>(L"V|VTT")
         /*
            Overloads:
            0. V   - vector
@@ -37325,7 +37325,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       copy()
-      : exprtk::igeneric_function<T>("VV|VTTVTT")
+      : exprtk::igeneric_function<T>(L"VV|VTTVTT")
         /*
            Overloads:
            0. VV     - x(vector), y(vector)
@@ -37375,7 +37375,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       rol()
-      : exprtk::igeneric_function<T>("VT|VTTT")
+      : exprtk::igeneric_function<T>(L"VT|VTTT")
         /*
            Overloads:
            0. VT   - vector, N
@@ -37423,7 +37423,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       ror()
-      : exprtk::igeneric_function<T>("VT|VTTT")
+      : exprtk::igeneric_function<T>(L"VT|VTTT")
         /*
            Overloads:
            0. VT   - vector, N
@@ -37471,7 +37471,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       shift_left()
-      : exprtk::igeneric_function<T>("VT|VTTT")
+      : exprtk::igeneric_function<T>(L"VT|VTTT")
         /*
            Overloads:
            0. VT   - vector, N
@@ -37526,7 +37526,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       shift_right()
-      : exprtk::igeneric_function<T>("VT|VTTT")
+      : exprtk::igeneric_function<T>(L"VT|VTTT")
         /*
            Overloads:
            0. VT   - vector, N
@@ -37583,7 +37583,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       sort()
-      : exprtk::igeneric_function<T>("V|VTT|VS|VSTT")
+      : exprtk::igeneric_function<T>(L"V|VTT|VS|VSTT")
         /*
            Overloads:
            0. V    - vector
@@ -37609,9 +37609,9 @@ namespace exprtk
 
          if ((2 == ps_index) || (3 == ps_index))
          {
-            if (exprtk::details::imatch(to_str(string_t(parameters[1])),"ascending"))
+            if (exprtk::details::imatch(to_str(string_t(parameters[1])),L"ascending"))
                ascending = true;
-            else if (exprtk::details::imatch(to_str(string_t(parameters[1])),"descending"))
+            else if (exprtk::details::imatch(to_str(string_t(parameters[1])),L"descending"))
                ascending = false;
             else
                return T(0);
@@ -37640,7 +37640,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       nthelement()
-      : exprtk::igeneric_function<T>("VT|VTTT")
+      : exprtk::igeneric_function<T>(L"VT|VTTT")
         /*
            Overloads:
            0. VT   - vector, nth-element
@@ -37682,7 +37682,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       iota()
-      : exprtk::igeneric_function<T>("VT|VTT|VTTT|VTTTT")
+      : exprtk::igeneric_function<T>(L"VT|VTT|VTTT|VTTTT")
         /*
            Overloads:
            0. VT    - vector, increment
@@ -37733,7 +37733,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       sumk()
-      : exprtk::igeneric_function<T>("V|VTT")
+      : exprtk::igeneric_function<T>(L"V|VTT")
         /*
            Overloads:
            0. V   - vector
@@ -37777,7 +37777,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       axpy()
-      : exprtk::igeneric_function<T>("TVV|TVVTT")
+      : exprtk::igeneric_function<T>(L"TVV|TVVTT")
         /*
            y <- ax + y
            Overloads:
@@ -37824,7 +37824,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       axpby()
-      : exprtk::igeneric_function<T>("TVTV|TVTVTT")
+      : exprtk::igeneric_function<T>(L"TVTV|TVTVTT")
         /*
            y <- ax + by
            Overloads:
@@ -37872,7 +37872,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       axpyz()
-      : exprtk::igeneric_function<T>("TVVV|TVVVTT")
+      : exprtk::igeneric_function<T>(L"TVVV|TVVVTT")
         /*
            z <- ax + y
            Overloads:
@@ -37922,7 +37922,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       axpbyz()
-      : exprtk::igeneric_function<T>("TVTVV|TVTVVTT")
+      : exprtk::igeneric_function<T>(L"TVTVV|TVTVVTT")
         /*
            z <- ax + by
            Overloads:
@@ -37973,7 +37973,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       axpbz()
-      : exprtk::igeneric_function<T>("TVTV|TVTVTT")
+      : exprtk::igeneric_function<T>(L"TVTV|TVTVTT")
         /*
            z <- ax + b
            Overloads:
@@ -38021,7 +38021,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       dot()
-      : exprtk::igeneric_function<T>("VV|VVTT")
+      : exprtk::igeneric_function<T>(L"VV|VVTT")
         /*
            Overloads:
            0. VV   - x(vector), y(vector)
@@ -38067,7 +38067,7 @@ namespace exprtk
       using exprtk::igeneric_function<T>::operator();
 
       dotk()
-      : exprtk::igeneric_function<T>("VV|VVTT")
+      : exprtk::igeneric_function<T>(L"VV|VVTT")
         /*
            Overloads:
            0. VV   - x(vector), y(vector)
@@ -38131,34 +38131,34 @@ namespace exprtk
          if (!symtab.add_function(FunctionName,FunctionType))                         \
          {                                                                            \
             exprtk_debug((                                                            \
-              "exprtk::rtl::vecops::register_package - Failed to add function: %s\n", \
+              L"exprtk::rtl::vecops::register_package - Failed to add function: %ls\n", \
               FunctionName));                                                         \
             return false;                                                             \
          }                                                                            \
 
-         exprtk_register_function("all_true"     ,at)
-         exprtk_register_function("all_false"    ,af)
-         exprtk_register_function("any_true"     ,nt)
-         exprtk_register_function("any_false"    ,nf)
-         exprtk_register_function("count"        , c)
-         exprtk_register_function("copy"        , cp)
-         exprtk_register_function("rotate_left"  ,rl)
-         exprtk_register_function("rol"          ,rl)
-         exprtk_register_function("rotate_right" ,rr)
-         exprtk_register_function("ror"          ,rr)
-         exprtk_register_function("shftl"        ,sl)
-         exprtk_register_function("shftr"        ,sr)
-         exprtk_register_function("sort"         ,st)
-         exprtk_register_function("nth_element"  ,ne)
-         exprtk_register_function("iota"         ,ia)
-         exprtk_register_function("sumk"         ,sk)
-         exprtk_register_function("axpy"    ,b1_axpy)
-         exprtk_register_function("axpby"  ,b1_axpby)
-         exprtk_register_function("axpyz"  ,b1_axpyz)
-         exprtk_register_function("axpbyz",b1_axpbyz)
-         exprtk_register_function("axpbz"  ,b1_axpbz)
-         exprtk_register_function("dot"          ,dt)
-         exprtk_register_function("dotk"        ,dtk)
+         exprtk_register_function(L"all_true"     ,at)
+         exprtk_register_function(L"all_false"    ,af)
+         exprtk_register_function(L"any_true"     ,nt)
+         exprtk_register_function(L"any_false"    ,nf)
+         exprtk_register_function(L"count"        , c)
+         exprtk_register_function(L"copy"        , cp)
+         exprtk_register_function(L"rotate_left"  ,rl)
+         exprtk_register_function(L"rol"          ,rl)
+         exprtk_register_function(L"rotate_right" ,rr)
+         exprtk_register_function(L"ror"          ,rr)
+         exprtk_register_function(L"shftl"        ,sl)
+         exprtk_register_function(L"shftr"        ,sr)
+         exprtk_register_function(L"sort"         ,st)
+         exprtk_register_function(L"nth_element"  ,ne)
+         exprtk_register_function(L"iota"         ,ia)
+         exprtk_register_function(L"sumk"         ,sk)
+         exprtk_register_function(L"axpy"    ,b1_axpy)
+         exprtk_register_function(L"axpby"  ,b1_axpby)
+         exprtk_register_function(L"axpyz"  ,b1_axpyz)
+         exprtk_register_function(L"axpbyz",b1_axpbyz)
+         exprtk_register_function(L"axpbz"  ,b1_axpbz)
+         exprtk_register_function(L"dot"          ,dt)
+         exprtk_register_function(L"dotk"        ,dtk)
          #undef exprtk_register_function
 
          return true;
@@ -38174,16 +38174,16 @@ namespace exprtk
 {
    namespace information
    {
-      static const char* library = "Mathematical Expression Toolkit";
-      static const char* version = "2.7182818284590452353602874713526624977572470936"
-                                   "999595749669676277240766303535475945713821785251";
-      static const char* date    = "20170505";
+      static const wchar_t* library = L"Mathematical Expression Toolkit";
+      static const wchar_t* version = L"2.7182818284590452353602874713526624977572470936"
+                                   L"999595749669676277240766303535475945713821785251";
+      static const wchar_t* date    = L"20170505";
 
-      static inline std::string data()
+      static inline std::wstring data()
       {
-         static const std::string info_str = std::string(library) +
-                                             std::string(" v") + std::string(version) +
-                                             std::string(" (") + date + std::string(")");
+         static const std::wstring info_str = std::wstring(library) +
+                                             std::wstring(L" v") + std::wstring(version) +
+                                             std::wstring(L" (") + date + std::wstring(L")");
          return info_str;
       }
 

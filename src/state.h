@@ -32,10 +32,13 @@ struct state {
 		cam
 	};
 	struct uistate {
-		bool cam = false, func = false, settings = false, error_shown = false, help = false;
+		bool cam = false, func = false, settings = false, help = false;
 		unsigned int settings_index = 0;
-		std::string error;
 		mode current = mode::idle;
+
+		std::mutex error_mut;
+		std::string error;
+		bool error_shown = false;
 	};
 
 	uistate ui;

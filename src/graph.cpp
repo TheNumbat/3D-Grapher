@@ -194,13 +194,14 @@ void fxy_graph::genthread(gendata* g) {
 	exprtk::symbol_table<float> table;
 	exprtk::parser<float> parser;
 	table.add_constants();
-	table.add_variable("x",x);
-	table.add_variable("y",y);
+	table.add_variable(L"x",x);
+	table.add_variable(L"y",y);
 	expr.register_symbol_table(table);
 
-	if(!parser.compile(trim_end(g->eq), expr)) {
+	if(!parser.compile(utf8_to_wstring(trim_end(g->eq)), expr)) {
+		std::lock_guard<std::mutex> lock(g->s->ui.error_mut);
 		g->s->ui.error_shown = true;
-		g->s->ui.error = parser.error();
+		g->s->ui.error = wstring_to_utf8(parser.error());
 		g->success = false;
 		return;
 	}
@@ -311,13 +312,14 @@ void cyl_graph::genthread(gendata* g) {
 	exprtk::symbol_table<float> table;
 	exprtk::parser<float> parser;
 	table.add_constants();
-	table.add_variable("z",z);
-	table.add_variable("θ",t);
+	table.add_variable(L"z",z);
+	table.add_variable(L"θ",t);
 	expr.register_symbol_table(table);
 
-	if(!parser.compile(trim_end(g->eq), expr)) {
+	if(!parser.compile(utf8_to_wstring(trim_end(g->eq)), expr)) {
+		std::lock_guard<std::mutex> lock(g->s->ui.error_mut);
 		g->s->ui.error_shown = true;
-		g->s->ui.error = parser.error();
+		g->s->ui.error = wstring_to_utf8(parser.error());
 		g->success = false;
 		return;
 	}
@@ -437,13 +439,14 @@ void spr_graph::genthread(gendata* g) {
 	exprtk::symbol_table<float> table;
 	exprtk::parser<float> parser;
 	table.add_constants();
-	table.add_variable("φ",p);
-	table.add_variable("θ",t);
+	table.add_variable(L"φ",p);
+	table.add_variable(L"θ",t);
 	expr.register_symbol_table(table);
 
-	if(!parser.compile(trim_end(g->eq), expr)) {
+	if(!parser.compile(utf8_to_wstring(trim_end(g->eq)), expr)) {
+		std::lock_guard<std::mutex> lock(g->s->ui.error_mut);
 		g->s->ui.error_shown = true;
-		g->s->ui.error = parser.error();
+		g->s->ui.error = wstring_to_utf8(parser.error());
 		g->success = false;
 		return;
 	}
@@ -578,24 +581,27 @@ void para_curve::generate(state* s) {
 	exprtk::symbol_table<float> table;
 	exprtk::parser<float> parser;
 	table.add_constants();
-	table.add_variable("t",t);
+	table.add_variable(L"t",t);
 	expr_x.register_symbol_table(table);
 	expr_y.register_symbol_table(table);
 	expr_z.register_symbol_table(table);
 
-	if(!parser.compile(trim_end(eqx), expr_x)) {
+	if(!parser.compile(utf8_to_wstring(trim_end(eqx)), expr_x)) {
+		std::lock_guard<std::mutex> lock(s->ui.error_mut);
 		s->ui.error_shown = true;
-		s->ui.error = parser.error();
+		s->ui.error = wstring_to_utf8(parser.error());
 		return;
 	}
-	if(!parser.compile(trim_end(eqy), expr_y)) {
+	if(!parser.compile(utf8_to_wstring(trim_end(eqy)), expr_y)) {
+		std::lock_guard<std::mutex> lock(s->ui.error_mut);
 		s->ui.error_shown = true;
-		s->ui.error = parser.error();
+		s->ui.error = wstring_to_utf8(parser.error());
 		return;
 	}
-	if(!parser.compile(trim_end(eqz), expr_z)) {
+	if(!parser.compile(utf8_to_wstring(trim_end(eqz)), expr_z)) {
+		std::lock_guard<std::mutex> lock(s->ui.error_mut);
 		s->ui.error_shown = true;
-		s->ui.error = parser.error();
+		s->ui.error = wstring_to_utf8(parser.error());
 		return;
 	}
 

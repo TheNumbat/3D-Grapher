@@ -1,6 +1,5 @@
 
 UI
-	Don't need * for multiply
 	Change help screen for exprtk syntax
 
 Rendering

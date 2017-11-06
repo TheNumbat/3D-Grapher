@@ -21,7 +21,7 @@ state::state() {
 	context = SDL_GL_CreateContext(window);
 
 	glewInit();
-	SDL_GL_SetSwapInterval(0);
+	SDL_GL_SetSwapInterval(1);
 
 	glEnable(GL_POLYGON_OFFSET_FILL);
 	glEnable(GL_DEPTH_TEST);
