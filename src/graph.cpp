@@ -229,7 +229,7 @@ void fxy_graph::genthread(gendata* g) {
 }
 
 void fxy_graph::generate(state* s) {
-	unsigned int numthreads = 2;// std::thread::hardware_concurrency();
+	unsigned int numthreads = std::thread::hardware_concurrency();
 #ifdef _MSC_VER
 	int cpuinfo[4];
 	__cpuid(cpuinfo, 1);
@@ -356,7 +356,7 @@ void cyl_graph::genthread(gendata* g) {
 }
 
 void cyl_graph::generate(state* s) {
-	unsigned int numthreads = 2;// std::thread::hardware_concurrency();
+	unsigned int numthreads = std::thread::hardware_concurrency();
 #ifdef _MSC_VER
 	int cpuinfo[4];
 	__cpuid(cpuinfo, 1);
@@ -492,7 +492,7 @@ void spr_graph::genthread(gendata* g) {
 }
 
 void spr_graph::generate(state* s) {
-	unsigned int numthreads = 2;// std::thread::hardware_concurrency();
+	unsigned int numthreads = std::thread::hardware_concurrency();
 #ifdef _MSC_VER
 	int cpuinfo[4];
 	__cpuid(cpuinfo, 1);
