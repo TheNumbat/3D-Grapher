@@ -13,6 +13,7 @@
 #include <thread>
 #include <limits>
 #include <mutex>
+#include <fstream>
 #undef min
 
 std::string trim_end(std::string s) {

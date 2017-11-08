@@ -36583,7 +36583,7 @@ namespace exprtk
             }
             else if (e_rdwrt == mode)
             {
-               std::wfstream* stream = new std::wfstream(file_name.c_str(),std::ios::binary);
+               std::fstream* stream = new std::fstream(wstring_to_utf8(file_name).c_str(),std::ios::binary);
 
                if (!(*stream))
                {
@@ -36638,7 +36638,7 @@ namespace exprtk
                                  write(reinterpret_cast<const char*>(view.begin() + offset), amount * sizeof(typename View::value_t));
                               break;
 
-               case e_rdwrt : reinterpret_cast<std::wfstream*>(stream_ptr)->
+               case e_rdwrt : reinterpret_cast<std::fstream*>(stream_ptr)->
                                  write(reinterpret_cast<const char*>(view.begin() + offset) , amount * sizeof(typename View::value_t));
                               break;
 
@@ -36654,11 +36654,11 @@ namespace exprtk
             switch (mode)
             {
                case e_read  : reinterpret_cast<std::wifstream*>(stream_ptr)->
-                                 read(reinterpret_cast<char*>(view.begin() + offset), amount * sizeof(typename View::value_t));
+                                 read(reinterpret_cast<wchar_t*>(view.begin() + offset), amount * sizeof(typename View::value_t));
                               break;
 
                case e_rdwrt : reinterpret_cast<std::wfstream*>(stream_ptr)->
-                                 read(reinterpret_cast<char*>(view.begin() + offset) , amount * sizeof(typename View::value_t));
+                                 read(reinterpret_cast<wchar_t*>(view.begin() + offset) , amount * sizeof(typename View::value_t));
                               break;
 
                default      : return false;
