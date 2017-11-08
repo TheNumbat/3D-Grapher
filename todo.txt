@@ -1,7 +1,4 @@
 
-UI
-	Change help screen for exprtk syntax
-
 Rendering
 	animate through settings / equation changes
 	color based on position option
@@ -27,9 +24,6 @@ Math Features
 	Partial Derivatives
 	Line/Surface/Flux integrals
 	E Regions
-
 	Tangent Planes
-	More than urnary functions (e.g. max, min)
-	Maxs & mins (abs and rel)
 	
 https://github.com/goldsborough/latexpp
