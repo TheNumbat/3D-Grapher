@@ -394,50 +394,59 @@ void state::UIFunc() {
 }
 
 void state::UISettings() {
+	using namespace ImGui;
+
 	bool changed = false;
 	graph* g = graphs[ui.settings_index];
 
-	ImGui::SetNextWindowPos({0.2f * w, 0.0f});
-	ImGui::Begin("Settings", &ui.settings, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
+	SetNextWindowPos({0.2f * w, 0.0f});
+	Begin("Settings", &ui.settings, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
 	
+	static const char* calc_strings[] = {"None", "1st Partial, 1st Variable", "1st Partial, 2nd Variable", "2nd Partial, 1st Variable", "2nd Partial, 2nd Variable", "3rd Partial, 1st Variable", "3rd Partial, 2nd Variable"};
+	static const char* para_strings[] = {"None", "1st Derivative", "2nd Derivative", "3rd Derivative"};
+
 	if(g->type != graph_para_curve) {
-		ImGui::Checkbox("Wireframe", &g->set.wireframe);
-		ImGui::Checkbox("Lighting", &g->set.lighting);
-		ImGui::Checkbox("Normals as Colors", &g->set.normal_colors);
-		changed = changed || ImGui::Checkbox("Normalization", &g->set.axisnormalization);
-		ImGui::SliderFloat("Opacity", &g->set.opacity, 0.0f, 1.0f);
-		ImGui::SliderFloat("Ambient Light", &g->set.ambientLighting, 0.0f, 1.0f);
+		Checkbox("Wireframe", &g->set.wireframe);
+		Checkbox("Lighting", &g->set.lighting);
+		Checkbox("Normals as Colors", &g->set.normal_colors);
+		changed = changed || Checkbox("Normalization", &g->set.axisnormalization);
+		changed = changed || Combo("Calculus", (int*)&g->set.calc, calc_strings, 7);
+
+		SliderFloat("Opacity", &g->set.opacity, 0.0f, 1.0f);
+		SliderFloat("Ambient Light", &g->set.ambientLighting, 0.0f, 1.0f);
+	} else {
+		changed = changed || Combo("Calculus", (int*)&g->set.calc, para_strings, 4);
 	}
-	
+
 	switch(g->type) {
 	case graph_func: {
-		changed = changed || ImGui::InputFloat("xmin", &g->set.rdom.xmin);
-		changed = changed || ImGui::InputFloat("xmax", &g->set.rdom.xmax);
-		changed = changed || ImGui::InputFloat("ymin", &g->set.rdom.ymin);
-		changed = changed || ImGui::InputFloat("ymax", &g->set.rdom.ymax);
-		changed = changed || ImGui::InputInt("xrez", &g->set.rdom.xrez);
-		changed = changed || ImGui::InputInt("yrez", &g->set.rdom.yrez);
+		changed = changed || InputFloat("xmin", &g->set.rdom.xmin);
+		changed = changed || InputFloat("xmax", &g->set.rdom.xmax);
+		changed = changed || InputFloat("ymin", &g->set.rdom.ymin);
+		changed = changed || InputFloat("ymax", &g->set.rdom.ymax);
+		changed = changed || InputInt("xrez", &g->set.rdom.xrez);
+		changed = changed || InputInt("yrez", &g->set.rdom.yrez);
 	} break;
 	case graph_cylindrical: {
-		changed = changed || ImGui::InputFloat("zmin", &g->set.cdom.zmin);
-		changed = changed || ImGui::InputFloat("zmax", &g->set.cdom.zmax);
-		changed = changed || ImGui::InputFloat("θmin", &g->set.cdom.tmin);
-		changed = changed || ImGui::InputFloat("θmax", &g->set.cdom.tmax);
-		changed = changed || ImGui::InputInt("zrez", &g->set.cdom.zrez);
-		changed = changed || ImGui::InputInt("θrez", &g->set.cdom.trez);
+		changed = changed || InputFloat("zmin", &g->set.cdom.zmin);
+		changed = changed || InputFloat("zmax", &g->set.cdom.zmax);
+		changed = changed || InputFloat("θmin", &g->set.cdom.tmin);
+		changed = changed || InputFloat("θmax", &g->set.cdom.tmax);
+		changed = changed || InputInt("zrez", &g->set.cdom.zrez);
+		changed = changed || InputInt("θrez", &g->set.cdom.trez);
 	} break;
 	case graph_spherical: {
-		changed = changed || ImGui::InputFloat("θmin", &g->set.sdom.tmin);
-		changed = changed || ImGui::InputFloat("θmax", &g->set.sdom.tmax);
-		changed = changed || ImGui::InputFloat("φmin", &g->set.sdom.pmin);
-		changed = changed || ImGui::InputFloat("φmax", &g->set.sdom.pmax);
-		changed = changed || ImGui::InputInt("θrez", &g->set.sdom.trez);
-		changed = changed || ImGui::InputInt("φrez", &g->set.sdom.prez);
+		changed = changed || InputFloat("θmin", &g->set.sdom.tmin);
+		changed = changed || InputFloat("θmax", &g->set.sdom.tmax);
+		changed = changed || InputFloat("φmin", &g->set.sdom.pmin);
+		changed = changed || InputFloat("φmax", &g->set.sdom.pmax);
+		changed = changed || InputInt("θrez", &g->set.sdom.trez);
+		changed = changed || InputInt("φrez", &g->set.sdom.prez);
 	} break;
 	case graph_para_curve: {
-		changed = changed || ImGui::InputFloat("tmin", &g->set.pdom.tmin);
-		changed = changed || ImGui::InputFloat("tmax", &g->set.pdom.tmax);
-		changed = changed || ImGui::InputInt("trez", &g->set.pdom.trez);
+		changed = changed || InputFloat("tmin", &g->set.pdom.tmin);
+		changed = changed || InputFloat("tmax", &g->set.pdom.tmax);
+		changed = changed || InputInt("trez", &g->set.pdom.trez);
 	} break;
 	}
 
@@ -445,7 +454,7 @@ void state::UISettings() {
 		regengraph(ui.settings_index);
 	}
 
-	ImGui::End();
+	End();
 }
 
 void state::UIError() {

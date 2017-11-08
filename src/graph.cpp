@@ -190,12 +190,12 @@ fxy_graph::fxy_graph(int id) : graph(id) {
 
 void fxy_graph::genthread(gendata* g) {
 
-	float x = g->xmin;
-	float y = g->dom.ymin;
+	double x = g->xmin;
+	double y = g->dom.ymin;
 
-	exprtk::expression<float> expr;
-	exprtk::symbol_table<float> table;
-	exprtk::parser<float> parser;
+	exprtk::expression<double> expr;
+	exprtk::symbol_table<double> table;
+	exprtk::parser<double> parser;
 	table.add_constant(L"e", CONST_E);
 	std::string pi_utf("π");
 	table.add_constant(utf8_to_wstring(pi_utf),CONST_PI);
@@ -215,14 +215,24 @@ void fxy_graph::genthread(gendata* g) {
 	for (int tx = 0; tx < g->txrez; tx++, x += g->dx) {
 		y = g->dom.ymin;
 		for (int ty = 0; ty <= g->dom.yrez; ty++, y += g->dy) {
-			float z = expr.value();
+			double z = 0.0f;
 
-			if (z < g->zmin) g->zmin = z;
-			if (z > g->zmax) g->zmax = z;
+			switch(g->calc) {
+			case calculus::none: 	z = expr.value(); break;
+			case calculus::part_x:	z = exprtk::derivative(expr, x, 0.00001); break;
+			case calculus::part_y:	z = exprtk::derivative(expr, y, 0.00001); break;
+			case calculus::part2_x:	z = exprtk::second_derivative(expr, x, 0.0001); break;
+			case calculus::part2_y:	z = exprtk::second_derivative(expr, y, 0.0001); break;
+			case calculus::part3_x:	z = exprtk::third_derivative(expr, x, 0.001); break;
+			case calculus::part3_y:	z = exprtk::third_derivative(expr, y, 0.001); break;
+			}
 
-			g->ret.push_back(x);
-			g->ret.push_back(y);
-			g->ret.push_back(z);
+			if (z < g->zmin) g->zmin = (float)z;
+			if (z > g->zmax) g->zmax = (float)z;
+
+			g->ret.push_back((float)x);
+			g->ret.push_back((float)y);
+			g->ret.push_back((float)z);
 		}
 	}
 	g->success = true;
@@ -270,6 +280,7 @@ void fxy_graph::generate(state* s) {
 			d->dy = dy;
 			d->xmin = _xmin;
 			d->ID = ID;
+			d->calc = set.calc;
 
 			data.push_back(d);
 			threads.push_back(std::thread(genthread, data.back()));
@@ -311,12 +322,12 @@ cyl_graph::cyl_graph(int id) : graph(id) {
 
 void cyl_graph::genthread(gendata* g) {
 	
-	float z = g->zmin;
-	float t = g->dom.tmin;
+	double z = g->zmin;
+	double t = g->dom.tmin;
 
-	exprtk::expression<float> expr;
-	exprtk::symbol_table<float> table;
-	exprtk::parser<float> parser;
+	exprtk::expression<double> expr;
+	exprtk::symbol_table<double> table;
+	exprtk::parser<double> parser;
 	table.add_constant(L"e", CONST_E);
 	std::string pi_utf("π");
 	table.add_constant(utf8_to_wstring(pi_utf),CONST_PI);
@@ -338,18 +349,28 @@ void cyl_graph::genthread(gendata* g) {
 	for (int tz = 0; tz < g->tzrez; tz++, z += g->dz) {
 		t = g->dom.tmin;
 		for (int tt = 0; tt <= g->dom.trez; tt++, t += g->dt) {
-			float r = expr.value();
+			double r = 0.0f;
 
-			float x = r * cos(t);
-			float y = r * sin(t);
-			if (x < g->gxmin) g->gxmin = x;
-			if (x > g->gxmax) g->gxmax = x;
-			if (y < g->gymin) g->gymin = y;
-			if (y > g->gymax) g->gymax = y;
+			switch(g->calc) {
+			case calculus::none: 	r = expr.value(); break;
+			case calculus::part_x:	r = exprtk::derivative(expr, z, 0.00001); break;
+			case calculus::part_y:	r = exprtk::derivative(expr, t, 0.00001); break;
+			case calculus::part2_x:	r = exprtk::second_derivative(expr, z, 0.0001); break;
+			case calculus::part2_y:	r = exprtk::second_derivative(expr, t, 0.0001); break;
+			case calculus::part3_x:	r = exprtk::third_derivative(expr, z, 0.001); break;
+			case calculus::part3_y:	r = exprtk::third_derivative(expr, t, 0.001); break;
+			}
 
-			g->ret.push_back(x);
-			g->ret.push_back(y);
-			g->ret.push_back(z);
+			double x = r * cos(t);
+			double y = r * sin(t);
+			if (x < g->gxmin) g->gxmin = (float)x;
+			if (x > g->gxmax) g->gxmax = (float)x;
+			if (y < g->gymin) g->gymin = (float)y;
+			if (y > g->gymax) g->gymax = (float)y;
+
+			g->ret.push_back((float)x);
+			g->ret.push_back((float)y);
+			g->ret.push_back((float)z);
 		}
 	}
 	g->success = true;
@@ -395,6 +416,7 @@ void cyl_graph::generate(state* s) {
 			d->dt = dt;
 			d->zmin = _zmin;
 			d->ID = ID;
+			d->calc = set.calc;
 
 			data.push_back(d);
 			threads.push_back(std::thread(genthread, data.back()));
@@ -443,12 +465,12 @@ spr_graph::spr_graph(int id) : graph(id) {
 
 void spr_graph::genthread(gendata* g) {
 
-	float p = g->pmin;
-	float t = g->dom.tmin;
+	double p = g->pmin;
+	double t = g->dom.tmin;
 
-	exprtk::expression<float> expr;
-	exprtk::symbol_table<float> table;
-	exprtk::parser<float> parser;
+	exprtk::expression<double> expr;
+	exprtk::symbol_table<double> table;
+	exprtk::parser<double> parser;
 	table.add_constant(L"e", CONST_E);
 	std::string pi_utf("π");
 	table.add_constant(utf8_to_wstring(pi_utf),CONST_PI);
@@ -470,22 +492,32 @@ void spr_graph::genthread(gendata* g) {
 	for (int tp = 0; tp < g->tprez; tp++, p += g->dp) {
 		t = g->dom.tmin;
 		for (int tt = 0; tt <= g->dom.trez; tt++, t += g->dt) {
-			float r = expr.value();
+			double r = 0.0f;
 
-			float x = r * cos(t) * sin(p);
-			float y = r * sin(t) * sin(p);
-			float z = r * cos(p);
+			switch(g->calc) {
+			case calculus::none: 	r = expr.value(); break;
+			case calculus::part_x:	r = exprtk::derivative(expr, p, 0.00001); break;
+			case calculus::part_y:	r = exprtk::derivative(expr, t, 0.00001); break;
+			case calculus::part2_x:	r = exprtk::second_derivative(expr, p, 0.0001); break;
+			case calculus::part2_y:	r = exprtk::second_derivative(expr, t, 0.0001); break;
+			case calculus::part3_x:	r = exprtk::third_derivative(expr, p, 0.001); break;
+			case calculus::part3_y:	r = exprtk::third_derivative(expr, t, 0.001); break;
+			}			
 
-			if (z < g->gzmin) g->gzmin = z;
-			if (z > g->gzmax) g->gzmax = z;
-			if (y < g->gymin) g->gymin = y;
-			if (y > g->gymax) g->gymax = y;
-			if (x < g->gxmin) g->gxmin = x;
-			if (x > g->gxmax) g->gxmax = x;
+			double x = r * cos(t) * sin(p);
+			double y = r * sin(t) * sin(p);
+			double z = r * cos(p);
 
-			g->ret.push_back(x);
-			g->ret.push_back(y);
-			g->ret.push_back(z);
+			if (z < g->gzmin) g->gzmin = (float)z;
+			if (z > g->gzmax) g->gzmax = (float)z;
+			if (y < g->gymin) g->gymin = (float)y;
+			if (y > g->gymax) g->gymax = (float)y;
+			if (x < g->gxmin) g->gxmin = (float)x;
+			if (x > g->gxmax) g->gxmax = (float)x;
+
+			g->ret.push_back((float)x);
+			g->ret.push_back((float)y);
+			g->ret.push_back((float)z);
 		}
 	}
 	g->success = true;
@@ -529,6 +561,7 @@ void spr_graph::generate(state* s) {
 			d->dp = dp;
 			d->pmin = pmin;
 			d->ID = ID;
+			d->calc = set.calc;
 
 			data.push_back(d);
 			threads.push_back(std::thread(genthread, data.back()));
@@ -591,11 +624,11 @@ void para_curve::generate(state* s) {
 	xmax = ymax = zmax = -FLT_MAX;
 
 	verticies.clear();
-	float t = set.pdom.tmin;
+	double t = set.pdom.tmin;
 
-	exprtk::expression<float> expr_x, expr_y, expr_z;
-	exprtk::symbol_table<float> table;
-	exprtk::parser<float> parser;
+	exprtk::expression<double> expr_x, expr_y, expr_z;
+	exprtk::symbol_table<double> table;
+	exprtk::parser<double> parser;
 	table.add_constant(L"e", CONST_E);
 	std::string pi_utf("π");
 	table.add_constant(utf8_to_wstring(pi_utf),CONST_PI);
@@ -625,20 +658,38 @@ void para_curve::generate(state* s) {
 	}
 
 	for (int tstep = 0; tstep < set.pdom.trez; tstep++, t += (set.pdom.tmax - set.pdom.tmin) / set.pdom.trez) {
-		float x = expr_x.value();
-		float y = expr_y.value();
-		float z = expr_z.value();
+		double x = 0.0f;
+		switch(set.calc) {
+		case calculus::none: 	x = expr_x.value(); break;
+		case calculus::part_x:	x = exprtk::derivative(expr_x, t, 0.00001); break;
+		case calculus::part_y:	x = exprtk::second_derivative(expr_x, t, 0.0001); break;
+		case calculus::part2_x:	x = exprtk::third_derivative(expr_x, t, 0.001); break;
+		}
+		double y = 0.0f;
+		switch(set.calc) {
+		case calculus::none: 	y = expr_y.value(); break;
+		case calculus::part_x:	y = exprtk::derivative(expr_y, t, 0.00001); break;
+		case calculus::part_y:	y = exprtk::second_derivative(expr_y, t, 0.0001); break;
+		case calculus::part2_x:	y = exprtk::third_derivative(expr_y, t, 0.001); break;
+		}
+		double z = 0.0f;
+		switch(set.calc) {
+		case calculus::none: 	z = expr_z.value(); break;
+		case calculus::part_x:	z = exprtk::derivative(expr_z, t, 0.00001); break;
+		case calculus::part_y:	z = exprtk::second_derivative(expr_z, t, 0.0001); break;
+		case calculus::part2_x:	z = exprtk::third_derivative(expr_z, t, 0.001); break;
+		}		
 
-		if (z < zmin) zmin = z;
-		if (z > zmax) zmax = z;
-		if (y < ymin) ymin = y;
-		if (y > ymax) ymax = y;
-		if (x < xmin) xmin = x;
-		if (x > xmax) xmax = x;
+		if (z < zmin) zmin = (float)z;
+		if (z > zmax) zmax = (float)z;
+		if (y < ymin) ymin = (float)y;
+		if (y > ymax) ymax = (float)y;
+		if (x < xmin) xmin = (float)x;
+		if (x > xmax) xmax = (float)x;
 
-		verticies.push_back(x);
-		verticies.push_back(y);
-		verticies.push_back(z);
+		verticies.push_back((float)x);
+		verticies.push_back((float)y);
+		verticies.push_back((float)z);
 	}
 	generateIndiciesAndNormals();
 }

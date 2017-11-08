@@ -66,6 +66,7 @@ struct fxy_graph : public graph {
 		std::vector<float> ret;
 		std::string eq;
 		rect_domain dom;
+		calculus calc;
 		float zmin, zmax, xmin, dx, dy;
 		int txrez, ID;
 		bool success;
@@ -86,6 +87,7 @@ struct cyl_graph : public graph {
 		std::vector<float> ret;
 		std::string eq;
 		cyl_domain dom;
+		calculus calc;
 		float gxmin, gxmax, gymin, gymax, zmin, dz, dt;
 		int tzrez, ID;
 		bool success;
@@ -106,6 +108,7 @@ struct spr_graph : public graph {
 		std::vector<float> ret;
 		std::string eq;
 		spr_domain dom;
+		calculus calc;
 		float gxmin, gxmax, gymin, gymax, gzmin, gzmax, pmin, dt, dp;
 		int tprez, ID;
 		bool success;
