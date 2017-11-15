@@ -30,7 +30,7 @@ void graph::send() {
 	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * verticies.size(), verticies.size() ? &verticies[0] : NULL, GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ARRAY_BUFFER, normVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * normals.size(), normals.size() ? &normals[0] : NULL, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * normals.size(), normals.size() ? &normals[0] : NULL, GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * indicies.size(), indicies.size() ? &indicies[0] : NULL, GL_STATIC_DRAW);
@@ -38,7 +38,7 @@ void graph::send() {
 	glBindVertexArray(0);
 }
 
-void graph::draw(state* s, mat4 model, mat4 view, mat4 proj) {
+void graph::draw(state* s, glm::mat4 model, glm::mat4 view, glm::mat4 proj) {
 	if(!verticies.size()) return;
 
 	glBindVertexArray(VAO);
@@ -46,7 +46,7 @@ void graph::draw(state* s, mat4 model, mat4 view, mat4 proj) {
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
 
-		mat4 modelviewproj = proj * view * model;
+		glm::mat4 modelviewproj = proj * view * model;
 
 		if (set.lighting) {
 			if(set.normal_colors) {
@@ -70,15 +70,12 @@ void graph::draw(state* s, mat4 model, mat4 view, mat4 proj) {
 			glUniform3f(s->graph_s_light.getUniform("lightColor"), 1.0f, 1.0f, 1.0f);
 			glUniform1f(s->graph_s_light.getUniform("ambientStrength"), set.ambientLighting);
 
-			if (s->camtype == cam_3d) {
-
+			if (s->camtype == cam_type::_3d) {
 				glUniform3f(s->graph_s_light.getUniform("lightPos"), s->c_3d.pos.x, s->c_3d.pos.y, s->c_3d.pos.z);
-			}
-			else {
+			} else {
 				glUniform3f(s->graph_s_light.getUniform("lightPos"), s->c_3d_static.pos.x, s->c_3d_static.pos.y, s->c_3d_static.pos.z);
 			}
-		}
-		else {
+		} else {
 			s->graph_s.use();
 
 			glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -91,11 +88,8 @@ void graph::draw(state* s, mat4 model, mat4 view, mat4 proj) {
 		}
 
 		if (set.wireframe) {
-
 			glDrawElements(GL_LINES, (int)indicies.size(), GL_UNSIGNED_INT, (void*)0);
-
 		} else {
-
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 			glPolygonOffset(1.0f, 0.0f);
@@ -124,7 +118,7 @@ void graph::generateIndiciesAndNormals() {
 	indicies.clear();
 	normals.clear();
 
-	vec3 norm;
+	glm::vec3 norm;
 	int _x_max = 0;
 	int _y_max = 0;
 	if (type == graph_func) {
@@ -163,8 +157,8 @@ void graph::generateIndiciesAndNormals() {
 				float x3 = verticies[(i_index + _y_max + 1) * 3];
 				float y3 = verticies[(i_index + _y_max + 1) * 3 + 1];
 				float z3 = verticies[(i_index + _y_max + 1) * 3 + 2];
-				vec3 one(x2 - x1, y2 - y1, z2 - z1);
-				vec3 two(x3 - x1, y3 - y1, z3 - z1);
+				glm::vec3 one(x2 - x1, y2 - y1, z2 - z1);
+				glm::vec3 two(x3 - x1, y3 - y1, z3 - z1);
 				norm = glm::normalize(cross(two, one));
 			}
 			normals.push_back(norm);
@@ -697,12 +691,12 @@ void para_curve::generateIndiciesAndNormals() {
 	indicies.push_back(set.pdom.trez - 1);
 }
 
-void para_curve::draw(state* s, mat4 model, mat4 view, mat4 proj) {
+void para_curve::draw(state* s, glm::mat4 model, glm::mat4 view, glm::mat4 proj) {
 	glBindVertexArray(VAO);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 
-	mat4 modelviewproj = proj * view * model;
+	glm::mat4 modelviewproj = proj * view * model;
 
 	s->graph_s.use();
 

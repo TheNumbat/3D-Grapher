@@ -21,7 +21,7 @@ struct para_domain {
 	int trez;
 };
 
-enum class calculus {
+enum class calculus : int {
 	none = 0,
 	part_x,
 	part_y,
@@ -31,6 +31,13 @@ enum class calculus {
 	part3_y,
 };
 
+enum class axis : int {
+	none = 0,
+	x,
+	y,
+	z
+};
+
 struct graph_settings {
 	bool wireframe         = false;
 	bool lighting          = true;
@@ -38,6 +45,10 @@ struct graph_settings {
 	bool normal_colors	   = false;
 	float opacity     	   = 1.0f;
 	float ambientLighting  = 0.0f;
+
+	axis highlight_along = axis::none;
+	glm::vec3 highlight_value;
+
 	union {
 		rect_domain rdom;       // { -10, 10, -10, 10, -10, 10, 200, 200 };
 		cyl_domain cdom;        // { 0, 1, 0, 2 * val_pi, 0, 10, 200, 200 };

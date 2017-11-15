@@ -46,8 +46,6 @@ std::string wstring_to_utf8(const std::wstring& str)
 
 #include "../asset/font.h"
 
-using namespace glm;
-
 #include "cam.h"
 #include "settings.h"
 #include "gl.h"

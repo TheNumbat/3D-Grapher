@@ -1,25 +1,25 @@
 
 #pragma once
 
-enum cam_type {
-	cam_3d = 0,
-	cam_3d_static
+enum class cam_type {
+	_3d = 0,
+	_3d_static
 };
 
 struct _cam_3d {
-	vec3 pos, front, up, right, globalUp;
+	glm::vec3 pos, front, up, right, globalUp;
 	float pitch, yaw, speed, fov;
 	Uint32 lastUpdate;
 
-	mat4 getView() {
-		mat4 ret = lookAt(pos, pos + front, up);
+	glm::mat4 getView() {
+		glm::mat4 ret = lookAt(pos, pos + front, up);
 		return ret;
 	}
 
 	void updateFront() {
-		front.x = cos(radians(pitch)) * cos(radians(yaw));
-		front.y = sin(radians(pitch));
-		front.z = sin(radians(yaw)) * cos(radians(pitch));
+		front.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
+		front.y = sin(glm::radians(pitch));
+		front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
 		front = normalize(front);
 		right = normalize(cross(front, globalUp));
 		up = normalize(cross(right, front));
@@ -30,8 +30,8 @@ struct _cam_3d {
 		pitch = -45.0f;
 		yaw = 225.0f;
 		speed = 5.0f;
-		pos = vec3(5, 5, 5);
-		globalUp = vec3(0, 1, 0);
+		pos = glm::vec3(5, 5, 5);
+		globalUp = glm::vec3(0, 1, 0);
 		lastUpdate = SDL_GetTicks();
 		updateFront();
 	}
@@ -49,11 +49,11 @@ struct _cam_3d {
 };
 
 struct _cam_3d_static {
-	vec3 pos, lookingAt, up;
+	glm::vec3 pos, lookingAt, up;
 	float pitch, yaw, radius, fov;
 
-	mat4 getView() {
-		mat4 ret = lookAt(pos, lookingAt, up);
+	glm::mat4 getView() {
+		glm::mat4 ret = lookAt(pos, lookingAt, up);
 		return ret;
 	}
 
@@ -61,15 +61,15 @@ struct _cam_3d_static {
 		fov = 60.0f;
 		pitch = 45.0f;
 		radius = 20.0f;
-		lookingAt = vec3(0, 0, 0);
-		up = vec3(0, 1, 0);
+		lookingAt = glm::vec3(0, 0, 0);
+		up = glm::vec3(0, 1, 0);
 		updatePos();
 	}
 
 	void updatePos() {
-		pos.x = cos(radians(pitch)) * cos(radians(yaw));
-		pos.y = sin(radians(pitch));
-		pos.z = sin(radians(yaw)) * cos(radians(pitch));
+		pos.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
+		pos.y = sin(glm::radians(pitch));
+		pos.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
 		pos = radius * normalize(pos) + lookingAt;
 	}
 

@@ -169,15 +169,15 @@ void state::run() {
 
 void state::RenderGraphs() {
 
-	mat4 model, view, proj;
-	model = rotate(model, radians(-90.0f), vec3(1, 0, 0));
-	if (camtype == cam_3d) {
+	glm::mat4 model, view, proj;
+	model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	if (camtype == cam_type::_3d) {
 		view = c_3d.getView();
-		proj = perspective(radians(c_3d.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
+		proj = glm::perspective(glm::radians(c_3d.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
 	}
 	else {
 		view = c_3d_static.getView();
-		proj = perspective(radians(c_3d_static.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
+		proj = glm::perspective(glm::radians(c_3d_static.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
 	} 
 	modelviewproj =  proj * view * model;
 
@@ -249,51 +249,64 @@ int complete_callback(ImGuiTextEditCallbackData* data)
 }
 
 void state::UIGraphs() {
-	ImGui::Columns(2);
-	ImGui::SetColumnWidth(-1, ImGui::GetWindowWidth() * 0.85f);
+	using namespace ImGui;
+
+	Columns(2);
+	SetColumnWidth(-1, GetWindowWidth() * 0.85f);
 
 	for(unsigned int i = 0; i < graphs.size(); i++) {
 		graph* g = graphs[i];
-		ImGui::PushID(g->ID);
+		PushID(g->ID);
 
 		switch(g->type) {
 		case graph_func: {
-			ImGui::Text("f(x,y) =");
-			if(ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback)) {
+			Text("f(x,y) =");
+			if(InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(GetColumnWidth() - 20, 60), text_input_flags, complete_callback)) {
 				regengraph(i);
 			}
 		} break;
 		case graph_cylindrical: {
-			ImGui::Text("ψ(z,θ) =");
-			if(ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback)) {
+			Text("ψ(z,θ) =");
+			if(InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(GetColumnWidth() - 20, 60), text_input_flags, complete_callback)) {
 				regengraph(i);
 			}
 		} break;
 		case graph_spherical: {
-			ImGui::Text("ρ(θ,φ) =");
-			if(ImGui::InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 60), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback)) {
+			Text("ρ(θ,φ) =");
+			if(InputTextMultiline("", (char*)g->eq_str.c_str(), 1000, ImVec2(GetColumnWidth() - 20, 60), text_input_flags, complete_callback)) {
 				regengraph(i);
 			}
 		} break;
 		case graph_para_curve: {
 			para_curve* p = (para_curve*)g;
-			ImGui::Text("x(t) =");
-			ImGui::PushID(0);
-			ImGui::InputTextMultiline("", (char*)p->eqx.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback);
-			ImGui::PopID();
-			ImGui::Text("y(t) =");
-			ImGui::PushID(1);
-			ImGui::InputTextMultiline("", (char*)p->eqy.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback);
-			ImGui::PopID();
-			ImGui::Text("z(t) =");
-			ImGui::PushID(2);
-			ImGui::InputTextMultiline("", (char*)p->eqz.c_str(), 1000, ImVec2(ImGui::GetColumnWidth() - 20, 40), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion, complete_callback);
-			ImGui::PopID();
+			Text("x(t) =");
+			PushID(0);
+			InputTextMultiline("", (char*)p->eqx.c_str(), 1000, ImVec2(GetColumnWidth() - 20, 40), text_input_flags, complete_callback);
+			PopID();
+			Text("y(t) =");
+			PushID(1);
+			InputTextMultiline("", (char*)p->eqy.c_str(), 1000, ImVec2(GetColumnWidth() - 20, 40), text_input_flags, complete_callback);
+			PopID();
+			Text("z(t) =");
+			PushID(2);
+			InputTextMultiline("", (char*)p->eqz.c_str(), 1000, ImVec2(GetColumnWidth() - 20, 40), text_input_flags, complete_callback);
+			PopID();
+		} break;
+		}
+		switch(g->set.highlight_along) {
+		case axis::x: {
+			SliderFloat("X", &g->set.highlight_value.x, g->xmin, g->xmax);
+		} break;
+		case axis::y: {
+			SliderFloat("Y", &g->set.highlight_value.y, g->ymin, g->ymax);
+		} break;
+		case axis::z: {
+			SliderFloat("Z", &g->set.highlight_value.z, g->zmin, g->zmax);
 		} break;
 		}
 
-		ImGui::NextColumn();
-		if(ImGui::Button("×")) {
+		NextColumn();
+		if(Button("×")) {
 			if(ui.settings_index == i) {
 				ui.settings_index = 0;
 				ui.settings = false;
@@ -306,91 +319,95 @@ void state::UIGraphs() {
 			i--;
 			updateAxes();
 		}
-		if(ImGui::Button("▶")) {
+		if(Button("▶")) {
 			regengraph(i);
 		}
-		if(ImGui::Button("⚙")) {
+		if(Button("⚙")) {
 			if(ui.settings_index == i) ui.settings = !ui.settings;
 			else ui.settings = true;
 			ui.settings_index = i;
 		}
-		ImGui::NextColumn();
+		NextColumn();
 
-		ImGui::Separator();
-		ImGui::PopID();
+		Separator();
+		PopID();
 	}
 }
 
 void state::UICamera() {
-	ImGui::SetNextWindowPos({0.2f * w, 0.0f});
-	ImGui::Begin("Camera", &ui.cam, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
+	using namespace ImGui;
+
+	SetNextWindowPos({0.2f * w, 0.0f});
+	Begin("Camera", &ui.cam, window_flags);
 	
 	const char* names[] = {"Free 3D", "Static 3D"};
-	ImGui::Combo("Camera", (int*)&camtype, names, 2);
+	Combo("Camera", (int*)&camtype, names, 2);
 
-	if(camtype == cam_3d) {
-		ImGui::SliderFloat("FOV", &c_3d.fov, 10.0f, 170.0f);
-	} else if(camtype == cam_3d_static) {
-		ImGui::SliderFloat("FOV", &c_3d_static.fov, 10.0f, 170.0f);
+	if(camtype == cam_type::_3d) {
+		SliderFloat("FOV", &c_3d.fov, 10.0f, 170.0f);
+	} else if(camtype == cam_type::_3d_static) {
+		SliderFloat("FOV", &c_3d_static.fov, 10.0f, 170.0f);
 	}
 	
-	if(ImGui::Button("Reset Camera")) {
-		if(camtype == cam_3d) {
+	if(Button("Reset Camera")) {
+		if(camtype == cam_type::_3d) {
 			c_3d.reset();
-		} else if(camtype == cam_3d_static) {
+		} else if(camtype == cam_type::_3d_static) {
 			c_3d_static.reset();
 		}
 	}
-	ImGui::End();
+	End();
 }
 
 void state::UIFunc() {
-	ImGui::SetNextWindowPos({0.2f * w, 0.0f});
-	ImGui::Begin("Add a Graph", &ui.func, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
+	using namespace ImGui;
 
-	if(ImGui::Button("Rectangular")) {
+	SetNextWindowPos({0.2f * w, 0.0f});
+	Begin("Add a Graph", &ui.func, window_flags);
+
+	if(Button("Rectangular")) {
 		ui.func = false;
 		graphs.push_back(new fxy_graph(next_graph_id++));
 	}
-	if(ImGui::IsItemHovered()) {
-		ImGui::BeginTooltip();
-			ImGui::Text("f(x,y)");
-		ImGui::EndTooltip();
+	if(IsItemHovered()) {
+		BeginTooltip();
+			Text("f(x,y)");
+		EndTooltip();
 	}
 
-	if(ImGui::Button("Cylindrical")) {
+	if(Button("Cylindrical")) {
 		ui.func = false;
 		graphs.push_back(new cyl_graph(next_graph_id++));
 	}
-	if(ImGui::IsItemHovered()) {
-		ImGui::BeginTooltip();
-			ImGui::Text("ψ(z,θ)");
-		ImGui::EndTooltip();
+	if(IsItemHovered()) {
+		BeginTooltip();
+			Text("ψ(z,θ)");
+		EndTooltip();
 	}
 
-	if(ImGui::Button("Spherical")) {
+	if(Button("Spherical")) {
 		ui.func = false;
 		graphs.push_back(new spr_graph(next_graph_id++));
 	}
-	if(ImGui::IsItemHovered()) {
-		ImGui::BeginTooltip();
-			ImGui::Text("ρ(θ,φ)");
-		ImGui::EndTooltip();
+	if(IsItemHovered()) {
+		BeginTooltip();
+			Text("ρ(θ,φ)");
+		EndTooltip();
 	}
 
-	if(ImGui::Button("Parametric Curve")) {
+	if(Button("Parametric Curve")) {
 		ui.func = false;
 		graphs.push_back(new para_curve(next_graph_id++));
 	}
-	if(ImGui::IsItemHovered()) {
-		ImGui::BeginTooltip();
-			ImGui::Text("x = f(t)");
-			ImGui::Text("y = g(t)");
-			ImGui::Text("z = h(t)");
-		ImGui::EndTooltip();
+	if(IsItemHovered()) {
+		BeginTooltip();
+			Text("x = f(t)");
+			Text("y = g(t)");
+			Text("z = h(t)");
+		EndTooltip();
 	}
 
-	ImGui::End();
+	End();
 }
 
 void state::UISettings() {
@@ -400,16 +417,18 @@ void state::UISettings() {
 	graph* g = graphs[ui.settings_index];
 
 	SetNextWindowPos({0.2f * w, 0.0f});
-	Begin("Settings", &ui.settings, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
+	Begin("Settings", &ui.settings, window_flags);
 	
 	static const char* calc_strings[] = {"None", "1st Partial, 1st Variable", "1st Partial, 2nd Variable", "2nd Partial, 1st Variable", "2nd Partial, 2nd Variable", "3rd Partial, 1st Variable", "3rd Partial, 2nd Variable"};
 	static const char* para_strings[] = {"None", "1st Derivative", "2nd Derivative", "3rd Derivative"};
+	static const char* highlight_stirngs[] = {"None", "X", "Y", "Z"};
 
 	if(g->type != graph_para_curve) {
 		Checkbox("Wireframe", &g->set.wireframe);
 		Checkbox("Lighting", &g->set.lighting);
 		Checkbox("Normals as Colors", &g->set.normal_colors);
 		changed = changed || Checkbox("Normalization", &g->set.axisnormalization);
+		changed = changed || Combo("Highlight Curve", (int*)&g->set.highlight_along, highlight_stirngs, 4);
 		changed = changed || Combo("Calculus", (int*)&g->set.calc, calc_strings, 7);
 
 		SliderFloat("Opacity", &g->set.opacity, 0.0f, 1.0f);
@@ -458,20 +477,22 @@ void state::UISettings() {
 }
 
 void state::UIError() {
-	ImGui::SetNextWindowPos({0.2f * w, 0.0f});
-	ImGui::Begin("Error!", &ui.error_shown, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
-	ImGui::Text(ui.error.c_str());
-	if(ImGui::Button("Dismiss")) {
+	using namespace ImGui;
+
+	SetNextWindowPos({0.2f * w, 0.0f});
+	Begin("Error!", &ui.error_shown, window_flags);
+	Text(ui.error.c_str());
+	if(Button("Dismiss")) {
 		ui.error_shown = false;
 	}
-	ImGui::End();
+	End();
 }
 
 void state::UIHelp() {
 	using namespace ImGui;
 
 	SetNextWindowPos({0.2f * w, 0.0f});
-	Begin("Help", &ui.help, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
+	Begin("Help", &ui.help, window_flags);
 
 	PushTextWrapPos(400);
 	Separator();
@@ -494,7 +515,7 @@ void state::UIHelp() {
 	End();
 
 	SetNextWindowPos({0.2f * w + 400, 0.0f});
-	Begin("Equation Features", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
+	Begin("Equation Features", nullptr, window_flags);
 	PushTextWrapPos(400);
 	Separator();
 	Text("Operators");
@@ -536,26 +557,27 @@ void state::UIHelp() {
 }
 
 void state::UI() {
+	using namespace ImGui;
 
 	ImGui_ImplSdlGL3_NewFrame(window);
 
-	ImGui::SetNextWindowPos({0, 0});
-	ImGui::SetNextWindowSize({0.2f * w, (float)h});
-	ImGui::Begin("Main", 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings);
+	SetNextWindowPos({0, 0});
+	SetNextWindowSize({0.2f * w, (float)h});
+	Begin("Main", 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings);
 
-	if(ImGui::Button("Add a Graph")) {
+	if(Button("Add a Graph")) {
 		ui.func = !ui.func;
 	}
-	ImGui::SameLine();
-	if(ImGui::Button("Camera")) {
+	SameLine();
+	if(Button("Camera")) {
 		ui.cam = !ui.cam;
 	}
-	ImGui::SameLine();
-	if(ImGui::Button("Help")) {
+	SameLine();
+	if(Button("Help")) {
 		ui.help = !ui.help;
 	}
 
-	ImGui::Separator();
+	Separator();
 
 	UIGraphs();
 
@@ -579,8 +601,8 @@ void state::UI() {
 		UIHelp();
 	}
 
-	ImGui::End();
-	ImGui::Render();
+	End();
+	Render();
 }
 
 void state::Events() {
@@ -617,10 +639,10 @@ void state::Events() {
 			if(ui.current == mode::cam) {
 				int dx = (e.motion.x - mx);
 				int dy = (e.motion.y - my);
-				if (camtype == cam_3d) {
+				if (camtype == cam_type::_3d) {
 					c_3d.move(dx, dy);
 				}
-				else if (camtype == cam_3d_static) {
+				else if (camtype == cam_type::_3d_static) {
 					c_3d_static.move(dx, dy);
 				}
 			}
@@ -649,11 +671,11 @@ void state::Events() {
 
 		case SDL_MOUSEWHEEL: {
 			if(!io.WantCaptureMouse) {
-				if(camtype == cam_3d) {
+				if(camtype == cam_type::_3d) {
 					c_3d.fov -= 5 * e.wheel.y;
 					if(c_3d.fov < 10) c_3d.fov = 10;
 					if(c_3d.fov > 170) c_3d.fov = 170;
-				} else if(camtype == cam_3d_static) {
+				} else if(camtype == cam_type::_3d_static) {
 					c_3d_static.fov -= 5 * e.wheel.y;
 					if(c_3d_static.fov < 10) c_3d_static.fov = 10;
 					if(c_3d_static.fov > 170) c_3d_static.fov = 170;
@@ -665,7 +687,7 @@ void state::Events() {
 
 	float dT = (SDL_GetTicks() - c_3d.lastUpdate) / 1000.0f;
 	c_3d.lastUpdate = SDL_GetTicks();
-	if (camtype == cam_3d && ui.current == mode::cam) {
+	if (camtype == cam_type::_3d && ui.current == mode::cam) {
 		if (keys[SDL_SCANCODE_W]) {
 			c_3d.pos += c_3d.front * c_3d.speed * dT;
 		}

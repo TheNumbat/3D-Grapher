@@ -40,7 +40,9 @@ struct state {
 		std::string error;
 		bool error_shown = false;
 	};
-
+	const ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings;
+	const ImGuiInputTextFlags text_input_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackCompletion;
+	
 	uistate ui;
 	int w, h, mx, my, next_graph_id, last_mx, last_my;
 	bool running;
@@ -57,10 +59,10 @@ struct state {
 	// OpenGL
 	GLuint axisVAO = 0, axisVBO = 0;
 	shader graph_s, axis_s, UI_s, rect_s, graph_s_light, graph_s_norm;
-	mat4 modelviewproj;
+	glm::mat4 modelviewproj;
 
 	// camera
-	cam_type camtype = cam_3d_static;
+	cam_type camtype = cam_type::_3d_static;
 	_cam_3d c_3d;
 	_cam_3d_static c_3d_static;
 };
