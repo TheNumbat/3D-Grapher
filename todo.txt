@@ -1,12 +1,10 @@
 
 Rendering
 	animate through settings / equation changes
-	color based on position option
-		also can use to highlight math features (e.g. gradient)
+	color based on math features (e.g. gradient)
 
 Camera
-	Set camera to rotate about axis
-	Keys & ability to align camera XY, XZ, YZ (currently XY will not go fully orthogonal)
+	Set to rotate about axis
 
 Bugs
 	One strip of polygons is too dark on cyl/spr
@@ -24,5 +22,8 @@ Math Features
 	Line/Surface/Flux integrals
 	E Regions
 	Tangent Planes
-	
-https://github.com/goldsborough/latexpp
+
+Change Log
+- added 1st/2nd/3rd partials in both variables
+- UI : snap camera to see XY/XZ/YZ plane
+[in progress] - UI : highlight curve on graph in x/y/z

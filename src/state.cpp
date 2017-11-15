@@ -347,6 +347,20 @@ void state::UICamera() {
 		SliderFloat("FOV", &c_3d.fov, 10.0f, 170.0f);
 	} else if(camtype == cam_type::_3d_static) {
 		SliderFloat("FOV", &c_3d_static.fov, 10.0f, 170.0f);
+
+		Text("Snap to:");
+		SameLine();
+		if(Button("XY")) {
+			c_3d_static.setAxis(glm::vec3(0,0,1));
+		}
+		SameLine();
+		if(Button("XZ")) {
+			c_3d_static.setAxis(glm::vec3(0,1,0));	
+		}
+		SameLine();
+		if(Button("YZ")) {
+			c_3d_static.setAxis(glm::vec3(1,0,0));
+		}
 	}
 	
 	if(Button("Reset Camera")) {
@@ -356,6 +370,7 @@ void state::UICamera() {
 			c_3d_static.reset();
 		}
 	}
+
 	End();
 }
 

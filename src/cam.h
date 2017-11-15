@@ -57,6 +57,21 @@ struct _cam_3d_static {
 		return ret;
 	}
 
+	void setAxis(glm::vec3 axis) {
+
+		if(axis == glm::vec3(0,0,1)) {
+			pitch = 90.0f;
+			yaw = 0.0f;
+		} else if(axis == glm::vec3(0,1,0)) {
+			pitch = 0.0f;
+			yaw = 0.0f;
+		} else if(axis == glm::vec3(1,0,0)) {
+			pitch = 0.0f;
+			yaw = 90.0f;
+		}
+		updatePos();
+	}
+
 	void reset() {
 		fov = 60.0f;
 		pitch = 45.0f;
@@ -79,8 +94,8 @@ struct _cam_3d_static {
 		pitch -= dy * sens;
 		if (yaw > 360.0f) yaw = 0.0f;
 		else if (yaw < 0.0f) yaw = 360.0f;
-		if (pitch > 89.0f) pitch = 89.0f;
-		else if (pitch < -89.0f) pitch = -89.0f;
+		if (pitch > 90.0f) pitch = 90.0f;
+		else if (pitch < -90.0f) pitch = -90.0f;
 		updatePos();
 	}
 };
