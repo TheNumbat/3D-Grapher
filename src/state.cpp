@@ -676,9 +676,9 @@ void state::Events() {
 					if(c_3d.fov < 10) c_3d.fov = 10;
 					if(c_3d.fov > 170) c_3d.fov = 170;
 				} else if(camtype == cam_type::_3d_static) {
-					c_3d_static.fov -= 5 * e.wheel.y;
-					if(c_3d_static.fov < 10) c_3d_static.fov = 10;
-					if(c_3d_static.fov > 170) c_3d_static.fov = 170;
+					c_3d_static.radius -=  e.wheel.y / 2.5f;
+					if(c_3d_static.radius < 0.5f) c_3d_static.radius = 0.5f;
+					c_3d_static.updatePos();
 				}
 			}
 		} break;
