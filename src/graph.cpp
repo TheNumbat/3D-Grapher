@@ -90,22 +90,15 @@ void graph::draw(state* s, mat4 model, mat4 view, mat4 proj) {
 			glUniform4f(s->graph_s.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, set.opacity);
 		}
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glPolygonOffset(1.0f, 0.0f);
-		glDrawElements(GL_TRIANGLES, (int)indicies.size(), GL_UNSIGNED_INT, (void*)0);
-
 		if (set.wireframe) {
-			glDisable(GL_BLEND);
 
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			glPolygonOffset(0.0f, 0.0f);
+			glDrawElements(GL_LINES, (int)indicies.size(), GL_UNSIGNED_INT, (void*)0);
 
-			if (set.lighting)
-				glUniform4f(s->graph_s_light.getUniform("vcolor"), 0.0f, 0.0f, 0.0f, set.opacity);
-			else
-				glUniform4f(s->graph_s.getUniform("vcolor"), 0.0f, 0.0f, 0.0f, set.opacity);
+		} else {
 
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glPolygonOffset(1.0f, 0.0f);
 			glDrawElements(GL_TRIANGLES, (int)indicies.size(), GL_UNSIGNED_INT, (void*)0);
 		}
 
