@@ -2,19 +2,13 @@
 #include <codecvt>
 #include <locale>
 #include <iostream>
-#include <sstream>
 #include <vector>
 #include <string>
-#include <stack>
-#include <queue>
 #include <algorithm>
-#include <exception>
 #include <cmath>
 #include <thread>
 #include <limits>
 #include <mutex>
-#include <fstream>
-#undef min
 
 std::string trim_end(std::string s) {
 	return s.substr(0, s.find_first_of('\0'));
@@ -33,19 +27,14 @@ std::string wstring_to_utf8(const std::wstring& str)
 }
 
 #include <exprtk.hpp>
-#undef string
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
 #include <SDL2/SDL.h>
 #include <glew/glew.h>
-
 #include <imgui/imgui.h>
 
 #include "../asset/font.h"
-
 #include "cam.h"
 #include "settings.h"
 #include "gl.h"
@@ -65,6 +54,5 @@ int main(int, char**) {
 #include "graph.cpp"
 #include "imgui_impl.cpp"
 #include "state.cpp"
-
 #include <imgui/imgui.cpp>
 #include <imgui/imgui_draw.cpp>

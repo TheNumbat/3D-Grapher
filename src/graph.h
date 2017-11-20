@@ -22,6 +22,9 @@ const int z_max = 32;
 
 extern GLfloat axes[];
 
+double select_calc(calculus calc, exprtk::expression<double> expr, double t);
+double select_calc(calculus calc, exprtk::expression<double> expr, double x, double y);
+
 struct graph {
 	graph(int id);
 	virtual ~graph();
@@ -34,6 +37,7 @@ struct graph {
 
 	void gen();
 	void send();
+	void clampInfBounds();
 
 	std::vector<GLfloat> verticies;
 	std::vector<GLuint> indicies;

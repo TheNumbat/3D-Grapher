@@ -75,6 +75,7 @@ struct _cam_3d_static {
 	void reset() {
 		fov = 60.0f;
 		pitch = 45.0f;
+		yaw = 45.0f;
 		radius = 20.0f;
 		lookingAt = glm::vec3(0, 0, 0);
 		up = glm::vec3(0, 1, 0);
@@ -85,7 +86,7 @@ struct _cam_3d_static {
 		pos.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
 		pos.y = sin(glm::radians(pitch));
 		pos.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-		pos = radius * normalize(pos) + lookingAt;
+		pos = radius * glm::normalize(pos) + lookingAt;
 	}
 
 	void move(int dx, int dy) {
@@ -94,8 +95,8 @@ struct _cam_3d_static {
 		pitch -= dy * sens;
 		if (yaw > 360.0f) yaw = 0.0f;
 		else if (yaw < 0.0f) yaw = 360.0f;
-		if (pitch > 90.0f) pitch = 90.0f;
-		else if (pitch < -90.0f) pitch = -90.0f;
+		if (pitch > 89.9f) pitch = 89.9f;
+		else if (pitch < -89.9f) pitch = -89.9f;
 		updatePos();
 	}
 };

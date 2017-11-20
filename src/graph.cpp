@@ -2,6 +2,58 @@
 #define CONST_E  2.71828182845f
 #define CONST_PI 3.14159265359f
 
+double select_calc(calculus calc, exprtk::expression<double> expr, double t) {
+	switch(calc) {
+	case calculus::none: 	return expr.value();
+	case calculus::part_x:	return exprtk::derivative(expr, t, 0.00001);
+	case calculus::part_y:	return exprtk::second_derivative(expr, t, 0.0001);
+	case calculus::part2_x:	return exprtk::third_derivative(expr, t, 0.001);
+	default: return 0.0;
+	}
+}
+
+double select_calc(calculus calc, exprtk::expression<double> expr, double x, double y) {
+	switch(calc) {
+	case calculus::none: 	return expr.value();
+	case calculus::part_x:	return exprtk::derivative(expr, x, 0.00001);
+	case calculus::part_y:	return exprtk::derivative(expr, y, 0.00001);
+	case calculus::part2_x:	return exprtk::second_derivative(expr, x, 0.0001);
+	case calculus::part2_y:	return exprtk::second_derivative(expr, y, 0.0001);
+	case calculus::part3_x:	return exprtk::third_derivative(expr, x, 0.001);
+	case calculus::part3_y:	return exprtk::third_derivative(expr, y, 0.001);
+	default: return 0.0;
+	}
+}
+
+exprtk::expression<double> make_expression(std::string eq_utf, exprtk::symbol_table<double>& table, state::uistate& ui) {
+	
+	exprtk::expression<double> expr;
+	exprtk::parser<double> parser;
+	expr.register_symbol_table(table);
+
+	if(!parser.compile(utf8_to_wstring(trim_end(eq_utf)), expr)) {
+		std::lock_guard<std::mutex> lock(ui.error_mut);
+		ui.error_shown = true;
+		ui.error = wstring_to_utf8(parser.error());
+	}
+
+	return expr;
+}
+
+exprtk::symbol_table<double> default_table() {
+
+	exprtk::symbol_table<double> table;
+	
+	std::string pi_utf("π");
+
+	table.add_constant(utf8_to_wstring(pi_utf),CONST_PI);
+	table.add_constant(L"e", CONST_E);
+
+	table.add_constants();
+	
+	return table;
+}
+
 graph::graph(int id) {
 	eq_str.resize(1000, 0);
 	ID = id;
@@ -36,6 +88,15 @@ void graph::send() {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * indicies.size(), indicies.size() ? &indicies[0] : NULL, GL_STATIC_DRAW);
 
 	glBindVertexArray(0);
+}
+
+void graph::clampInfBounds() {
+	if(isnan(xmin) || isinf(xmin)) xmin = -100;
+	if(isnan(xmax) || isinf(xmax)) xmax =  100;
+	if(isnan(ymin) || isinf(ymin)) ymin = -100;
+	if(isnan(ymax) || isinf(ymax)) ymax =  100;
+	if(isnan(zmin) || isinf(zmin)) zmin = -100;
+	if(isnan(zmax) || isinf(zmax)) zmax =  100;
 }
 
 void graph::draw(state* s, glm::mat4 model, glm::mat4 view, glm::mat4 proj) {
@@ -180,21 +241,12 @@ void fxy_graph::genthread(gendata* g) {
 	double x = g->xmin;
 	double y = g->dom.ymin;
 
-	exprtk::expression<double> expr;
-	exprtk::symbol_table<double> table;
-	exprtk::parser<double> parser;
-	table.add_constant(L"e", CONST_E);
-	std::string pi_utf("π");
-	table.add_constant(utf8_to_wstring(pi_utf),CONST_PI);
-	table.add_constants();
+	exprtk::symbol_table<double> table = default_table();
 	table.add_variable(L"x",x);
 	table.add_variable(L"y",y);
-	expr.register_symbol_table(table);
 
-	if(!parser.compile(utf8_to_wstring(trim_end(g->eq)), expr)) {
-		std::lock_guard<std::mutex> lock(g->s->ui.error_mut);
-		g->s->ui.error_shown = true;
-		g->s->ui.error = wstring_to_utf8(parser.error());
+	exprtk::expression<double> expr = make_expression(g->eq, table, g->s->ui);
+	if(g->s->ui.error_shown) {
 		g->success = false;
 		return;
 	}
@@ -202,21 +254,10 @@ void fxy_graph::genthread(gendata* g) {
 	for (int tx = 0; tx < g->txrez; tx++, x += g->dx) {
 		y = g->dom.ymin;
 		for (int ty = 0; ty <= g->dom.yrez; ty++, y += g->dy) {
-			double z = 0.0f;
+			double z = select_calc(g->calc, expr, x, y);
 
-			switch(g->calc) {
-			case calculus::none: 	z = expr.value(); break;
-			case calculus::part_x:	z = exprtk::derivative(expr, x, 0.00001); break;
-			case calculus::part_y:	z = exprtk::derivative(expr, y, 0.00001); break;
-			case calculus::part2_x:	z = exprtk::second_derivative(expr, x, 0.0001); break;
-			case calculus::part2_y:	z = exprtk::second_derivative(expr, y, 0.0001); break;
-			case calculus::part3_x:	z = exprtk::third_derivative(expr, x, 0.001); break;
-			case calculus::part3_y:	z = exprtk::third_derivative(expr, y, 0.001); break;
-			}
-
-			if (z < g->zmin) g->zmin = (float)z;
-			if (z > g->zmax) g->zmax = (float)z;
-
+			g->zmin = std::min(g->zmin, (float)z);
+			g->zmax = std::max(g->zmax, (float)z);
 			g->ret.push_back((float)x);
 			g->ret.push_back((float)y);
 			g->ret.push_back((float)z);
@@ -286,15 +327,14 @@ void fxy_graph::generate(state* s) {
 	}
 
 	if (success) {
-		float gzmin = FLT_MAX, gzmax = -FLT_MAX;
+		zmin = FLT_MAX; zmax = -FLT_MAX;
 		for (unsigned int i = 0; i < threads.size(); i++) {
-			if (data[i]->zmin < gzmin) gzmin = data[i]->zmin;
-			if (data[i]->zmax > gzmax) gzmax = data[i]->zmax;
+			zmin = std::min(data[i]->zmin,zmin);
+			zmax = std::max(data[i]->zmax,zmax);
 		}
-		zmin = gzmin;
-		zmax = gzmax;
 
 		normalize();
+		clampInfBounds();
 		generateIndiciesAndNormals();
 	}
 
@@ -312,23 +352,14 @@ void cyl_graph::genthread(gendata* g) {
 	double z = g->zmin;
 	double t = g->dom.tmin;
 
-	exprtk::expression<double> expr;
-	exprtk::symbol_table<double> table;
-	exprtk::parser<double> parser;
-	table.add_constant(L"e", CONST_E);
-	std::string pi_utf("π");
-	table.add_constant(utf8_to_wstring(pi_utf),CONST_PI);
-	table.add_constants();
-	table.add_variable(L"z",z);
+	exprtk::symbol_table<double> table = default_table();
 	std::string theta_utf("θ");
+
+	table.add_variable(L"z",z);
 	table.add_variable(utf8_to_wstring(theta_utf),t);
 
-	expr.register_symbol_table(table);
-
-	if(!parser.compile(utf8_to_wstring(trim_end(g->eq)), expr)) {
-		std::lock_guard<std::mutex> lock(g->s->ui.error_mut);
-		g->s->ui.error_shown = true;
-		g->s->ui.error = wstring_to_utf8(parser.error());
+	exprtk::expression<double> expr = make_expression(g->eq, table, g->s->ui);
+	if(g->s->ui.error_shown) {
 		g->success = false;
 		return;
 	}
@@ -336,25 +367,14 @@ void cyl_graph::genthread(gendata* g) {
 	for (int tz = 0; tz < g->tzrez; tz++, z += g->dz) {
 		t = g->dom.tmin;
 		for (int tt = 0; tt <= g->dom.trez; tt++, t += g->dt) {
-			double r = 0.0f;
-
-			switch(g->calc) {
-			case calculus::none: 	r = expr.value(); break;
-			case calculus::part_x:	r = exprtk::derivative(expr, z, 0.00001); break;
-			case calculus::part_y:	r = exprtk::derivative(expr, t, 0.00001); break;
-			case calculus::part2_x:	r = exprtk::second_derivative(expr, z, 0.0001); break;
-			case calculus::part2_y:	r = exprtk::second_derivative(expr, t, 0.0001); break;
-			case calculus::part3_x:	r = exprtk::third_derivative(expr, z, 0.001); break;
-			case calculus::part3_y:	r = exprtk::third_derivative(expr, t, 0.001); break;
-			}
+			double r = select_calc(g->calc, expr, z, t);
 
 			double x = r * cos(t);
 			double y = r * sin(t);
-			if (x < g->gxmin) g->gxmin = (float)x;
-			if (x > g->gxmax) g->gxmax = (float)x;
-			if (y < g->gymin) g->gymin = (float)y;
-			if (y > g->gymax) g->gymax = (float)y;
-
+			g->gxmin = std::min(g->gxmin, (float)x);
+			g->gxmax = std::max(g->gxmax, (float)x);
+			g->gymin = std::min(g->gymin, (float)y);
+			g->gymax = std::max(g->gymax, (float)y);
 			g->ret.push_back((float)x);
 			g->ret.push_back((float)y);
 			g->ret.push_back((float)z);
@@ -422,22 +442,17 @@ void cyl_graph::generate(state* s) {
 	}
 
 	if (success) {
-		float gxmin = FLT_MAX, gxmax = -FLT_MAX;
+		xmin = FLT_MAX; xmax = -FLT_MAX;
+		ymin = FLT_MAX; ymax = -FLT_MAX;
 		for (unsigned int i = 0; i < threads.size(); i++) {
-			if (data[i]->gxmin < gxmin) gxmin = data[i]->gxmin;
-			if (data[i]->gxmax > gxmax) gxmax = data[i]->gxmax;
+			xmin = std::min(data[i]->gxmin, xmin);
+			xmax = std::max(data[i]->gxmax, xmax);
+			ymin = std::min(data[i]->gymin, ymin);
+			ymax = std::max(data[i]->gymax, ymax);
 		}
-		xmin = gxmin;
-		xmax = gxmax;
-		float gymin = FLT_MAX, gymax = -FLT_MAX;
-		for (unsigned int i = 0; i < threads.size(); i++) {
-			if (data[i]->gymin < gymin) gymin = data[i]->gymin;
-			if (data[i]->gymax > gymax) gymax = data[i]->gymax;
-		}
-		ymin = gymin;
-		ymax = gymax;
 
 		normalize();
+		clampInfBounds();
 		generateIndiciesAndNormals();
 	}
 
@@ -455,23 +470,15 @@ void spr_graph::genthread(gendata* g) {
 	double p = g->pmin;
 	double t = g->dom.tmin;
 
-	exprtk::expression<double> expr;
-	exprtk::symbol_table<double> table;
-	exprtk::parser<double> parser;
-	table.add_constant(L"e", CONST_E);
-	std::string pi_utf("π");
-	table.add_constant(utf8_to_wstring(pi_utf),CONST_PI);
-	table.add_constants();
+	exprtk::symbol_table<double> table = default_table();
 	std::string phi_utf("φ");
-	table.add_variable(utf8_to_wstring(phi_utf),p);
 	std::string theta_utf("θ");
-	table.add_variable(utf8_to_wstring(theta_utf),t);
-	expr.register_symbol_table(table);
 
-	if(!parser.compile(utf8_to_wstring(trim_end(g->eq)), expr)) {
-		std::lock_guard<std::mutex> lock(g->s->ui.error_mut);
-		g->s->ui.error_shown = true;
-		g->s->ui.error = wstring_to_utf8(parser.error());
+	table.add_variable(utf8_to_wstring(phi_utf),p);
+	table.add_variable(utf8_to_wstring(theta_utf),t);
+
+	exprtk::expression<double> expr = make_expression(g->eq, table, g->s->ui);
+	if(g->s->ui.error_shown) {
 		g->success = false;
 		return;
 	}
@@ -479,28 +486,18 @@ void spr_graph::genthread(gendata* g) {
 	for (int tp = 0; tp < g->tprez; tp++, p += g->dp) {
 		t = g->dom.tmin;
 		for (int tt = 0; tt <= g->dom.trez; tt++, t += g->dt) {
-			double r = 0.0f;
-
-			switch(g->calc) {
-			case calculus::none: 	r = expr.value(); break;
-			case calculus::part_x:	r = exprtk::derivative(expr, p, 0.00001); break;
-			case calculus::part_y:	r = exprtk::derivative(expr, t, 0.00001); break;
-			case calculus::part2_x:	r = exprtk::second_derivative(expr, p, 0.0001); break;
-			case calculus::part2_y:	r = exprtk::second_derivative(expr, t, 0.0001); break;
-			case calculus::part3_x:	r = exprtk::third_derivative(expr, p, 0.001); break;
-			case calculus::part3_y:	r = exprtk::third_derivative(expr, t, 0.001); break;
-			}			
+			double r = select_calc(g->calc, expr, p, t);
 
 			double x = r * cos(t) * sin(p);
 			double y = r * sin(t) * sin(p);
 			double z = r * cos(p);
 
-			if (z < g->gzmin) g->gzmin = (float)z;
-			if (z > g->gzmax) g->gzmax = (float)z;
-			if (y < g->gymin) g->gymin = (float)y;
-			if (y > g->gymax) g->gymax = (float)y;
-			if (x < g->gxmin) g->gxmin = (float)x;
-			if (x > g->gxmax) g->gxmax = (float)x;
+			g->gzmin = std::min(g->gzmin, (float)z);
+			g->gzmax = std::max(g->gzmax, (float)z);
+			g->gymin = std::min(g->gymin, (float)y);
+			g->gymax = std::max(g->gymax, (float)y);
+			g->gxmin = std::min(g->gxmin, (float)x);
+			g->gxmax = std::max(g->gxmax, (float)x);
 
 			g->ret.push_back((float)x);
 			g->ret.push_back((float)y);
@@ -567,29 +564,20 @@ void spr_graph::generate(state* s) {
 	}
 
 	if (success) {
-		float gzmin = FLT_MAX, gzmax = -FLT_MAX;
+		xmin = FLT_MAX; xmax = -FLT_MAX;
+		ymin = FLT_MAX; ymax = -FLT_MAX;
+		zmin = FLT_MAX; zmax = -FLT_MAX;
 		for (unsigned int i = 0; i < threads.size(); i++) {
-			if (data[i]->gzmin < gzmin) gzmin = data[i]->gzmin;
-			if (data[i]->gzmax > gzmax) gzmax = data[i]->gzmax;
+			xmin = std::min(data[i]->gxmin, xmin);
+			xmax = std::max(data[i]->gxmax, xmax);
+			ymin = std::min(data[i]->gymin, ymin);
+			ymax = std::max(data[i]->gymax, ymax);
+			zmin = std::min(data[i]->gzmin, zmin);
+			zmax = std::max(data[i]->gzmax, zmax);
 		}
-		zmin = gzmin;
-		zmax = gzmax;
-		float gxmin = FLT_MAX, gxmax = -FLT_MAX;
-		for (unsigned int i = 0; i < threads.size(); i++) {
-			if (data[i]->gxmin < gxmin) gxmin = data[i]->gxmin;
-			if (data[i]->gxmax > gxmax) gxmax = data[i]->gxmax;
-		}
-		xmin = gxmin;
-		xmax = gxmax;
-		float gymin = FLT_MAX, gymax = -FLT_MAX;
-		for (unsigned int i = 0; i < threads.size(); i++) {
-			if (data[i]->gymin < gymin) gymin = data[i]->gymin;
-			if (data[i]->gymax > gymax) gymax = data[i]->gymax;
-		}
-		ymin = gymin;
-		ymax = gymax;
 
 		normalize();
+		clampInfBounds();
 		generateIndiciesAndNormals();
 	}
 
@@ -613,71 +601,33 @@ void para_curve::generate(state* s) {
 	verticies.clear();
 	double t = set.pdom.tmin;
 
-	exprtk::expression<double> expr_x, expr_y, expr_z;
 	exprtk::symbol_table<double> table;
-	exprtk::parser<double> parser;
-	table.add_constant(L"e", CONST_E);
-	std::string pi_utf("π");
-	table.add_constant(utf8_to_wstring(pi_utf),CONST_PI);
-	table.add_constants();
 	table.add_variable(L"t",t);
-	expr_x.register_symbol_table(table);
-	expr_y.register_symbol_table(table);
-	expr_z.register_symbol_table(table);
 
-	if(!parser.compile(utf8_to_wstring(trim_end(eqx)), expr_x)) {
-		std::lock_guard<std::mutex> lock(s->ui.error_mut);
-		s->ui.error_shown = true;
-		s->ui.error = wstring_to_utf8(parser.error());
-		return;
-	}
-	if(!parser.compile(utf8_to_wstring(trim_end(eqy)), expr_y)) {
-		std::lock_guard<std::mutex> lock(s->ui.error_mut);
-		s->ui.error_shown = true;
-		s->ui.error = wstring_to_utf8(parser.error());
-		return;
-	}
-	if(!parser.compile(utf8_to_wstring(trim_end(eqz)), expr_z)) {
-		std::lock_guard<std::mutex> lock(s->ui.error_mut);
-		s->ui.error_shown = true;
-		s->ui.error = wstring_to_utf8(parser.error());
+	exprtk::expression<double> expr_x = make_expression(eqx, table, s->ui);
+	exprtk::expression<double> expr_y = make_expression(eqy, table, s->ui);
+	exprtk::expression<double> expr_z = make_expression(eqz, table, s->ui);
+	if(s->ui.error_shown) {
 		return;
 	}
 
 	for (int tstep = 0; tstep < set.pdom.trez; tstep++, t += (set.pdom.tmax - set.pdom.tmin) / set.pdom.trez) {
-		double x = 0.0f;
-		switch(set.calc) {
-		case calculus::none: 	x = expr_x.value(); break;
-		case calculus::part_x:	x = exprtk::derivative(expr_x, t, 0.00001); break;
-		case calculus::part_y:	x = exprtk::second_derivative(expr_x, t, 0.0001); break;
-		case calculus::part2_x:	x = exprtk::third_derivative(expr_x, t, 0.001); break;
-		}
-		double y = 0.0f;
-		switch(set.calc) {
-		case calculus::none: 	y = expr_y.value(); break;
-		case calculus::part_x:	y = exprtk::derivative(expr_y, t, 0.00001); break;
-		case calculus::part_y:	y = exprtk::second_derivative(expr_y, t, 0.0001); break;
-		case calculus::part2_x:	y = exprtk::third_derivative(expr_y, t, 0.001); break;
-		}
-		double z = 0.0f;
-		switch(set.calc) {
-		case calculus::none: 	z = expr_z.value(); break;
-		case calculus::part_x:	z = exprtk::derivative(expr_z, t, 0.00001); break;
-		case calculus::part_y:	z = exprtk::second_derivative(expr_z, t, 0.0001); break;
-		case calculus::part2_x:	z = exprtk::third_derivative(expr_z, t, 0.001); break;
-		}		
+		double x = select_calc(set.calc, expr_x, t);
+		double y = select_calc(set.calc, expr_y, t);
+		double z = select_calc(set.calc, expr_z, t);
 
-		if (z < zmin) zmin = (float)z;
-		if (z > zmax) zmax = (float)z;
-		if (y < ymin) ymin = (float)y;
-		if (y > ymax) ymax = (float)y;
-		if (x < xmin) xmin = (float)x;
-		if (x > xmax) xmax = (float)x;
+		xmin = std::min(xmin, (float)x);
+		xmax = std::max(xmax, (float)x);
+		ymin = std::min(ymin, (float)y);
+		ymax = std::max(ymax, (float)y);
+		zmin = std::min(zmin, (float)z);
+		zmax = std::max(zmax, (float)z);
 
 		verticies.push_back((float)x);
 		verticies.push_back((float)y);
 		verticies.push_back((float)z);
 	}
+	clampInfBounds();		
 	generateIndiciesAndNormals();
 }
 
