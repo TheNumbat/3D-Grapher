@@ -38,13 +38,19 @@ enum class axis : int {
 	z
 };
 
+enum class color_by : int {
+	nothing = 0,
+	normal,
+	gradient
+};
+
 struct graph_settings {
 	bool wireframe         = false;
 	bool lighting          = true;
 	bool axisnormalization = false;
-	bool normal_colors	   = false;
 	float opacity     	   = 1.0f;
 	float ambientLighting  = 0.0f;
+	color_by color 		   = color_by::nothing;
 
 	axis highlight_along = axis::none;
 	glm::vec3 highlight_value;

@@ -42,13 +42,14 @@ struct graph {
 	std::vector<GLfloat> verticies;
 	std::vector<GLuint> indicies;
 	std::vector<glm::vec3> normals;
+	std::vector<glm::vec4> colors;
 
 	int ID;
 	std::string eq_str;
 	graph_type type;
 	
 	float xmin, xmax, ymin, ymax, zmin, zmax; // set after generation
-	GLuint VAO, VBO, EBO, normVBO;
+	GLuint VAO, VBO, EBO, normVBO, colorVBO;
 
 	graph_settings set;
 };

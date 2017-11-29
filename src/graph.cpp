@@ -66,6 +66,7 @@ graph::~graph() {
 	glDeleteBuffers(1, &VBO);
 	glDeleteBuffers(1, &EBO);
 	glDeleteBuffers(1, &normVBO);
+	glDeleteBuffers(1, &colorVBO);
 }
 
 void graph::gen() {
@@ -73,19 +74,32 @@ void graph::gen() {
 	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);
 	glGenBuffers(1, &normVBO);
+	glGenBuffers(1, &colorVBO);
 }
 
 void graph::send() {
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * verticies.size(), verticies.size() ? &verticies[0] : NULL, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * verticies.size(), verticies.size() ? &verticies[0] : nullptr, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, normVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * normals.size(), normals.size() ? &normals[0] : NULL, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * normals.size(), normals.size() ? &normals[0] : nullptr, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(1);
+
+	glBindBuffer(GL_ARRAY_BUFFER, colorVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * colors.size(), colors.size() ? &colors[0] : nullptr, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(2);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * indicies.size(), indicies.size() ? &indicies[0] : NULL, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * indicies.size(), indicies.size() ? &indicies[0] : nullptr, GL_STATIC_DRAW);
 
 	glBindVertexArray(0);
 }
@@ -110,24 +124,11 @@ void graph::draw(state* s, glm::mat4 model, glm::mat4 view, glm::mat4 proj) {
 		glm::mat4 modelviewproj = proj * view * model;
 
 		if (set.lighting) {
-			if(set.normal_colors) {
-				s->graph_s_norm.use();
-			} else {
-				s->graph_s_light.use();
-			}
-
-			glBindBuffer(GL_ARRAY_BUFFER, VBO);
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-			glEnableVertexAttribArray(0);
-
-			glBindBuffer(GL_ARRAY_BUFFER, normVBO);
-			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-			glEnableVertexAttribArray(1);
+			s->graph_s_light.use();
 
 			glUniformMatrix4fv(s->graph_s_light.getUniform("model"), 1, GL_FALSE, value_ptr(model));
 			glUniformMatrix4fv(s->graph_s_light.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
 
-			glUniform4f(s->graph_s_light.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, set.opacity);
 			glUniform3f(s->graph_s_light.getUniform("lightColor"), 1.0f, 1.0f, 1.0f);
 			glUniform1f(s->graph_s_light.getUniform("ambientStrength"), set.ambientLighting);
 
@@ -139,26 +140,14 @@ void graph::draw(state* s, glm::mat4 model, glm::mat4 view, glm::mat4 proj) {
 		} else {
 			s->graph_s.use();
 
-			glBindBuffer(GL_ARRAY_BUFFER, VBO);
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-			glEnableVertexAttribArray(0);
-
 			glUniformMatrix4fv(s->graph_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
-
-			glUniform4f(s->graph_s.getUniform("vcolor"), 0.8f, 0.8f, 0.8f, set.opacity);
 		}
 
 		if (set.wireframe) {
 			glDrawElements(GL_LINES, (int)indicies.size(), GL_UNSIGNED_INT, (void*)0);
 		} else {
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			glPolygonOffset(1.0f, 0.0f);
 			glDrawElements(GL_TRIANGLES, (int)indicies.size(), GL_UNSIGNED_INT, (void*)0);
 		}
-
-		glDisableVertexAttribArray(0);
-		glDisableVertexAttribArray(1);
 	}
 	glBindVertexArray(0);
 }
@@ -178,6 +167,7 @@ void graph::normalize() {
 void graph::generateIndiciesAndNormals() {
 	indicies.clear();
 	normals.clear();
+	colors.clear();
 
 	glm::vec3 norm;
 	int _x_max = 0;
@@ -229,6 +219,10 @@ void graph::generateIndiciesAndNormals() {
 		normals.push_back(norm);
 	}
 	normals.push_back(norm);
+
+	for(int i = 0; i < normals.size(); i++) {
+		colors.push_back(glm::vec4(0.8, 0.8, 0.8, set.opacity));
+	}
 }
 
 fxy_graph::fxy_graph(int id) : graph(id) {

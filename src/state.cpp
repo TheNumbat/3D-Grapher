@@ -23,6 +23,11 @@ state::state() {
 	glewInit();
 	SDL_GL_SetSwapInterval(1);
 
+	glEnable(GL_DEBUG_OUTPUT);
+	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+	glDebugMessageCallback(debug_proc, 0);
+	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, 0, GL_TRUE);
+
 	glEnable(GL_POLYGON_OFFSET_FILL);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_MULTISAMPLE);
@@ -36,7 +41,6 @@ state::state() {
 	graph_s.load(graph_vertex, graph_fragment);
 	axis_s.load(axis_vertex, axis_fragment);
 	graph_s_light.load(graph_vertex_lighting, graph_fragment_lighting);
-	graph_s_norm.load(graph_vertex_norm, graph_fragment_norm);
 
 	ImGui_ImplSdlGL3_Init(window);
 	ImGui::GetStyle().WindowRounding = 0.0f;
@@ -437,12 +441,13 @@ void state::UISettings() {
 	static const char* calc_strings[] = {"None", "1st Partial, 1st Variable", "1st Partial, 2nd Variable", "2nd Partial, 1st Variable", "2nd Partial, 2nd Variable", "3rd Partial, 1st Variable", "3rd Partial, 2nd Variable"};
 	static const char* para_strings[] = {"None", "1st Derivative", "2nd Derivative", "3rd Derivative"};
 	static const char* highlight_stirngs[] = {"None", "X", "Y", "Z"};
+	static const char* color_strings[] = {"Nothing", "Surface Normal", "Gradient"};
 
 	if(g->type != graph_para_curve) {
 		Checkbox("Wireframe", &g->set.wireframe);
 		Checkbox("Lighting", &g->set.lighting);
-		Checkbox("Normals as Colors", &g->set.normal_colors);
 		changed = changed || Checkbox("Normalization", &g->set.axisnormalization);
+		changed = changed || Combo("Color By", (int*)&g->set.color, color_strings, 3);
 		changed = changed || Combo("Highlight Curve", (int*)&g->set.highlight_along, highlight_stirngs, 4);
 		changed = changed || Combo("Calculus", (int*)&g->set.calc, calc_strings, 7);
 
