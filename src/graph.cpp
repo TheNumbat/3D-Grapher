@@ -155,8 +155,8 @@ void graph::draw(state* s, glm::mat4 model, glm::mat4 view, glm::mat4 proj) {
 void graph::normalize() {
 	if (set.axisnormalization) {
 		for (unsigned int i = 0; i < verticies.size(); i += 3) {
-			verticies[i] /= (set.rdom.xmax - set.rdom.xmin) / 20;
-			verticies[i + 1] /= (set.rdom.ymax - set.rdom.ymin) / 20;
+			verticies[i] 	 /= (xmax - xmin) / 20;
+			verticies[i + 1] /= (ymax - ymin) / 20;
 			verticies[i + 2] /= (zmax - zmin) / 20;
 		}
 		zmin = -10;
@@ -220,8 +220,20 @@ void graph::generateIndiciesAndNormals() {
 	}
 	normals.push_back(norm);
 
-	for(int i = 0; i < normals.size(); i++) {
-		colors.push_back(glm::vec4(0.8, 0.8, 0.8, set.opacity));
+	switch(set.color) {
+	case color_by::nothing: {
+		for(int i = 0; i < normals.size(); i++) {
+			colors.push_back(glm::vec4(0.8, 0.8, 0.8, set.opacity));
+		}
+	} break;
+	case color_by::normal: {
+		for(glm::vec3& n : normals) {
+			colors.push_back(glm::abs(glm::vec4(n, set.opacity)));
+		}
+	} break;
+	case color_by::gradient: {
+		
+	} break;
 	}
 }
 
