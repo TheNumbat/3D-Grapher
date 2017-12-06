@@ -11,7 +11,7 @@ Current
   - spherical functions
   - parametric lines
   - visualization options
-  - calculus options
+  - calculus options (partials/gradient)
   - domain options
   
 Planned
@@ -20,14 +20,13 @@ Planned
   - rectangular surfaces
   - parametric surfaces
   - vector fields 
-  - partial derivative evaluation
   - double/triple integral evaluation
   - line/surface integral evaluation
   - curve & intersection highlighting
   - animated transitions between graph states
 
 ### Tools
-  - C++11/STL
+  - C++14/STL
   - SDL2.0 for windowing, events, and OpenGL setup
   - GLM for vector/matrix math
   - Dear ImGui for GUI
