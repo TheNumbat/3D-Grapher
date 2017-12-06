@@ -25,6 +25,14 @@ double select_calc(calculus calc, exprtk::expression<double> expr, double x, dou
 	}
 }
 
+glm::vec2 get_grad(exprtk::expression<double> expr, double x, double y) {
+
+	glm::vec2 ret;
+	ret.x = (float)exprtk::derivative(expr, x, 0.00001);
+	ret.y = (float)exprtk::derivative(expr, y, 0.00001);
+	return ret;
+}
+
 exprtk::expression<double> make_expression(std::string eq_utf, exprtk::symbol_table<double>& table, state::uistate& ui) {
 	
 	exprtk::expression<double> expr;
@@ -93,9 +101,9 @@ void graph::send() {
 	glEnableVertexAttribArray(1);
 
 	glBindBuffer(GL_ARRAY_BUFFER, colorVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * colors.size(), colors.size() ? &colors[0] : nullptr, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * colors.size(), colors.size() ? &colors[0] : nullptr, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (GLvoid*)0);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(2);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -131,6 +139,7 @@ void graph::draw(state* s, glm::mat4 model, glm::mat4 view, glm::mat4 proj) {
 
 			glUniform3f(s->graph_s_light.getUniform("lightColor"), 1.0f, 1.0f, 1.0f);
 			glUniform1f(s->graph_s_light.getUniform("ambientStrength"), set.ambientLighting);
+			glUniform1f(s->graph_s_light.getUniform("opacity"), set.opacity);
 
 			if (s->camtype == cam_type::_3d) {
 				glUniform3f(s->graph_s_light.getUniform("lightPos"), s->c_3d.pos.x, s->c_3d.pos.y, s->c_3d.pos.z);
@@ -141,6 +150,7 @@ void graph::draw(state* s, glm::mat4 model, glm::mat4 view, glm::mat4 proj) {
 			s->graph_s.use();
 
 			glUniformMatrix4fv(s->graph_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
+			glUniform1f(s->graph_s.getUniform("opacity"), set.opacity);
 		}
 
 		if (set.wireframe) {
@@ -223,16 +233,13 @@ void graph::generateIndiciesAndNormals() {
 	switch(set.color) {
 	case color_by::nothing: {
 		for(int i = 0; i < normals.size(); i++) {
-			colors.push_back(glm::vec4(0.8, 0.8, 0.8, set.opacity));
+			colors.push_back(glm::vec3(0.8, 0.8, 0.8));
 		}
 	} break;
 	case color_by::normal: {
 		for(glm::vec3& n : normals) {
-			colors.push_back(glm::abs(glm::vec4(n, set.opacity)));
+			colors.push_back(glm::abs(n));
 		}
-	} break;
-	case color_by::gradient: {
-		
 	} break;
 	}
 }
@@ -242,34 +249,40 @@ fxy_graph::fxy_graph(int id) : graph(id) {
 	set.rdom = { -10, 10, -10, 10, 200, 200 };
 }
 
-void fxy_graph::genthread(gendata* g) {
+void fxy_graph::genthread(gendata* d) {
 
-	double x = g->xmin;
-	double y = g->dom.ymin;
+	double x = d->xmin;
+	double y = d->set.rdom.ymin;
 
 	exprtk::symbol_table<double> table = default_table();
 	table.add_variable(L"x",x);
 	table.add_variable(L"y",y);
 
-	exprtk::expression<double> expr = make_expression(g->eq, table, g->s->ui);
-	if(g->s->ui.error_shown) {
-		g->success = false;
+	exprtk::expression<double> expr = make_expression(d->eq, table, d->s->ui);
+	if(d->s->ui.error_shown) {
+		d->success = false;
 		return;
 	}
 
-	for (int tx = 0; tx < g->txrez; tx++, x += g->dx) {
-		y = g->dom.ymin;
-		for (int ty = 0; ty <= g->dom.yrez; ty++, y += g->dy) {
-			double z = select_calc(g->calc, expr, x, y);
+	for (int tx = 0; tx < d->txrez; tx++, x += d->dx) {
+		y = d->set.rdom.ymin;
+		for (int ty = 0; ty <= d->set.rdom.yrez; ty++, y += d->dy) {
+			
+			double z = select_calc(d->set.calc, expr, x, y);
+			if(d->set.color == color_by::gradient) {
+				glm::vec2 xy = get_grad(expr, x, y);
 
-			g->zmin = std::min(g->zmin, (float)z);
-			g->zmax = std::max(g->zmax, (float)z);
-			g->ret.push_back((float)x);
-			g->ret.push_back((float)y);
-			g->ret.push_back((float)z);
+				d->grad.push_back(glm::vec3(xy, 0));
+			}
+
+			d->zmin = std::min(d->zmin, (float)z);
+			d->zmax = std::max(d->zmax, (float)z);
+			d->func.push_back((float)x);
+			d->func.push_back((float)y);
+			d->func.push_back((float)z);
 		}
 	}
-	g->success = true;
+	d->success = true;
 }
 
 void fxy_graph::generate(state* s) {
@@ -308,13 +321,12 @@ void fxy_graph::generate(state* s) {
 				d->txrez = txDelta;
 
 			d->s = s;
-			d->dom = set.rdom;
+			d->set = set;
 			d->eq = eq_str;
 			d->dx = dx;
 			d->dy = dy;
 			d->xmin = _xmin;
 			d->ID = ID;
-			d->calc = set.calc;
 
 			data.push_back(d);
 			threads.push_back(std::thread(genthread, data.back()));
@@ -327,8 +339,13 @@ void fxy_graph::generate(state* s) {
 		threads[i].join();
 		if (success) {
 			success = data[i]->success;
-			verticies.insert(verticies.end(), data[i]->ret.begin(), data[i]->ret.end());
-			data[i]->ret.clear();
+			verticies.insert(verticies.end(), data[i]->func.begin(), data[i]->func.end());
+			data[i]->func.clear();
+
+			if(set.color == color_by::gradient) {
+				colors.insert(colors.end(), data[i]->grad.begin(), data[i]->grad.end());
+				data[i]->grad.clear();
+			}
 		}
 	}
 

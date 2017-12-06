@@ -42,7 +42,7 @@ struct graph {
 	std::vector<GLfloat> verticies;
 	std::vector<GLuint> indicies;
 	std::vector<glm::vec3> normals;
-	std::vector<glm::vec4> colors;
+	std::vector<glm::vec3> colors;
 
 	int ID;
 	std::string eq_str;
@@ -68,14 +68,17 @@ struct fxy_graph : public graph {
 			zmin = FLT_MAX;
 			zmax = -FLT_MAX;
 		};
-		std::vector<float> ret;
-		std::string eq;
-		rect_domain dom;
-		calculus calc;
+		std::vector<float> 		func;
+		std::vector<glm::vec3> 	grad;
+		
 		float zmin, zmax, xmin, dx, dy;
 		int txrez, ID;
 		bool success;
+		
 		state* s;
+
+		graph_settings set;	
+		std::string eq;
 	};
 
 	fxy_graph(int id);

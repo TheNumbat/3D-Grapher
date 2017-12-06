@@ -103,10 +103,10 @@ const GLchar* graph_vertex = R"STR(
 
 	layout (location = 0) in vec3 v_pos;
 	layout (location = 1) in vec3 v_norm;
-	layout (location = 2) in vec4 v_color;
+	layout (location = 2) in vec3 v_color;
 	
 	uniform mat4 modelviewproj;
-	out vec4 f_color;
+	out vec3 f_color;
 	
 	void main() {
 		gl_Position = modelviewproj * vec4(v_pos, 1.0f);
@@ -117,12 +117,14 @@ const GLchar* graph_vertex = R"STR(
 const GLchar* graph_fragment = R"STR(
 	#version 330 core
 
-	in vec4 f_color;
+	in vec3 f_color;
+
+	uniform float opacity;
 
 	out vec4 out_color;
 
 	void main() {
-		out_color = f_color;
+		out_color = vec4(f_color, opacity);
 	}
 )STR";
 
@@ -131,14 +133,14 @@ const GLchar* graph_vertex_lighting = R"STR(
 
 	layout (location = 0) in vec3 v_pos;
 	layout (location = 1) in vec3 v_norm;
-	layout (location = 2) in vec4 v_color;
+	layout (location = 2) in vec3 v_color;
 
 	uniform mat4 modelviewproj;
 	uniform mat4 model;
 	
 	out vec3 f_pos;
 	out vec3 f_norm;
-	out vec4 f_color;
+	out vec3 f_color;
 
 	void main() {
 		gl_Position = modelviewproj * vec4(v_pos, 1.0);
@@ -154,10 +156,11 @@ const GLchar* graph_fragment_lighting = R"STR(
 	uniform vec3 lightColor;
 	uniform vec3 lightPos;
 	uniform float ambientStrength;
+	uniform float opacity;
 
 	in vec3 f_pos;
 	in vec3 f_norm;
-	in vec4 f_color;
+	in vec3 f_color;
 	out vec4 out_color;
 
 	void main() {
@@ -165,7 +168,7 @@ const GLchar* graph_fragment_lighting = R"STR(
 		vec3 lightDir = normalize(lightPos - f_pos);
 		float diff = abs(dot(f_norm, lightDir));
 		vec3 diffuse = diff * lightColor;
-		out_color = vec4(ambient + diffuse, 1.0f) * f_color;
+		out_color = vec4(ambient + diffuse, 1.0f) * vec4(f_color, opacity);
 	}
 )STR";
 
