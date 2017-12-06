@@ -26,6 +26,9 @@ double select_calc(calculus calc, const exprtk::expression<double>& expr, double
 double select_calc(calculus calc, const exprtk::expression<double>& expr, double& x, double& y);
 glm::vec2 get_grad(const exprtk::expression<double>& expr, double& x, double& y);
 
+bool isnan(glm::vec3 v);
+bool isinf(glm::vec3 v);
+
 struct graph {
 	graph(int id);
 	virtual ~graph();
@@ -41,8 +44,8 @@ struct graph {
 	void clampInfBounds();
 	void clear();
 
-	std::vector<GLfloat> verticies;
-	std::vector<GLuint> indicies;
+	std::vector<GLuint>    indicies;
+	std::vector<glm::vec3> verticies;
 	std::vector<glm::vec3> normals;
 	std::vector<glm::vec3> colors;
 
@@ -70,8 +73,8 @@ struct fxy_graph : public graph {
 			zmin = FLT_MAX;
 			zmax = -FLT_MAX;
 		};
-		std::vector<float> 		func;
-		std::vector<glm::vec3> 	grad;
+		std::vector<glm::vec3> func;
+		std::vector<glm::vec3> grad;
 		
 		float zmin, zmax, xmin, dx, dy;
 		int txrez, ID;
@@ -94,7 +97,7 @@ struct cyl_graph : public graph {
 			gxmin = gymin = FLT_MAX;
 			gxmax = gymax = -FLT_MAX;
 		};
-		std::vector<float> func;
+		std::vector<glm::vec3> func;
 		std::vector<glm::vec3> grad;
 
 		float gxmin, gxmax, gymin, gymax, zmin, dz, dt;
@@ -117,9 +120,9 @@ struct spr_graph : public graph {
 			gxmin = gymin = gzmin = FLT_MAX;
 			gxmax = gymax = gzmax = -FLT_MAX;
 		};
-		std::vector<float> func;
+		std::vector<glm::vec3> func;
 		std::vector<glm::vec3> grad;
-		
+
 		float gxmin, gxmax, gymin, gymax, gzmin, gzmax, pmin, dt, dp;
 		int tprez, ID;
 		bool success;

@@ -62,6 +62,14 @@ exprtk::symbol_table<double> default_table() {
 	return table;
 }
 
+bool isnan(glm::vec3 v) {
+	return isnan(v.x) || isnan(v.y) || isnan(v.z);
+}
+
+bool isinf(glm::vec3 v) {
+	return isinf(v.x) || isinf(v.y) || isinf(v.z);
+}
+
 graph::graph(int id) {
 	eq_str.resize(1000, 0);
 	ID = id;
@@ -99,7 +107,7 @@ void graph::send() {
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * verticies.size(), verticies.size() ? &verticies[0] : nullptr, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * verticies.size(), verticies.size() ? &verticies[0] : nullptr, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
@@ -206,8 +214,8 @@ void graph::generateIndiciesAndNormals() {
 		for (int y = 0; y < _y_max; y++) {
 			GLuint i_index = x * (_y_max + 1) + y;
 
-			if (!isnan(verticies[i_index * 3 + 2]) &&
-				!isinf(verticies[i_index * 3 + 2])) {
+			if (!isnan(verticies[i_index + 2]) &&
+				!isinf(verticies[i_index + 2])) {
 				indicies.push_back(i_index);
 				indicies.push_back(i_index + 1);
 				indicies.push_back(i_index + _y_max + 1);
@@ -216,18 +224,13 @@ void graph::generateIndiciesAndNormals() {
 				indicies.push_back(i_index + _y_max + 1);
 				indicies.push_back(i_index + _y_max + 2);
 
-				float x1 = verticies[i_index * 3];
-				float y1 = verticies[i_index * 3 + 1];
-				float z1 = verticies[i_index * 3 + 2];
-				float x2 = verticies[(i_index + 1) * 3];
-				float y2 = verticies[(i_index + 1) * 3 + 1];
-				float z2 = verticies[(i_index + 1) * 3 + 2];
-				float x3 = verticies[(i_index + _y_max + 1) * 3];
-				float y3 = verticies[(i_index + _y_max + 1) * 3 + 1];
-				float z3 = verticies[(i_index + _y_max + 1) * 3 + 2];
-				glm::vec3 one(x2 - x1, y2 - y1, z2 - z1);
-				glm::vec3 two(x3 - x1, y3 - y1, z3 - z1);
-				norm = glm::normalize(cross(two, one));
+				glm::vec3 p1 = verticies[i_index];
+				glm::vec3 p2 = verticies[i_index + 1];
+				glm::vec3 p3 = verticies[i_index + _y_max + 1];
+				
+				glm::vec3 one = p2 - p1;
+				glm::vec3 two = p3 - p1;
+				norm = glm::normalize(cross(one, two));
 			}
 			normals.push_back(norm);
 			if (x == 0)
@@ -283,9 +286,7 @@ void fxy_graph::genthread(gendata* d) {
 
 			d->zmin = std::min(d->zmin, (float)z);
 			d->zmax = std::max(d->zmax, (float)z);
-			d->func.push_back((float)x);
-			d->func.push_back((float)y);
-			d->func.push_back((float)z);
+			d->func.push_back(glm::vec3(x, y, z));
 		}
 	}
 	d->success = true;
@@ -406,9 +407,7 @@ void cyl_graph::genthread(gendata* d) {
 			d->gxmax = std::max(d->gxmax, (float)x);
 			d->gymin = std::min(d->gymin, (float)y);
 			d->gymax = std::max(d->gymax, (float)y);
-			d->func.push_back((float)x);
-			d->func.push_back((float)y);
-			d->func.push_back((float)z);
+			d->func.push_back(glm::vec3(x, y, z));
 		}
 	}
 	d->success = true;
@@ -535,9 +534,7 @@ void spr_graph::genthread(gendata* d) {
 			d->gxmin = std::min(d->gxmin, (float)x);
 			d->gxmax = std::max(d->gxmax, (float)x);
 
-			d->func.push_back((float)x);
-			d->func.push_back((float)y);
-			d->func.push_back((float)z);
+			d->func.push_back(glm::vec3(x, y, z));
 		}
 	}
 	d->success = true;
@@ -657,9 +654,7 @@ void para_curve::generate(state* s) {
 		zmin = std::min(zmin, (float)z);
 		zmax = std::max(zmax, (float)z);
 
-		verticies.push_back((float)x);
-		verticies.push_back((float)y);
-		verticies.push_back((float)z);
+		verticies.push_back(glm::vec3(x, y, z));
 	}
 	clampInfBounds();		
 	generateIndiciesAndNormals();
