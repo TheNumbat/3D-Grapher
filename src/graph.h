@@ -39,6 +39,7 @@ struct graph {
 	void gen();
 	void send();
 	void clampInfBounds();
+	void clear();
 
 	std::vector<GLfloat> verticies;
 	std::vector<GLuint> indicies;
@@ -93,14 +94,16 @@ struct cyl_graph : public graph {
 			gxmin = gymin = FLT_MAX;
 			gxmax = gymax = -FLT_MAX;
 		};
-		std::vector<float> ret;
-		std::string eq;
-		cyl_domain dom;
-		calculus calc;
+		std::vector<float> func;
+		std::vector<glm::vec3> grad;
+
 		float gxmin, gxmax, gymin, gymax, zmin, dz, dt;
 		int tzrez, ID;
 		bool success;
+
 		state* s;
+		graph_settings set;
+		std::string eq;
 	};
 
 	cyl_graph(int id);
@@ -114,14 +117,16 @@ struct spr_graph : public graph {
 			gxmin = gymin = gzmin = FLT_MAX;
 			gxmax = gymax = gzmax = -FLT_MAX;
 		};
-		std::vector<float> ret;
-		std::string eq;
-		spr_domain dom;
-		calculus calc;
+		std::vector<float> func;
+		std::vector<glm::vec3> grad;
+		
 		float gxmin, gxmax, gymin, gymax, gzmin, gzmax, pmin, dt, dp;
 		int tprez, ID;
 		bool success;
+
 		state* s;
+		std::string eq;
+		graph_settings set;
 	};
 
 	spr_graph(int id);

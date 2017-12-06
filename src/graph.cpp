@@ -85,6 +85,16 @@ void graph::gen() {
 	glGenBuffers(1, &colorVBO);
 }
 
+void graph::clear() {
+	indicies.clear();
+	normals.clear();
+	colors.clear();
+	verticies.clear();
+
+	xmin = ymin = zmin = FLT_MAX;
+	xmax = ymax = zmax = -FLT_MAX;
+}
+
 void graph::send() {
 	glBindVertexArray(VAO);
 
@@ -175,9 +185,6 @@ void graph::normalize() {
 }
 
 void graph::generateIndiciesAndNormals() {
-	indicies.clear();
-	normals.clear();
-	colors.clear();
 
 	glm::vec3 norm;
 	int _x_max = 0;
@@ -271,8 +278,7 @@ void fxy_graph::genthread(gendata* d) {
 			double z = select_calc(d->set.calc, expr, x, y);
 			if(d->set.color == color_by::gradient) {
 				glm::vec2 xy = get_grad(expr, x, y);
-
-				d->grad.push_back(glm::vec3(xy, 0));
+				d->grad.push_back(glm::abs(glm::vec3(xy, 0)));
 			}
 
 			d->zmin = std::min(d->zmin, (float)z);
@@ -294,8 +300,7 @@ void fxy_graph::generate(state* s) {
 	if (HT) numthreads /= 2;
 #endif
 
-	xmin = ymin = zmin = FLT_MAX;
-	xmax = ymax = zmax = -FLT_MAX;
+	clear();
 
 	float dx = (set.rdom.xmax - set.rdom.xmin) / set.rdom.xrez;
 	float dy = (set.rdom.ymax - set.rdom.ymin) / set.rdom.yrez;
@@ -306,8 +311,6 @@ void fxy_graph::generate(state* s) {
 	float _xmin = xmin;
 	unsigned int txDelta = set.rdom.xrez / numthreads;
 	unsigned int txLast = set.rdom.xrez - (numthreads - 1) * txDelta + 1;
-
-	verticies.clear();
 
 	std::vector<std::thread> threads;
 	std::vector<gendata*> data;
@@ -370,10 +373,10 @@ cyl_graph::cyl_graph(int id) : graph(id) {
 	set.cdom = { 0, 1, 0, 2 * (float)CONST_PI, 200, 200 };
 }
 
-void cyl_graph::genthread(gendata* g) {
+void cyl_graph::genthread(gendata* d) {
 	
-	double z = g->zmin;
-	double t = g->dom.tmin;
+	double z = d->zmin;
+	double t = d->set.cdom.tmin;
 
 	exprtk::symbol_table<double> table = default_table();
 	std::string theta_utf("θ");
@@ -381,29 +384,34 @@ void cyl_graph::genthread(gendata* g) {
 	table.add_variable(L"z",z);
 	table.add_variable(utf8_to_wstring(theta_utf),t);
 
-	exprtk::expression<double> expr = make_expression(g->eq, table, g->s->ui);
-	if(g->s->ui.error_shown) {
-		g->success = false;
+	exprtk::expression<double> expr = make_expression(d->eq, table, d->s->ui);
+	if(d->s->ui.error_shown) {
+		d->success = false;
 		return;
 	}
 
-	for (int tz = 0; tz < g->tzrez; tz++, z += g->dz) {
-		t = g->dom.tmin;
-		for (int tt = 0; tt <= g->dom.trez; tt++, t += g->dt) {
-			double r = select_calc(g->calc, expr, z, t);
+	for (int tz = 0; tz < d->tzrez; tz++, z += d->dz) {
+		t = d->set.cdom.tmin;
+		for (int tt = 0; tt <= d->set.cdom.trez; tt++, t += d->dt) {
+			double r = select_calc(d->set.calc, expr, z, t);
+
+			if(d->set.color == color_by::gradient) {
+				glm::vec2 xy = get_grad(expr, z, t);
+				d->grad.push_back(glm::abs(glm::vec3(xy, 0)));
+			}
 
 			double x = r * cos(t);
 			double y = r * sin(t);
-			g->gxmin = std::min(g->gxmin, (float)x);
-			g->gxmax = std::max(g->gxmax, (float)x);
-			g->gymin = std::min(g->gymin, (float)y);
-			g->gymax = std::max(g->gymax, (float)y);
-			g->ret.push_back((float)x);
-			g->ret.push_back((float)y);
-			g->ret.push_back((float)z);
+			d->gxmin = std::min(d->gxmin, (float)x);
+			d->gxmax = std::max(d->gxmax, (float)x);
+			d->gymin = std::min(d->gymin, (float)y);
+			d->gymax = std::max(d->gymax, (float)y);
+			d->func.push_back((float)x);
+			d->func.push_back((float)y);
+			d->func.push_back((float)z);
 		}
 	}
-	g->success = true;
+	d->success = true;
 }
 
 void cyl_graph::generate(state* s) {
@@ -415,8 +423,7 @@ void cyl_graph::generate(state* s) {
 	if (HT) numthreads /= 2;
 #endif
 
-	xmin = ymin = zmin = FLT_MAX;
-	xmax = ymax = zmax = -FLT_MAX;
+	clear();
 
 	float dz = (set.cdom.zmax - set.cdom.zmin) / set.cdom.zrez;
 	float dt = (set.cdom.tmax - set.cdom.tmin) / set.cdom.trez;
@@ -425,8 +432,6 @@ void cyl_graph::generate(state* s) {
 	float _zmin = zmin;
 	unsigned int tzDelta = set.cdom.zrez / numthreads;
 	unsigned int tzLast = set.cdom.zrez - (numthreads - 1) * tzDelta + 1;
-
-	verticies.clear();
 
 	std::vector<std::thread> threads;
 	std::vector<gendata*> data;
@@ -441,12 +446,11 @@ void cyl_graph::generate(state* s) {
 
 			d->s = s;
 			d->eq = eq_str;
-			d->dom = set.cdom;
+			d->set = set;
 			d->dz = dz;
 			d->dt = dt;
 			d->zmin = _zmin;
 			d->ID = ID;
-			d->calc = set.calc;
 
 			data.push_back(d);
 			threads.push_back(std::thread(genthread, data.back()));
@@ -459,8 +463,12 @@ void cyl_graph::generate(state* s) {
 		threads[i].join();
 		if (success) {
 			success = data[i]->success;
-			verticies.insert(verticies.end(), data[i]->ret.begin(), data[i]->ret.end());
-			data[i]->ret.clear();
+			verticies.insert(verticies.end(), data[i]->func.begin(), data[i]->func.end());
+
+			if(set.color == color_by::gradient) {
+				colors.insert(colors.end(), data[i]->grad.begin(), data[i]->grad.end());
+				data[i]->grad.clear();
+			}			
 		}
 	}
 
@@ -488,10 +496,10 @@ spr_graph::spr_graph(int id) : graph(id) {
 	set.sdom = { 0, 2 * (float)CONST_PI, 0, (float)CONST_PI, 200, 200 };
 }
 
-void spr_graph::genthread(gendata* g) {
+void spr_graph::genthread(gendata* d) {
 
-	double p = g->pmin;
-	double t = g->dom.tmin;
+	double p = d->pmin;
+	double t = d->set.sdom.tmin;
 
 	exprtk::symbol_table<double> table = default_table();
 	std::string phi_utf("φ");
@@ -500,34 +508,39 @@ void spr_graph::genthread(gendata* g) {
 	table.add_variable(utf8_to_wstring(phi_utf),p);
 	table.add_variable(utf8_to_wstring(theta_utf),t);
 
-	exprtk::expression<double> expr = make_expression(g->eq, table, g->s->ui);
-	if(g->s->ui.error_shown) {
-		g->success = false;
+	exprtk::expression<double> expr = make_expression(d->eq, table, d->s->ui);
+	if(d->s->ui.error_shown) {
+		d->success = false;
 		return;
 	}
 
-	for (int tp = 0; tp < g->tprez; tp++, p += g->dp) {
-		t = g->dom.tmin;
-		for (int tt = 0; tt <= g->dom.trez; tt++, t += g->dt) {
-			double r = select_calc(g->calc, expr, p, t);
+	for (int tp = 0; tp < d->tprez; tp++, p += d->dp) {
+		t = d->set.sdom.tmin;
+		for (int tt = 0; tt <= d->set.sdom.trez; tt++, t += d->dt) {
+			double r = select_calc(d->set.calc, expr, p, t);
+
+			if(d->set.color == color_by::gradient) {
+				glm::vec2 xy = get_grad(expr, p, t);
+				d->grad.push_back(glm::abs(glm::vec3(xy, 0)));
+			}
 
 			double x = r * cos(t) * sin(p);
 			double y = r * sin(t) * sin(p);
 			double z = r * cos(p);
 
-			g->gzmin = std::min(g->gzmin, (float)z);
-			g->gzmax = std::max(g->gzmax, (float)z);
-			g->gymin = std::min(g->gymin, (float)y);
-			g->gymax = std::max(g->gymax, (float)y);
-			g->gxmin = std::min(g->gxmin, (float)x);
-			g->gxmax = std::max(g->gxmax, (float)x);
+			d->gzmin = std::min(d->gzmin, (float)z);
+			d->gzmax = std::max(d->gzmax, (float)z);
+			d->gymin = std::min(d->gymin, (float)y);
+			d->gymax = std::max(d->gymax, (float)y);
+			d->gxmin = std::min(d->gxmin, (float)x);
+			d->gxmax = std::max(d->gxmax, (float)x);
 
-			g->ret.push_back((float)x);
-			g->ret.push_back((float)y);
-			g->ret.push_back((float)z);
+			d->func.push_back((float)x);
+			d->func.push_back((float)y);
+			d->func.push_back((float)z);
 		}
 	}
-	g->success = true;
+	d->success = true;
 }
 
 void spr_graph::generate(state* s) {
@@ -539,16 +552,13 @@ void spr_graph::generate(state* s) {
 	if (HT) numthreads /= 2;
 #endif
 
-	xmin = ymin = zmin = FLT_MAX;
-	xmax = ymax = zmax = -FLT_MAX;
+	clear();
 
 	float dt = (set.sdom.tmax - set.sdom.tmin) / set.sdom.trez;
 	float dp = (set.sdom.pmax - set.sdom.pmin) / set.sdom.prez;
 	float pmin = set.sdom.pmin;
 	unsigned int tpDelta = set.sdom.prez / numthreads;
 	unsigned int tpLast = set.sdom.prez - (numthreads - 1) * tpDelta + 1;
-
-	verticies.clear();
 
 	std::vector<std::thread> threads;
 	std::vector<gendata*> data;
@@ -562,13 +572,12 @@ void spr_graph::generate(state* s) {
 				d->tprez = tpDelta;
 
 			d->s = s;
-			d->dom = set.sdom;
+			d->set = set;
 			d->eq = eq_str;
 			d->dt = dt;
 			d->dp = dp;
 			d->pmin = pmin;
 			d->ID = ID;
-			d->calc = set.calc;
 
 			data.push_back(d);
 			threads.push_back(std::thread(genthread, data.back()));
@@ -581,8 +590,12 @@ void spr_graph::generate(state* s) {
 		threads[i].join();
 		if (success) {
 			success = data[i]->success;
-			verticies.insert(verticies.end(), data[i]->ret.begin(), data[i]->ret.end());
-			data[i]->ret.clear();
+			verticies.insert(verticies.end(), data[i]->func.begin(), data[i]->func.end());
+
+			if(set.color == color_by::gradient) {
+				colors.insert(colors.end(), data[i]->grad.begin(), data[i]->grad.end());
+				data[i]->grad.clear();
+			}				
 		}
 	}
 
@@ -618,10 +631,8 @@ para_curve::para_curve(int id) : graph(id) {
 
 void para_curve::generate(state* s) {
 
-	xmin = ymin = zmin = FLT_MAX;
-	xmax = ymax = zmax = -FLT_MAX;
+	clear();
 
-	verticies.clear();
 	double t = set.pdom.tmin;
 
 	exprtk::symbol_table<double> table;
