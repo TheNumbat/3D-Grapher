@@ -10,8 +10,9 @@ Current
   - cylindrical functions
   - spherical functions
   - parametric lines
-  - visualization settings: lighting, wireframe, normalization, FOV, orbiting/movable camera
-  - domain settings  
+  - visualization options
+  - calculus options
+  - domain options
   
 Planned
   - examples
@@ -38,4 +39,4 @@ Planned
   - Pretty nice interface
 
 ### Screenshots
-![graph](https://i.imgur.com/B7mOStw.png)
+![graph](https://i.imgur.com/zUi6ZQb.png)
