@@ -2,7 +2,7 @@
 #define CONST_E  2.71828182845f
 #define CONST_PI 3.14159265359f
 
-double select_calc(calculus calc, exprtk::expression<double> expr, double t) {
+double select_calc(calculus calc, const exprtk::expression<double>& expr, double t) {
 	switch(calc) {
 	case calculus::none: 	return expr.value();
 	case calculus::part_x:	return exprtk::derivative(expr, t, 0.00001);
@@ -12,7 +12,7 @@ double select_calc(calculus calc, exprtk::expression<double> expr, double t) {
 	}
 }
 
-double select_calc(calculus calc, exprtk::expression<double> expr, double x, double y) {
+double select_calc(calculus calc, const exprtk::expression<double>& expr, double x, double y) {
 	switch(calc) {
 	case calculus::none: 	return expr.value();
 	case calculus::part_x:	return exprtk::derivative(expr, x, 0.00001);
@@ -25,7 +25,7 @@ double select_calc(calculus calc, exprtk::expression<double> expr, double x, dou
 	}
 }
 
-glm::vec2 get_grad(exprtk::expression<double> expr, double x, double y) {
+glm::vec2 get_grad(const exprtk::expression<double>& expr, double x, double y) {
 
 	glm::vec2 ret;
 	ret.x = (float)exprtk::derivative(expr, x, 0.00001);
