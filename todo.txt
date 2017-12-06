@@ -1,7 +1,6 @@
 
 Rendering
 	animate through settings / equation changes
-	color based on math features (e.g. gradient)
 
 Camera
 	Set to rotate about axis
@@ -18,7 +17,6 @@ Math Features
 	More graph types (see enum)
 	Plot evolution of 3D graph over time (4D) (animated)
 	
-	Partial Derivatives
 	Line/Surface/Flux integrals
 	E Regions
 	Tangent Planes

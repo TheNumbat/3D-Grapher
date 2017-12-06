@@ -448,7 +448,7 @@ void state::UISettings() {
 		Checkbox("Lighting", &g->set.lighting);
 		changed = changed || Checkbox("Normalization", &g->set.axisnormalization);
 		changed = changed || Combo("Color By", (int*)&g->set.color, color_strings, 3);
-		changed = changed || Combo("Highlight Curve", (int*)&g->set.highlight_along, highlight_stirngs, 4);
+		// Combo("Highlight Curve", (int*)&g->set.highlight_along, highlight_stirngs, 4);
 		changed = changed || Combo("Calculus", (int*)&g->set.calc, calc_strings, 7);
 
 		SliderFloat("Opacity", &g->set.opacity, 0.0f, 1.0f);
