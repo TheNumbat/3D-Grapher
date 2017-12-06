@@ -63,11 +63,11 @@ exprtk::symbol_table<double> default_table() {
 }
 
 bool isnan(glm::vec3 v) {
-	return isnan(v.x) || isnan(v.y) || isnan(v.z);
+	return std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z);
 }
 
 bool isinf(glm::vec3 v) {
-	return isinf(v.x) || isinf(v.y) || isinf(v.z);
+	return std::isinf(v.x) || std::isinf(v.y) || std::isinf(v.z);
 }
 
 graph::graph(int id) {
@@ -131,12 +131,12 @@ void graph::send() {
 }
 
 void graph::clampInfBounds() {
-	if(isnan(xmin) || isinf(xmin)) xmin = -100;
-	if(isnan(xmax) || isinf(xmax)) xmax =  100;
-	if(isnan(ymin) || isinf(ymin)) ymin = -100;
-	if(isnan(ymax) || isinf(ymax)) ymax =  100;
-	if(isnan(zmin) || isinf(zmin)) zmin = -100;
-	if(isnan(zmax) || isinf(zmax)) zmax =  100;
+	if(std::isnan(xmin) || std::isinf(xmin)) xmin = -100;
+	if(std::isnan(xmax) || std::isinf(xmax)) xmax =  100;
+	if(std::isnan(ymin) || std::isinf(ymin)) ymin = -100;
+	if(std::isnan(ymax) || std::isinf(ymax)) ymax =  100;
+	if(std::isnan(zmin) || std::isinf(zmin)) zmin = -100;
+	if(std::isnan(zmax) || std::isinf(zmax)) zmax =  100;
 }
 
 void graph::draw(state* s, glm::mat4 model, glm::mat4 view, glm::mat4 proj) {
