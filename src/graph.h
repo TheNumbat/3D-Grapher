@@ -22,9 +22,9 @@ const int z_max = 32;
 
 extern GLfloat axes[];
 
-double select_calc(calculus calc, const exprtk::expression<double>& expr, double t);
-double select_calc(calculus calc, const exprtk::expression<double>& expr, double x, double y);
-glm::vec2 get_grad(const exprtk::expression<double>& expr, double x, double y);
+double select_calc(calculus calc, const exprtk::expression<double>& expr, double& t);
+double select_calc(calculus calc, const exprtk::expression<double>& expr, double& x, double& y);
+glm::vec2 get_grad(const exprtk::expression<double>& expr, double& x, double& y);
 
 struct graph {
 	graph(int id);

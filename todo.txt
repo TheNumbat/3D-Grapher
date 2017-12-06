@@ -26,5 +26,5 @@ Math Features
 Change Log
 - added 1st/2nd/3rd partials in both variables
 - UI : snap camera to see XY/XZ/YZ plane
+- color based on gradient/surface normal refactor
 [in progress] - highlight curve on graph in x/y/z
-[in progress] - color based on gradient/surface normal refactor
