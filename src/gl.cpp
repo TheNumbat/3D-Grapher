@@ -11,12 +11,33 @@ void shader::load(const GLchar* vertex, const GLchar* fragment) {
 	glShaderSource(f, 1, &fragment, NULL);
 	glCompileShader(v);
 	glCompileShader(f);
+
+	check(v);
+	check(f);
+
 	program = glCreateProgram();
 	glAttachShader(program, v);
 	glAttachShader(program, f);
 	glLinkProgram(program);
 	glDeleteShader(v);
 	glDeleteShader(f);
+}
+
+void shader::check(GLuint program) {
+
+	GLint isCompiled = 0;
+	glGetShaderiv(program, GL_COMPILE_STATUS, &isCompiled);
+	if(isCompiled == GL_FALSE) {
+		
+		GLint len = 0;
+		glGetShaderiv(program, GL_INFO_LOG_LENGTH, &len);
+
+		char* msg = new char[len];
+		glGetShaderInfoLog(program, len, &len, msg);
+
+		std::cout << "Shader  " << program << " failed to compile: " << msg << std::endl;
+		delete[] msg;
+	}
 }
 
 void shader::use() {
@@ -129,21 +150,35 @@ const GLchar* graph_fragment = R"STR(
 	uniform float opacity;
 
 	uniform bool lighting;
+	uniform int highlight;
+	uniform vec3 highlight_pos;
+	uniform float tolerance;
 
 	in vec3 f_pos;
 	in vec3 f_norm;
 	in vec3 f_color;
 	out vec4 out_color;
 
+	bool approx(float l, float r) {
+		return l > r - tolerance && l < r + tolerance;
+	}
+
 	void main() {
+		vec3 f_color_new = f_color;
+		if(highlight != 0) {
+			int dim1 = 2 - (highlight - 1);
+			if(approx(f_pos[dim], highlight_pos[dim])) {
+				f_color_new.r = 1.0f;
+			}
+		}
 		if(lighting) {
 			vec3 ambient = ambientStrength * lightColor;
 			vec3 lightDir = normalize(lightPos - f_pos);
 			float diff = abs(dot(f_norm, lightDir));
 			vec3 diffuse = diff * lightColor;
-			out_color = vec4(ambient + diffuse, 1.0f) * vec4(f_color, opacity);
+			out_color = vec4(ambient + diffuse, 1.0f) * vec4(f_color_new, opacity);
 		} else {
-			out_color = vec4(f_color, opacity);
+			out_color = vec4(f_color_new, opacity);
 		}
 	}
 )STR";

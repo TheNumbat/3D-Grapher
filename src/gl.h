@@ -12,6 +12,7 @@ struct shader {
 	void use();
 	GLuint getUniform(const GLchar* name);
 	GLuint program;
+	static void check(GLuint program);
 };
 
 void debug_proc(GLenum glsource, GLenum gltype, GLuint id, GLenum severity, GLsizei length, const GLchar* glmessage, const void* up);
