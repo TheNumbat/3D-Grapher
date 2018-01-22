@@ -149,26 +149,21 @@ void graph::draw(state* s, glm::mat4 model, glm::mat4 view, glm::mat4 proj) {
 
 		glm::mat4 modelviewproj = proj * view * model;
 
-		if (set.lighting) {
-			s->graph_s_light.use();
+		s->graph_s.use();
 
-			glUniformMatrix4fv(s->graph_s_light.getUniform("model"), 1, GL_FALSE, value_ptr(model));
-			glUniformMatrix4fv(s->graph_s_light.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
+		glUniformMatrix4fv(s->graph_s.getUniform("model"), 1, GL_FALSE, value_ptr(model));
+		glUniformMatrix4fv(s->graph_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
 
-			glUniform3f(s->graph_s_light.getUniform("lightColor"), 1.0f, 1.0f, 1.0f);
-			glUniform1f(s->graph_s_light.getUniform("ambientStrength"), set.ambientLighting);
-			glUniform1f(s->graph_s_light.getUniform("opacity"), set.opacity);
+		glUniform3f(s->graph_s.getUniform("lightColor"), 1.0f, 1.0f, 1.0f);
+		glUniform1f(s->graph_s.getUniform("ambientStrength"), set.ambientLighting);
+		glUniform1f(s->graph_s.getUniform("opacity"), set.opacity);
 
-			if (s->camtype == cam_type::_3d) {
-				glUniform3f(s->graph_s_light.getUniform("lightPos"), s->c_3d.pos.x, s->c_3d.pos.y, s->c_3d.pos.z);
-			} else {
-				glUniform3f(s->graph_s_light.getUniform("lightPos"), s->c_3d_static.pos.x, s->c_3d_static.pos.y, s->c_3d_static.pos.z);
-			}
+		glUniform1i(s->graph_s.getUniform("lighting"), set.lighting);
+
+		if (s->camtype == cam_type::_3d) {
+			glUniform3f(s->graph_s.getUniform("lightPos"), s->c_3d.pos.x, s->c_3d.pos.y, s->c_3d.pos.z);
 		} else {
-			s->graph_s.use();
-
-			glUniformMatrix4fv(s->graph_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
-			glUniform1f(s->graph_s.getUniform("opacity"), set.opacity);
+			glUniform3f(s->graph_s.getUniform("lightPos"), s->c_3d_static.pos.x, s->c_3d_static.pos.y, s->c_3d_static.pos.z);
 		}
 
 		if (set.wireframe) {

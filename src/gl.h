@@ -3,8 +3,6 @@
 
 extern const GLchar* graph_vertex;
 extern const GLchar* graph_fragment;
-extern const GLchar* graph_vertex_lighting;
-extern const GLchar* graph_fragment_lighting;
 extern const GLchar* axis_vertex;
 extern const GLchar* axis_fragment;
 

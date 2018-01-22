@@ -15,7 +15,7 @@ Math Features
 
 	More graph types (see enum)
 	Plot evolution of 3D graph over time (4D) (animated)
-	
+
 	Line/Surface/Flux integrals
 	E Regions
 	Tangent Planes
