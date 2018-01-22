@@ -7,7 +7,6 @@ Camera
 
 Bugs
 	One strip of polygons is too dark on cyl/spr
-	Wrong face gets generated on != trez/zrez
 
 Math Features
 	Level curves + animate
@@ -25,4 +24,5 @@ Change Log
 - added 1st/2nd/3rd partials in both variables
 - UI : snap camera to see XY/XZ/YZ plane
 - color based on gradient/surface normal
+- [bug] fixed incorrect generation of triangles for unmatched z/theta resolutions in cylindrical graphs
 [in progress] - highlight curve on graph in x/y/z

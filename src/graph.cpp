@@ -202,8 +202,8 @@ void graph::generateIndiciesAndNormals() {
 		_y_max = set.rdom.yrez;
 	}
 	else if (type == graph_cylindrical) {
-		_x_max = set.cdom.trez;
-		_y_max = set.cdom.zrez;
+		_x_max = set.cdom.zrez;
+		_y_max = set.cdom.trez;
 	}
 	else if (type == graph_spherical) {
 		_x_max = set.sdom.prez;
