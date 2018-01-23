@@ -15,6 +15,8 @@ state::state() {
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
 	window = SDL_CreateWindow("3D Grapher", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		screen_w, screen_h, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
@@ -30,13 +32,16 @@ state::state() {
 
 	glEnable(GL_POLYGON_OFFSET_FILL);
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_MULTISAMPLE);
 	glEnable(GL_BLEND);
+
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glViewport(0, 0, w, h);
 
 	glGenVertexArrays(1, &axisVAO);
 	glGenBuffers(1, &axisVBO);
+
+	axes[3] = axes[9] = axes[16] = axes[22] = axes[29] = axes[35] = 1.0f;
+	updateAxes();
 
 	graph_s.load(graph_vertex, graph_fragment);
 	axis_s.load(axis_vertex, axis_fragment);
@@ -47,9 +52,6 @@ state::state() {
 	ImGuiIO& io = ImGui::GetIO();
 	static const ImWchar range[] = {32, 127, 215, 215, 913, 969, 8592, 9654, 9881, 9881, 0};
 	io.Fonts->AddFontFromMemoryTTF(font_ttf, font_ttf_len, 18, 0, range);
-
-	axes[3] = axes[9] = axes[16] = axes[22] = axes[29] = axes[35] = 1.0f;
-	updateAxes();
 
 	keys = SDL_GetKeyboardState(NULL);
 
@@ -131,11 +133,18 @@ void state::updateAxes() {
 	axes[y_max] = ymax;
 	axes[z_max] = zmax;
 
-	glBindVertexArray(axisVAO);
-	{
+	glBindVertexArray(axisVAO); {
+		
 		glBindBuffer(GL_ARRAY_BUFFER, axisVBO);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(axes), axes, GL_STATIC_DRAW);
-	}
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+		glEnableVertexAttribArray(0);
+
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
+		glEnableVertexAttribArray(1);
+
+	} glBindVertexArray(0);
 }
 
 void state::resetCam() {
@@ -172,8 +181,7 @@ void state::run() {
 
 void state::RenderGraphs() {
 
-	glm::mat4 model, view, proj;
-	model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+	glm::mat4 view, proj;
 	if (camtype == cam_type::_3d) {
 		view = c_3d.getView();
 		proj = glm::perspective(glm::radians(c_3d.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
@@ -182,38 +190,29 @@ void state::RenderGraphs() {
 		view = c_3d_static.getView();
 		proj = glm::perspective(glm::radians(c_3d_static.fov), (GLfloat)w / (GLfloat)h, 0.1f, 1000.0f);
 	} 
-	modelviewproj =  proj * view * model;
+	viewproj =  proj * view;
 
+	glEnable(GL_MULTISAMPLE);
 	for (graph* g : graphs) {
-		g->draw(this, model, view, proj);
+		g->draw(this, viewproj);
 	}
+	glDisable(GL_MULTISAMPLE);
 }
 
 void state::RenderAxes() {
-	glBindVertexArray(axisVAO);
-	{
+	
+	glEnable(GL_MULTISAMPLE);
+	glBindVertexArray(axisVAO); {
 		axis_s.use();
-
-		glBindBuffer(GL_ARRAY_BUFFER, axisVBO);
-
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
-		glEnableVertexAttribArray(0);
-
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-		glEnableVertexAttribArray(1);
-
-		glUniformMatrix4fv(axis_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
+		glUniformMatrix4fv(axis_s.getUniform("viewproj"), 1, GL_FALSE, value_ptr(viewproj));
 
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
 
 		glDrawArrays(GL_LINES, 0, 6);
-
-		glDisableVertexAttribArray(0);
-		glDisableVertexAttribArray(1);
-	}
-	glBindVertexArray(0);
+	} glBindVertexArray(0);
+	glDisable(GL_MULTISAMPLE);
 }
 
 int complete_callback(ImGuiTextEditCallbackData* data)
@@ -447,7 +446,18 @@ void state::UISettings() {
 		Checkbox("Lighting", &g->set.lighting);
 		changed = changed || Checkbox("Normalization", &g->set.axisnormalization);
 		changed = changed || Combo("Color By", (int*)&g->set.color, color_strings, 3);
-		Combo("Highlight Curve", (int*)&g->set.highlight_along, highlight_strings, 4);
+		
+		if(Combo("Level Curve", (int*)&g->set.highlight_along, highlight_strings, 4)) {
+			if(g->set.highlight_along == axis::x) {
+				c_3d_static.setAxis(glm::vec3(0,1,0));
+			} else if(g->set.highlight_along == axis::y) {
+				c_3d_static.setAxis(glm::vec3(1,0,0));	
+			} else if(g->set.highlight_along == axis::z) {
+				c_3d_static.setAxis(glm::vec3(0,0,1));
+			}
+		}
+		c_3d_static.lock = g->set.highlight_along != axis::none;
+
 		changed = changed || Combo("Calculus", (int*)&g->set.calc, calc_strings, 7);
 
 		SliderFloat("Opacity", &g->set.opacity, 0.0f, 1.0f);

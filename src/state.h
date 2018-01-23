@@ -59,7 +59,7 @@ struct state {
 	// OpenGL
 	GLuint axisVAO = 0, axisVBO = 0;
 	shader graph_s, axis_s;
-	glm::mat4 modelviewproj;
+	glm::mat4 viewproj;
 
 	// camera
 	cam_type camtype = cam_type::_3d_static;

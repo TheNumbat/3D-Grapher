@@ -139,7 +139,7 @@ void graph::clampInfBounds() {
 	if(std::isnan(zmax) || std::isinf(zmax)) zmax =  100;
 }
 
-void graph::draw(state* s, glm::mat4 model, glm::mat4 view, glm::mat4 proj) {
+void graph::draw(state* s, glm::mat4 vp) {
 	if(!verticies.size()) return;
 
 	glBindVertexArray(VAO);
@@ -147,12 +147,9 @@ void graph::draw(state* s, glm::mat4 model, glm::mat4 view, glm::mat4 proj) {
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
 
-		glm::mat4 modelviewproj = proj * view * model;
-
 		s->graph_s.use();
 
-		glUniformMatrix4fv(s->graph_s.getUniform("model"), 1, GL_FALSE, value_ptr(model));
-		glUniformMatrix4fv(s->graph_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
+		glUniformMatrix4fv(s->graph_s.getUniform("viewproj"), 1, GL_FALSE, value_ptr(vp));
 
 		glUniform3f(s->graph_s.getUniform("lightColor"), 1.0f, 1.0f, 1.0f);
 		glUniform1f(s->graph_s.getUniform("ambientStrength"), set.ambientLighting);
@@ -161,7 +158,8 @@ void graph::draw(state* s, glm::mat4 model, glm::mat4 view, glm::mat4 proj) {
 		glUniform1i(s->graph_s.getUniform("lighting"), set.lighting);
 		glUniform1i(s->graph_s.getUniform("highlight"), (int)set.highlight_along);
 		glUniform3fv(s->graph_s.getUniform("highlight_pos"), 1, value_ptr(set.highlight_value));
-		glUniform1f(s->graph_s.getUniform("tolerance"), 1.0f);
+		glUniform3fv(s->graph_s.getUniform("highlight_color"), 1, value_ptr(set.highlight_color));
+		glUniform1f(s->graph_s.getUniform("tolerance"), set.highlight_thickness);
 
 		if (s->camtype == cam_type::_3d) {
 			glUniform3f(s->graph_s.getUniform("lightPos"), s->c_3d.pos.x, s->c_3d.pos.y, s->c_3d.pos.z);
@@ -668,12 +666,10 @@ void para_curve::generateIndiciesAndNormals() {
 	indicies.push_back(set.pdom.trez - 1);
 }
 
-void para_curve::draw(state* s, glm::mat4 model, glm::mat4 view, glm::mat4 proj) {
+void para_curve::draw(state* s, glm::mat4 vp) {
 	glBindVertexArray(VAO);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
-
-	glm::mat4 modelviewproj = proj * view * model;
 
 	s->graph_s.use();
 
@@ -681,7 +677,7 @@ void para_curve::draw(state* s, glm::mat4 model, glm::mat4 view, glm::mat4 proj)
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 	glEnableVertexAttribArray(0);
 
-	glUniformMatrix4fv(s->graph_s.getUniform("modelviewproj"), 1, GL_FALSE, value_ptr(modelviewproj));
+	glUniformMatrix4fv(s->graph_s.getUniform("viewproj"), 1, GL_FALSE, value_ptr(vp));
 	glUniform4f(s->graph_s.getUniform("vcolor"), 0.0f, 0.0f, 0.0f, set.opacity);
 	
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);

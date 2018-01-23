@@ -53,7 +53,8 @@ struct graph_settings {
 	color_by color 		   = color_by::nothing;
 
 	axis highlight_along = axis::none;
-	glm::vec3 highlight_value;
+	glm::vec3 highlight_value, highlight_color = glm::vec3(1.0f, 0.0f, 0.0f);
+	float highlight_thickness = 0.05f;
 
 	union {
 		rect_domain rdom;       // { -10, 10, -10, 10, -10, 10, 200, 200 };

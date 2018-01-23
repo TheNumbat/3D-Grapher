@@ -126,18 +126,35 @@ const GLchar* graph_vertex = R"STR(
 	layout (location = 1) in vec3 v_norm;
 	layout (location = 2) in vec3 v_color;
 
-	uniform mat4 modelviewproj;
-	uniform mat4 model;
-	
+	uniform mat4 viewproj;
+	uniform int highlight;
+
 	out vec3 f_pos;
 	out vec3 f_norm;
 	out vec3 f_color;
 
+	mat4 rotMat(vec3 axis, float angle) {
+	    axis = normalize(axis);
+	    float s = sin(angle);
+	    float c = cos(angle);
+	    float oc = 1.0 - c;
+	    
+	    return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
+	                oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
+	                oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
+	                0.0,                                0.0,                                0.0,                                1.0);
+	}
+
 	void main() {
-		gl_Position = modelviewproj * vec4(v_pos, 1.0);
-		f_norm = vec3(model * vec4(v_norm, 1.0));
+		mat4 rot = rotMat(vec3(1, 0, 0), -1.5708);
+		vec3 v_out = v_pos;
+		
+		f_pos = vec3(rot * vec4(v_out, 1.0f));
+		f_norm = vec3(rot * vec4(v_norm, 1.0));
 		f_color = v_color;
-		f_pos = vec3(model * vec4(v_pos, 1.0));
+		
+		if(highlight != 0) v_out[highlight - 1] = 0;
+		gl_Position = viewproj * rot * vec4(v_out, 1.0f);
 	}
 )STR";
 
@@ -152,6 +169,7 @@ const GLchar* graph_fragment = R"STR(
 	uniform bool lighting;
 	uniform int highlight;
 	uniform vec3 highlight_pos;
+	uniform vec3 highlight_color;
 	uniform float tolerance;
 
 	in vec3 f_pos;
@@ -164,11 +182,17 @@ const GLchar* graph_fragment = R"STR(
 	}
 
 	void main() {
-		vec3 f_color_new = f_color;
+		vec3 c = f_color;
 		if(highlight != 0) {
-			int dim1 = 2 - (highlight - 1);
-			if(approx(f_pos[dim], highlight_pos[dim])) {
-				f_color_new.r = 1.0f;
+			int dim = highlight - 1;
+			float h = highlight_pos[dim];
+			if(dim == 1) dim = 2;
+			else if(dim == 2) dim = 1;
+			float p = f_pos[dim];
+			if(approx(p, h)) {
+				c = highlight_color;
+			} else {
+				discard;
 			}
 		}
 		if(lighting) {
@@ -176,10 +200,9 @@ const GLchar* graph_fragment = R"STR(
 			vec3 lightDir = normalize(lightPos - f_pos);
 			float diff = abs(dot(f_norm, lightDir));
 			vec3 diffuse = diff * lightColor;
-			out_color = vec4(ambient + diffuse, 1.0f) * vec4(f_color_new, opacity);
-		} else {
-			out_color = vec4(f_color_new, opacity);
+			c *= ambient + diffuse;
 		}
+		out_color = vec4(c, opacity);
 	}
 )STR";
 
@@ -191,10 +214,22 @@ const GLchar* axis_vertex = R"STR(
 
 	out vec3 f_color;
 
-	uniform mat4 modelviewproj;
+	uniform mat4 viewproj;
+
+	mat4 rotMat(vec3 axis, float angle) {
+	    axis = normalize(axis);
+	    float s = sin(angle);
+	    float c = cos(angle);
+	    float oc = 1.0 - c;
+	    
+	    return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
+	                oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
+	                oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
+	                0.0,                                0.0,                                0.0,                                1.0);
+	}
 
 	void main() {
-		gl_Position = modelviewproj * vec4(v_pos, 1.0f);
+		gl_Position = viewproj * rotMat(vec3(1,0,0), -1.5708) * vec4(v_pos, 1.0f);
 		f_color = v_color;
 	}
 )STR";

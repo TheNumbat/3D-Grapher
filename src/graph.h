@@ -37,7 +37,7 @@ struct graph {
 	virtual void generateIndiciesAndNormals();
 
 	virtual void generate(state* s) = 0;
-	virtual void draw(state* s, glm::mat4 model, glm::mat4 view, glm::mat4 proj);
+	virtual void draw(state* s, glm::mat4 vp);
 
 	void gen();
 	void send();
@@ -62,7 +62,7 @@ struct graph {
 struct para_curve : public graph {
 	para_curve(int id);
 	void generate(state* s);
-	void draw(state* s, glm::mat4 model, glm::mat4 view, glm::mat4 proj);
+	void draw(state* s, glm::mat4 vp);
 	void generateIndiciesAndNormals();
 	std::string eqx, eqy, eqz;
 };

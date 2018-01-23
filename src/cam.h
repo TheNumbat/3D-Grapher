@@ -9,6 +9,7 @@ enum class cam_type {
 struct _cam_3d {
 	glm::vec3 pos, front, up, right, globalUp;
 	float pitch, yaw, speed, fov;
+	bool lock;
 	Uint32 lastUpdate;
 
 	glm::mat4 getView() {
@@ -30,6 +31,7 @@ struct _cam_3d {
 		pitch = -45.0f;
 		yaw = 225.0f;
 		speed = 5.0f;
+		lock = false;
 		pos = glm::vec3(5, 5, 5);
 		globalUp = glm::vec3(0, 1, 0);
 		lastUpdate = SDL_GetTicks();
@@ -37,6 +39,7 @@ struct _cam_3d {
 	}
 
 	void move(int dx, int dy) {
+		if(lock) return;
 		const float sens = 0.1f;
 		yaw += dx * sens;
 		pitch -= dy * sens;
@@ -51,6 +54,7 @@ struct _cam_3d {
 struct _cam_3d_static {
 	glm::vec3 pos, lookingAt, up;
 	float pitch, yaw, radius, fov;
+	bool lock;
 
 	glm::mat4 getView() {
 		glm::mat4 ret = lookAt(pos, lookingAt, up);
@@ -77,6 +81,7 @@ struct _cam_3d_static {
 		pitch = 45.0f;
 		yaw = 45.0f;
 		radius = 20.0f;
+		lock = false;
 		lookingAt = glm::vec3(0, 0, 0);
 		up = glm::vec3(0, 1, 0);
 		updatePos();
@@ -90,6 +95,7 @@ struct _cam_3d_static {
 	}
 
 	void move(int dx, int dy) {
+		if(lock) return;
 		const float sens = 0.1f;
 		yaw += dx * sens;
 		pitch -= dy * sens;

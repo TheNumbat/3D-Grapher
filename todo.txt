@@ -25,4 +25,4 @@ Change Log
 - UI : snap camera to see XY/XZ/YZ plane
 - color based on gradient/surface normal
 - [bug] fixed incorrect generation of triangles for unmatched z/theta resolutions in cylindrical graphs
-[in progress] - highlight curve on graph in x/y/z
+- level curves on graph in x/y/z
