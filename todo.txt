@@ -1,22 +1,25 @@
 
-Rendering
-	animate through settings / equation changes
-
-Camera
-	Set to rotate about axis
+Priority:
+	FIX BUGS
+	animations
+	vector fields
 
 Bugs
 	clamp x/y bounds correctly when the function doesn't exist in part of the domain
 	one strip of polygons is too dark
 	cylindrical graph doesn't have correct bounds??
 
-Math Features
-	Level curves + animate
-	Highlight curve along a set x/y
-	Highlight graph intersections
+Camera
+	lock to rotate about axis
 
+Graphs
+	animation
+		settings changes
+		level curves
+		evolution over time (4D)	
+
+	Highlight graph intersections
 	More graph types (see enum)
-	Plot evolution of 3D graph over time (4D) (animated)
 
 	Line/Surface/Flux integrals
 	E Regions
