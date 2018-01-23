@@ -55,6 +55,7 @@ struct graph_settings {
 	axis highlight_along = axis::none;
 	glm::vec3 highlight_value, highlight_color = glm::vec3(1.0f, 0.0f, 0.0f);
 	float highlight_thickness = 0.05f;
+	bool highlight_draw_graph = false;
 
 	union {
 		rect_domain rdom;       // { -10, 10, -10, 10, -10, 10, 200, 200 };

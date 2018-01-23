@@ -128,6 +128,7 @@ const GLchar* graph_vertex = R"STR(
 
 	uniform mat4 viewproj;
 	uniform int highlight;
+	uniform bool highlight_draw_graph;
 
 	out vec3 f_pos;
 	out vec3 f_norm;
@@ -146,14 +147,14 @@ const GLchar* graph_vertex = R"STR(
 	}
 
 	void main() {
-		mat4 rot = rotMat(vec3(1, 0, 0), -1.5708);
+		mat4 rot = rotMat(vec3(1, 0, 0), 1.5708);
 		vec3 v_out = v_pos;
 		
 		f_pos = vec3(rot * vec4(v_out, 1.0f));
 		f_norm = vec3(rot * vec4(v_norm, 1.0));
 		f_color = v_color;
 		
-		if(highlight != 0) v_out[highlight - 1] = 0;
+		if(highlight != 0 && !highlight_draw_graph) v_out[highlight - 1] = 0;
 		gl_Position = viewproj * rot * vec4(v_out, 1.0f);
 	}
 )STR";
@@ -166,7 +167,7 @@ const GLchar* graph_fragment = R"STR(
 	uniform float ambientStrength;
 	uniform float opacity;
 
-	uniform bool lighting;
+	uniform bool lighting, highlight_draw_graph;
 	uniform int highlight;
 	uniform vec3 highlight_pos;
 	uniform vec3 highlight_color;
@@ -191,7 +192,7 @@ const GLchar* graph_fragment = R"STR(
 			float p = f_pos[dim];
 			if(approx(p, h)) {
 				c = highlight_color;
-			} else {
+			} else if(!highlight_draw_graph) {
 				discard;
 			}
 		}
@@ -229,7 +230,7 @@ const GLchar* axis_vertex = R"STR(
 	}
 
 	void main() {
-		gl_Position = viewproj * rotMat(vec3(1,0,0), -1.5708) * vec4(v_pos, 1.0f);
+		gl_Position = viewproj * rotMat(vec3(1,0,0), 1.5708) * vec4(v_pos, 1.0f);
 		f_color = v_color;
 	}
 )STR";

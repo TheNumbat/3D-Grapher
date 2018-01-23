@@ -160,6 +160,7 @@ void graph::draw(state* s, glm::mat4 vp) {
 		glUniform3fv(s->graph_s.getUniform("highlight_pos"), 1, value_ptr(set.highlight_value));
 		glUniform3fv(s->graph_s.getUniform("highlight_color"), 1, value_ptr(set.highlight_color));
 		glUniform1f(s->graph_s.getUniform("tolerance"), set.highlight_thickness);
+		glUniform1i(s->graph_s.getUniform("highlight_draw_graph"), set.highlight_draw_graph);
 
 		if (s->camtype == cam_type::_3d) {
 			glUniform3f(s->graph_s.getUniform("lightPos"), s->c_3d.pos.x, s->c_3d.pos.y, s->c_3d.pos.z);

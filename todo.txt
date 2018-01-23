@@ -6,7 +6,9 @@ Camera
 	Set to rotate about axis
 
 Bugs
-	One strip of polygons is too dark on cyl/spr
+	clamp x/y bounds correctly when the function doesn't exist in part of the domain
+	one strip of polygons is too dark
+	cylindrical graph doesn't have correct bounds??
 
 Math Features
 	Level curves + animate
@@ -24,5 +26,6 @@ Change Log
 - added 1st/2nd/3rd partials in both variables
 - UI : snap camera to see XY/XZ/YZ plane
 - color based on gradient/surface normal
-- [bug] fixed incorrect generation of triangles for unmatched z/theta resolutions in cylindrical graphs
 - level curves on graph in x/y/z
+- MSAA
+- [fix] fixed incorrect generation of triangles for unmatched z/theta resolutions in cylindrical graphs
