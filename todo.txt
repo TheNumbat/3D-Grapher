@@ -30,5 +30,5 @@ Change Log
 - UI : snap camera to see XY/XZ/YZ plane
 - color based on gradient/surface normal
 - level curves on graph in x/y/z
-- MSAA
+- improved anti-aliasing/smooth polygons
 - [fix] fixed incorrect generation of triangles for unmatched z/theta resolutions in cylindrical graphs

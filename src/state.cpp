@@ -33,6 +33,10 @@ state::state() {
 	glEnable(GL_POLYGON_OFFSET_FILL);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
+	glEnable(GL_LINE_SMOOTH);
+	glEnable(GL_POLYGON_SMOOTH);
+	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+	glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glViewport(0, 0, w, h);
@@ -636,7 +640,9 @@ void state::UI() {
 	}
 
 	End();
+	glDisable(GL_POLYGON_SMOOTH);
 	Render();
+	glEnable(GL_POLYGON_SMOOTH);
 }
 
 void state::Events() {
