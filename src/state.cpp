@@ -465,7 +465,6 @@ void state::UISettings() {
 			Checkbox("Draw Graph", &g->set.highlight_draw_graph);
 			Unindent();
 		}
-		c_3d_static.lock = g->set.highlight_along != axis::none && !g->set.highlight_draw_graph;
 
 		changed = changed || Combo("Calculus", (int*)&g->set.calc, calc_strings, 7);
 
