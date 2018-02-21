@@ -24,11 +24,3 @@ Graphs
 	Line/Surface/Flux integrals
 	E Regions
 	Tangent Planes
-
-Change Log
-- added 1st/2nd/3rd partials in both variables
-- UI : snap camera to see XY/XZ/YZ plane
-- color based on gradient/surface normal
-- level curves on graph in x/y/z
-- improved anti-aliasing/smooth polygons
-- [fix] fixed incorrect generation of triangles for unmatched z/theta resolutions in cylindrical graphs
