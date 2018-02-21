@@ -13,11 +13,11 @@ Current
   - visualization options
   - calculus options (partials/gradient)
   - domain options
+  - level curves
   
 Planned
   - examples
-  - level curves
-  - rectangular surfaces
+    - rectangular surfaces
   - parametric surfaces
   - vector fields 
   - double/triple integral evaluation
